@@ -17,7 +17,12 @@ jobs:
         with:
           node-version: "22.x"
 
-      - name: Create release
+      - name: Build Plugin
+        run: |
+          npm install
+          npm run build
+
+      - name: Create Release
         env: 
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
