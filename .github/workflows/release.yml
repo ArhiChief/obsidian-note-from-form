@@ -18,7 +18,8 @@ jobs:
           node-version: "18.x"
 
       - name: Create release
-        env: GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        env: 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           tag="${GITHUB_REF#refs/tags/}"
 
