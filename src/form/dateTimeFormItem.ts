@@ -1,15 +1,16 @@
-
-import { TemplateFormItem, TemplateFormItemType, TemplateGetFunction, TemplateGetFunctionType, TemplateInitFunction, TemplateInitFunctionType } from "src/template/template";
-import { FormItemBase } from "./formItem";
-import { SettingExtended } from "src/settingExtensions";
-import { DateTimeComponent } from "src/dateTimeComponent";
+import { GetFunctionType, InitFunctionType, TemplateFormItem, TemplateFormItemType, TemplateFunction } from "src/template/template";
+import { FormItemBase } from "./formItemBase";
+import { DateTimeComponent } from "src/ui/dateTimeComponent";
 import { moment } from "obsidian";
+import { renderMustacheTemplate } from "src/helpers";
+import { SettingExtended } from "src/ui/settingExtensions";
+
 
 const MUSTACHE_TEMPLATE_REGEX = /[{]{2}.+[}]{2}/g;
 
 export class DateTimeFormItem extends FormItemBase<Date> {
 
-    private readonly _getSrc?: TemplateGetFunction;
+    private readonly _getSrc?: TemplateFunction<GetFunctionType>;
 
     constructor (src: TemplateFormItem) {
         DateTimeFormItem.assertType(src.type);
@@ -17,6 +18,8 @@ export class DateTimeFormItem extends FormItemBase<Date> {
         const initValue : Date = DateTimeFormItem.getInitValue(src.init);
 
         super(src.id, src.type, initValue, src.form);
+
+        this._getSrc = src.get;
     }
 
     protected assignToFormImpl(contentEl: HTMLElement): void {
@@ -47,6 +50,7 @@ export class DateTimeFormItem extends FormItemBase<Date> {
     }
 
     protected getImpl(view: Record<string, any>): string {
+        
         if (!this._getSrc) {
             const val = moment(this.value);
             switch(this.type) {
@@ -61,30 +65,34 @@ export class DateTimeFormItem extends FormItemBase<Date> {
             }
         }
 
-        switch(this._getSrc.type) {
-            case TemplateGetFunctionType.Template:
-                if (this._getSrc.setterText.match(MUSTACHE_TEMPLATE_REGEX)) {
-                    return DateTimeFormItem.renderMustacheTemplate(this._getSrc.setterText, view);
+        const { type, text } = this._getSrc;
+        switch(type) {
+            case GetFunctionType.Template:
+                if (text.match(MUSTACHE_TEMPLATE_REGEX)) {
+                    return renderMustacheTemplate(text, view);
                 } else {
-                    return moment(this.value).format(this._getSrc.setterText);
+                    return moment(this.value).format(text);
                 }
-            case TemplateGetFunctionType.Function:
-                return DateTimeFormItem.executeGetFunction(this._getSrc.setterText, view);
+            case GetFunctionType.Function:
+                return DateTimeFormItem.executeGetFunction(text, view);
+            case GetFunctionType.Value:
+                return text;
             default:
                 throw 1;
         }
     }
 
-    private static getInitValue(src?: TemplateInitFunction): Date {
+    private static getInitValue(src?: TemplateFunction<InitFunctionType>): Date {
         if (!src) {
             return new Date(Date.now());
         }
 
-        switch (src.type) {
-            case TemplateInitFunctionType.String:
-                return new Date(src.setterText);
-            case TemplateInitFunctionType.Function:
-                return DateTimeFormItem.executeInitFunction(src.setterText);
+        const { type, text } = src;
+        switch (type) {
+            case InitFunctionType.Value:
+                return new Date(text);
+            case InitFunctionType.Function:
+                return DateTimeFormItem.executeInitFunction(text);
             default:
                 throw 1;
         }

@@ -1,5 +1,6 @@
 import { Template } from "./template/template";
 
+
 export const TEMPLATE_PROPERTY_NAME = "note-from-form";
 
 export interface NoteFromFormPluginSettings {

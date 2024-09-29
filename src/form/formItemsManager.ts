@@ -1,11 +1,11 @@
 import { Template, TemplateFormItemType } from "src/template/template";
-import { FormItem } from "./formItem";
+import { FormItem } from "./formItemBase";
 import { FileLocationFormItem, FileNameFormItem } from "./fileInfoFormItem";
 import { TextFormItem } from "./textFormItem";
 import { DateTimeFormItem } from "./dateTimeFormItem";
 import { NumberFormItem } from "./numberFormItem";
+import { nameof } from "src/helpers";
 
-const nameof = <T>(name: Extract<keyof T, string>): string => name;
 
 export class FormItemsManager {
     static getFormItems(template: Template): FormItem[] {

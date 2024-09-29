@@ -1,7 +1,7 @@
 {
-	"id": "obsidian-note-from-form",
+	"id": "note-from-form",
 	"name": "Note From Form",
-	"version": "0.0.2",
+	"version": "0.0.5",
 	"minAppVersion": "0.15.0",
 	"description": "Define dynamic input form and use it to create notes",
 	"author": "ArhiChief",

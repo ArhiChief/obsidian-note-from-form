@@ -1,5 +1,7 @@
-import { App, Modal, Setting } from "obsidian";
-import { FormItem } from "./formItem";
+import { App, Modal } from "obsidian";
+import { FormItem } from "../form/formItemBase";
+import { SettingExtended } from "src/ui/settingExtensions";
+
 
 export class InputFormModal extends Modal {
 
@@ -26,7 +28,7 @@ export class InputFormModal extends Modal {
             item.assignToForm(contentEl);
         }
 
-        new Setting(contentEl)
+        new SettingExtended(contentEl)
             .addButton(btn => btn
                 .setButtonText("Create")
                 .setCta()

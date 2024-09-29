@@ -1,8 +1,7 @@
 import { App, PluginSettingTab } from 'obsidian';
-
-import NoteFromFormPlugin from './main';
-import { TEMPLATE_PROPERTY_NAME } from './pluginSettings';
+import NoteFromFormPlugin from 'src/main';
 import { SettingExtended } from './settingExtensions';
+import { TEMPLATE_PROPERTY_NAME } from 'src/pluginSettings';
 
 
 export class NoteFromFormSettingTab extends PluginSettingTab {

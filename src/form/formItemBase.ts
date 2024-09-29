@@ -1,5 +1,5 @@
+import { evaluateTextFunction } from "src/helpers";
 import { FormDisplay, TemplateFormItemType } from "src/template/template";
-import { TemplateProcessor } from "src/template/templateProcessor";
 
 
 export interface FormItem {
@@ -51,21 +51,13 @@ export abstract class FormItemBase<TValue> implements FormItem {
     protected abstract assignToFormImpl(contentEl: HTMLElement): void;
     protected abstract getImpl(view: Record<string, any>): string;
 
-    protected static renderMustacheTemplate(template: string, view: Record<string, any>) {
-        return TemplateProcessor.renderMustacheTemplate(template, view);
-    }
-
     protected static executeInitFunction<TResult>(funcText: string): TResult {
-        const func = FormItemBase.evaluateTextFunction<TResult, []>(funcText);
+        const func = evaluateTextFunction<TResult, []>(funcText);
         return func();
     }
 
     protected static executeGetFunction(funcText: string, view: Record<string, any>) : string {
-        const func = FormItemBase.evaluateTextFunction<string, [Record<string, any>]>(funcText);
+        const func = evaluateTextFunction<string, [Record<string, any>]>(funcText);
         return func(view);
-    }
-
-    private static evaluateTextFunction<TResult, TParam extends Array<any>>(funcText: string): (...p: TParam) => TResult {
-        return eval(`(${funcText})`);
     }
 }

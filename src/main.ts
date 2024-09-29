@@ -1,14 +1,12 @@
 import { App, normalizePath, Plugin, type PluginManifest } from 'obsidian';
-
-import { NoteFromFormSettingTab } from './settingsTab';
+import { NoteFromFormSettingTab } from './ui/settingsTab';
 import { TemplateParser } from './template/templateParser';
 import { DEFAULT_PLUGIN_SETTINGS, NoteFromFormPluginSettings } from './pluginSettings';
 import { Template } from './template/template';
-import { InputFormModal } from './form/inputFormModal';
-import { FormItem } from './form/formItem';
+import { InputFormModal } from './ui/inputFormModal';
+import { FormItem } from './form/formItemBase';
 import { FormItemsManager } from './form/formItemsManager';
-import { TemplateProcessor } from './template/templateProcessor';
-import { Base64 } from './base64';
+import { base64Decode, renderMustacheTemplate } from './helpers';
 
 
 export default class NoteFromFormPlugin extends Plugin {
@@ -70,20 +68,18 @@ export default class NoteFromFormPlugin extends Plugin {
     private async useTemplate(template: Template): Promise<void> {
 
         const items: FormItem[] = FormItemsManager.getFormItems(template);
-        new InputFormModal(this.app, template.name, items, async ()=> await this.CreateNewNote(template.text, items)).open();
+        new InputFormModal(this.app, template.name, items, async ()=> await this.createNewNote(template.text, items)).open();
     }
 
-    private async CreateNewNote(noteTemplateText: string, src: FormItem[]): Promise<void> {
+    private async createNewNote(noteTemplateText: string, src: FormItem[]): Promise<void> {
         const view = FormItemsManager.getViewModel(src);
         
-        noteTemplateText = Base64.Decode(noteTemplateText);
-        const noteText = TemplateProcessor.renderMustacheTemplate(noteTemplateText, view);
+        noteTemplateText = base64Decode(noteTemplateText);
+        const noteText = renderMustacheTemplate(noteTemplateText, view);
 
         const vault = this.app.vault;
-        try {            
+        if (!vault.getFolderByPath(normalizePath(view.fileLocation))) {
             await vault.createFolder(normalizePath(view.fileLocation));
-        }catch{
-            // ignore
         }
 
         const path = normalizePath(`${view.fileLocation}/${view.fileName}.md`);

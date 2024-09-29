@@ -2,6 +2,7 @@ import { Setting } from "obsidian";
 import { DateTimeComponent, DateTimeType } from "./dateTimeComponent";
 import { NumberComponent } from "./numberComponent";
 
+
 export class SettingExtended extends Setting {
 
     private addDateTimeComponent(cb: (component: DateTimeComponent) => any, type: DateTimeType): this {
@@ -28,6 +29,7 @@ export class SettingExtended extends Setting {
     }
 
     addNumber(cb: (component: NumberComponent) => any): this {
+        
         const component = new NumberComponent(this.controlEl);
 
         this.components.push(component);

@@ -1,10 +1,12 @@
-import { TemplateFormItem, TemplateFormItemType, TemplateGetFunction, TemplateGetFunctionType, TemplateInitFunction, TemplateInitFunctionType } from "src/template/template";
-import { FormItemBase } from "./formItem";
-import { SettingExtended } from "src/settingExtensions";
+import { GetFunctionType, InitFunctionType, TemplateFormItem, TemplateFormItemType, TemplateFunction } from "src/template/template";
+import { FormItemBase } from "./formItemBase";
+import { SettingExtended } from "src/ui/settingExtensions";
+import { renderMustacheTemplate } from "src/helpers";
+
 
 export class NumberFormItem extends FormItemBase<number> {
 
-    private readonly _getSrc?: TemplateGetFunction;
+    private readonly _getSrc?: TemplateFunction<GetFunctionType>;
 
     constructor(src: TemplateFormItem) {
         NumberFormItem.assertType(src.type);
@@ -26,32 +28,35 @@ export class NumberFormItem extends FormItemBase<number> {
             );
     }
 
-
     protected getImpl(view: Record<string, any>): string {
         if (!this._getSrc) {
             return this.value.toString();
         }
 
-        switch (this._getSrc.type) {
-            case TemplateGetFunctionType.Template:
-                return NumberFormItem.renderMustacheTemplate(this._getSrc.setterText, view);
-            case TemplateGetFunctionType.Function:
-                return NumberFormItem.executeGetFunction(this._getSrc.setterText, view);
+        const { type, text } = this._getSrc;
+        switch (type) {
+            case GetFunctionType.Template:
+                return renderMustacheTemplate(text, view);
+            case GetFunctionType.Function:
+                return NumberFormItem.executeGetFunction(text, view);
+            case GetFunctionType.Value:
+                return text;
             default:
                 throw 1;
         }
     }
 
-    private static getInitValue(src?: TemplateInitFunction): number {
+    private static getInitValue(src?: TemplateFunction<InitFunctionType>): number {
         if (!src) {
             return 0;
         }
 
-        switch(src.type) {
-            case TemplateInitFunctionType.String:
-                return Number.parseFloat(src.setterText);
-            case TemplateInitFunctionType.Function:
-                return NumberFormItem.executeInitFunction(src.setterText);
+        const { type, text } = src;
+        switch(type) {
+            case InitFunctionType.Value:
+                return Number.parseFloat(text);
+            case InitFunctionType.Function:
+                return NumberFormItem.executeInitFunction(text);
             default:
                 throw 1;
         }

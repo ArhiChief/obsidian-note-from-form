@@ -4,8 +4,8 @@ export interface Template {
     // content of template that can be pasted into output. Encoded as base64 to avoid problem of storing inside JSON
     text: string;
 
-    fileName?: TemplateGetFunction
-    fileLocation?: TemplateGetFunction;
+    fileName?: TemplateFunction<GetFunctionType>;
+    fileLocation?: TemplateFunction<GetFunctionType>;
 
     formItems: TemplateFormItem[];
 }
@@ -13,8 +13,8 @@ export interface Template {
 export interface TemplateFormItem {
     id: string;
     type: TemplateFormItemType;
-    init?: TemplateInitFunction;
-    get?: TemplateGetFunction;
+    init?: TemplateFunction<InitFunctionType>;
+    get?: TemplateFunction<GetFunctionType>;
     form?: FormDisplay;
 }
 
@@ -33,31 +33,27 @@ export enum TemplateFormItemType {
     Number = 'number',
 }
 
-export interface TemplateInitFunction {
-    type: TemplateInitFunctionType,
-    setterText: string,
+export interface TemplateFunction<TFunctionType> {
+    type: TFunctionType,
+    text: string,
 }
 
-export interface TemplateGetFunction {
-    type: TemplateGetFunctionType,
-    setterText: string,
-}
-
-export enum TemplateInitFunctionType {
-    String = 's',
+export enum InitFunctionType {
+    Value = 'v',
     Function = 'f',
 }
 
-export enum TemplateGetFunctionType {
+export enum GetFunctionType {
+    Function = 'f',
     Template = 't',
-    Function = 'f',
+    Value = 'v',
 }
 
 export interface TemplateInput {
     "file-name"?: string;
     "file-location"?: string;
     "form-items": TemplateInputFormItem[];
-};
+}
 
 export interface TemplateInputFormItem {
     id: string;

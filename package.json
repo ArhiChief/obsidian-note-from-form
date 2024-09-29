@@ -1,6 +1,6 @@
 {
-	"name": "obsidian-note-from-form",
-	"version": "0.0.1",
+	"name": "note-from-form",
+	"version": "0.0.5",
 	"description": "Plugin for Obsidian.md. Allows to define templates that creates input forms used as source for template.",
 	"main": "main.js",
 	"scripts": {

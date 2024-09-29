@@ -1,12 +1,13 @@
-import { TemplateFormItem, TemplateFormItemType, TemplateGetFunction, TemplateGetFunctionType, TemplateInitFunction, TemplateInitFunctionType } from "src/template/template";
-import { FormItemBase } from "./formItem";
-import { SettingExtended } from "src/settingExtensions";
+import { GetFunctionType, InitFunctionType, TemplateFormItem, TemplateFormItemType, TemplateFunction } from "src/template/template";
 import { TextAreaComponent, TextComponent } from "obsidian";
+import { SettingExtended } from "src/ui/settingExtensions";
+import { FormItemBase } from "./formItemBase";
+import { renderMustacheTemplate } from "src/helpers";
 
 
 export class TextFormItem extends FormItemBase<string> {
     
-    private readonly _getSrc?: TemplateGetFunction;
+    private readonly _getSrc?: TemplateFunction<GetFunctionType>;
     
     constructor (src: TemplateFormItem) {
         TextFormItem.assertType(src.type);
@@ -48,27 +49,31 @@ export class TextFormItem extends FormItemBase<string> {
             return this.value;
         }
 
-        switch(this._getSrc.type) {
-            case TemplateGetFunctionType.Template:
-                return TextFormItem.renderMustacheTemplate(this._getSrc.setterText, view);
-            case TemplateGetFunctionType.Function:
-                return TextFormItem.executeGetFunction(this._getSrc.setterText, view);
+        const { type, text } = this._getSrc;
+        switch(type) {
+            case GetFunctionType.Template:
+                return renderMustacheTemplate(text, view);
+            case GetFunctionType.Function:
+                return TextFormItem.executeGetFunction(text, view);
+            case GetFunctionType.Value:
+                    return text;
             default: 
                 throw 1;
         }
     }
 
-    private static getInitValue(src?: TemplateInitFunction): string {
+    private static getInitValue(src?: TemplateFunction<InitFunctionType>): string {
 
         if (!src) {
-            return '';
+            return "";
         }
 
-        switch(src.type) {
-            case TemplateInitFunctionType.Function:
-                return TextFormItem.executeInitFunction(src.setterText);
-            case TemplateInitFunctionType.String:
-                return src.setterText;
+        const { type, text } =  src;
+        switch(type) {
+            case InitFunctionType.Function:
+                return TextFormItem.executeInitFunction(text);
+            case InitFunctionType.Value:
+                return text;
             default:
                 throw 1;
         }

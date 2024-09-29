@@ -1,5 +1,6 @@
 import { ValueComponent } from "obsidian";
 
+
 export class NumberComponent extends ValueComponent<number> {
 
     private readonly _inputEl: HTMLInputElement;

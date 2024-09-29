@@ -1,12 +1,14 @@
-import { FormDisplay, TemplateFormItemType, TemplateGetFunction, TemplateGetFunctionType, TemplateInitFunction } from "src/template/template";
-import { FormItem, FormItemBase } from "./formItem";
+import { FormDisplay, GetFunctionType, TemplateFormItemType, TemplateFunction} from "src/template/template";
+import { FormItemBase } from "./formItemBase";
 import { normalizePath, Setting } from "obsidian";
+import { renderMustacheTemplate } from "src/helpers";
+
 
 abstract class FileInfoFormItem extends FormItemBase<string> {
 
-    private readonly _getSrc?: TemplateGetFunction;
+    private readonly _getSrc?: TemplateFunction<GetFunctionType>;
 
-    protected constructor (id: string, title: string, src?: TemplateGetFunction) {
+    protected constructor (id: string, title: string, src?: TemplateFunction<GetFunctionType>) {
 
         let formDisplay: FormDisplay | undefined;
         let initValue: string;
@@ -39,43 +41,37 @@ abstract class FileInfoFormItem extends FormItemBase<string> {
 
     protected getImpl(view: Record<string, any>): string {
         if (!this._getSrc) {
-            return this.value;
+            return normalizePath(this.value);
         }
 
-        switch(this._getSrc.type) {
-            case TemplateGetFunctionType.Template:
-                return FileInfoFormItem.renderMustacheTemplate(this._getSrc.setterText, view);
-            case TemplateGetFunctionType.Function:
-                return FileInfoFormItem.executeGetFunction(this._getSrc.setterText, view);
+        const {type, text } = this._getSrc;
+        let result: string;
+        switch(type) {
+            case GetFunctionType.Template:
+                result = renderMustacheTemplate(text, view);
+                break;
+            case GetFunctionType.Function:
+                result = FileInfoFormItem.executeGetFunction(text, view);
+                break;
+            case GetFunctionType.Value:
+                result = text;
+                break;
             default: 
                 throw 1;
         }
+
+        return normalizePath(result);
     }
 }
 
-const INVALID_FILENAME_CHARS = /[:[\]?/\\]/g;
-const INVALID_PATH_CHARS = /[:[\]?\\]/g;
-
 export class FileNameFormItem extends FileInfoFormItem {
-    constructor (src?: TemplateGetFunction){
+    constructor (src?: TemplateFunction<GetFunctionType>){
         super("fileName", "File Name", src);
-    }
-
-    get(src: Record<string, unknown>): string {
-        let result:string = super.get(src);
-
-        return normalizePath(result.replace(INVALID_FILENAME_CHARS, ""));
     }
 }
 
 export class FileLocationFormItem extends FileInfoFormItem {
-    constructor (src?: TemplateGetFunction) {
+    constructor (src?: TemplateFunction<GetFunctionType>) {
         super("fileLocation", "File Name", src);
-    }
-
-    get(src: Record<string, unknown>): string {
-        let result:string = super.get(src);
-
-        return result.replace(INVALID_PATH_CHARS, "");
     }
 }
