@@ -37,7 +37,7 @@ export default class NoteFromFormPlugin extends Plugin {
     }
     
     async reindexTemplates(): Promise<void> {
-        const parser = new TemplateParser(this.app.vault, this.settings);
+        const parser = new TemplateParser(this.app, this.settings);
         const result = await parser.parse();
 
         if (result) {
