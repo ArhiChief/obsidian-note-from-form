@@ -70,14 +70,26 @@ date: 2024-09-29T22:13:47
 # Chapter 1: This is title
 ```
 
+## Using
+1. Install plugin
+2. Open plugin settings and and set location of template files. Also you can specify obsidian property that will point to template definition:
+![image](readme_files/plugin_settings.png)
+3. Create set of templates that will be used by plugin to generate input form and new notes. See [Template Description](#template-description);
+4. In plugin settings press **Re-build** button or run `Note From Form: Re-Build Template Index` from [Command palette](https://help.obsidian.md/Plugins/Command+palette).
+
+
+If template files have no issues Obsidian command pallete wil be enriched with new commands in format `Note From Form: Your Template Name`. Use commands from command pallete to create new note from template.
+
+
+
 ## Template Description
 
 Form and note template are defined as markdown files that supports [mustache](https://mustache.github.io/) syntax for values that need to be placed from form. Instructions for form itself are defined as [JSON](https://www.json.org/json-en.html) object inside [properties](https://help.obsidian.md/Editing+and+formatting/Properties). Property name might be defined in plugin settings or be a default value `note-from-form`.
 
 Form template contains following fields:
-- `file-name` used to define name of the result file;
-- `file-location` used to define folder where new note will be stored;
-- `form-items` used to define content of the input form or compute values for template based on the input or user-defined logic.
+- [`file-name`](#file-name) used to define name of the result file;
+- [`file-location`](#file-location) used to define folder where new note will be stored;
+- [`form-items`](#form-items) used to define content of the input form or compute values for template based on the input or user-defined logic.
 
 ### `file-name`
 
@@ -123,10 +135,104 @@ Each item of array may have following structure:
 | Field Name | Is Mandatory | Description | Possible values |
 |-|-|-|-|
 | `id` | yes | Declare identifier of the filed in form. By this identifier field can be later referenced inside user defined function or mustache template | string with field name, i.e. `date` |
-| `type` | yes | Specify type of input field. Type of the field allow you to control what user can input, what operations can be done and how field would be displayed | `text`, `textArea`, `date`, `time`, `dateTime`, `number` |
-| `init` | no | Init function. Used to get initial value of field. In case if not specified, default value would be used | Pure values or user defined functions (see below) |
-| `get` | no | This is function that is called after all input provided and used to create result object that will be used as source of values for template, `file-name` and `file-location` | Pure value, mustache template or user defined function |
+| `type` | yes | Specify [type of input field](#input-type-fields). Type of the field allow you to control what user can input, what operations can be done and how field would be displayed | `text`, `textArea`, `date`, `time`, `dateTime`, `number` |
+| `init` | no | [Init function](#init-function). Used to get initial value of field. In case if not specified, default value would be used | Pure values or user defined functions (see below) |
+| `get` | no | This is [function](#get-function) that is called after all input provided and used to create result object that will be used as source of values for template, `file-name` and `file-location` | Pure value, mustache template or user defined function |
 | `form` | no | Instructs plugin how to render field on form. This property might be skipped if some computed values are needed but shouldn't be changed by user | Complex object that have `title`, `placeholder` and `description` fields |
 | `title` | no | Used to provide user-friendly name of the field. | Any string |
 | `placeholder` | no | For fields of `text` and `textArea` types might be used as filed placeholder. For other types is not used | Any string |
 | `description` | no | Used to provide user-friendly description of the field on input form | Any string |
+
+### `get` function
+`get` function used to get final result of intput and generate model used as source for template `mustache` blocks. It might be defined in one of three variants:
+
+- `v:<value>`. This instructs `get` function to return string value defined after `:`. For example, `v:Hello World!` will return `Hello World!` string and assign it to appropriate field in model used in mustache blocks of template;
+- `t:<mustache string>`. This instructs This instructs `get` function to collect all values defined in [`form-items`](#form-items) and use it as source for mustache template defined in `<mustache string>`. For example, 
+`t:Hello {{who}}!` will take filed from [`form-items`](#form-items) with `id` `who` and use it value for template. Consider, `who` is set to `world` than result of `t:Hello {{who}}!` would be `Hello world!` string;
+`f:<JS function text>`. This instructs `get` function to execute function defined in `<JS function text>`. For example, `f:function(view) { return view.myfield + '+ 1'; }`.
+
+Function can be useful to produce values based on user input or values that do not need to be provided by user.
+
+Function accept single argument that is JS object with fields defined in [`form-items`](#form-items) with latest values entered by user and expected to return string. Function have following TS declaration:
+```ts
+function(view: Record<string, any>): string;
+```
+
+
+>[!warning]:
+>
+> `f:<JS function text>` use JavaScript `eval()` call to translate text into executable. Use it carefully!
+
+If not specified, default variant is used that returns string representation of field.
+
+### `init` function
+`init` function used to set initial values of fields declared in [`form-items`](#form-items). `init` function might be defined in one of two variants:
+
+- `v:<value>`. Instructs `init` function to initialize form field from string specified in `<value>`. Based on [filed type](#input-type-fields) appropriate casting will be done;
+- `f:<JS function text>` use JavaScript function defined in `<JS function text>` to initialize form field.
+
+Function accept no arguments and expect to return object with type equivalent to defined in `type`. Function have following TS declaration:
+```ts
+function<TFieldType>(): TFieldType;
+```
+
+>[!warning]:
+>
+> `f:<JS function text>` use JavaScript `eval()` call to translate text into executable. Use it carefully!
+
+If not specified, default value will be used.
+
+
+### Input type fields
+
+Following field types are supported:
+
+- `text`
+- `textArea`
+- `number`
+- `date`
+- `time`
+- `dateTime`
+
+#### `text` and `textArea`
+
+Simple single line text input field.
+
+If [`init` function](#init-function) is not set, than empty string used as default value;
+
+If [`get` function](#get-function) is not set, latest user input will be returned.
+
+For this type of field user can specifu `placeholder` inside `form` field of [`form-items`](#form-items) item.
+
+In model passed as argument to [`get` function](#get-function) field type would be `string`.
+
+
+`textArea` is same to `text` but provides multiline.
+
+#### `number`
+
+Generates field for numeric input.
+
+If [`init` function](#init-function) is not set, than `0` used as default value;
+
+If [`get` function](#get-function) is not set, latest user input will be returned.
+
+In model passed as argument to [`get` function](#get-function) field type would be `number`.
+
+#### `date`, `time` and `dateTime`
+
+Generates widget for user input of **date**, **time** or **date & time**.
+
+If [`init` function](#init-function) is not set, current date & time will be used as initial value.
+
+If [`get` function](#get-function) is not set, latest user input will be returned and formatted to string using [moment.js](https://momentjs.com/). Based on the type different formatting will be used (see [moment.js|Format](https://momentjs.com/docs/#/displaying/format/))
+
+- `date` - `L` format will be used;
+- `time` - `LTS` format will be used;
+- `dateTime` - will format time based on system locale.
+
+[moment.js](https://momentjs.com/) can be used inside [`get`](#get-function) or [`init`](#init-function) functions to manipulte date and time values.
+
+This type extends `t:` definition of [`get`](#get-function). Instead of mustache template [moment.js|Format](https://momentjs.com/docs/#/displaying/format/) string can be specified, i.e. `t:t:YYYY-MM-DDTHH:mm:ss`.
+
+In model passed as argument to [`get` function](#get-function) field type would be `Date`.
