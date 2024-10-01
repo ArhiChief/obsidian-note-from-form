@@ -84,7 +84,7 @@ export class DateTimeFormItem extends FormItemBase<Date> {
         }
     }
 
-    private static assertType (type: TemplateFormItemType) {
+    private static assertType (type: TemplateFormItemType): void {
         switch (type) {
             case TemplateFormItemType.Date:
             case TemplateFormItemType.Time:

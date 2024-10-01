@@ -5,6 +5,8 @@ import { TextFormItem } from "./textFormItem";
 import { DateTimeFormItem } from "./dateTimeFormItem";
 import { NumberFormItem } from "./numberFormItem";
 import { nameof } from "src/helpers";
+import { CheckBoxFormItem } from "./checkBoxFormItem";
+import { DropDownFormItem } from "./dropDownFormItem";
 
 
 export class FormItemsManager {
@@ -29,6 +31,12 @@ export class FormItemsManager {
                     break;
                 case TemplateFormItemType.Number:
                     result.push(new NumberFormItem(formItemSrc));
+                    break;
+                case TemplateFormItemType.CheckBox:
+                    result.push(new CheckBoxFormItem(formItemSrc));
+                    break;
+                case TemplateFormItemType.DropDown:
+                    result.push(new DropDownFormItem(formItemSrc));
                     break;
                 default:
                     throw new Error(`Not supported type: ${formItemSrc.type}`);

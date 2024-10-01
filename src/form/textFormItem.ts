@@ -61,7 +61,7 @@ export class TextFormItem extends FormItemBase<string> {
         }
     }
 
-    private static assertType (type: TemplateFormItemType) {
+    private static assertType (type: TemplateFormItemType): void {
         switch (type) {
             case TemplateFormItemType.Text:
             case TemplateFormItemType.TextArea:

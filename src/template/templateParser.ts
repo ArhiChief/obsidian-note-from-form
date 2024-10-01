@@ -255,6 +255,8 @@ export class TemplateParser {
                 case TemplateFormItemType.Time:
                 case TemplateFormItemType.DateTime:
                 case TemplateFormItemType.Number:
+                case TemplateFormItemType.CheckBox:
+                case TemplateFormItemType.DropDown:
                     return true;
                 default:
                     return false;
