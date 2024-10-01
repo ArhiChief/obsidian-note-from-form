@@ -1,7 +1,6 @@
 import { GetFunctionType, InitFunctionType, TemplateFormItem, TemplateFormItemType, TemplateFunction } from "src/template/template";
 import { FormItemBase } from "./formItemBase";
 import { SettingExtended } from "src/ui/settingExtensions";
-import { renderMustacheTemplate } from "src/helpers";
 
 
 export class NumberFormItem extends FormItemBase<number> {
@@ -13,7 +12,7 @@ export class NumberFormItem extends FormItemBase<number> {
 
         const initValue = NumberFormItem.getInitValue(src.init);
 
-        super(src.id, src.type, initValue, src.form);
+        super(src.id, src.type, initValue, src.get, src.form);
 
         this._getSrc = src.get;
     }
@@ -28,22 +27,8 @@ export class NumberFormItem extends FormItemBase<number> {
             );
     }
 
-    protected getImpl(view: Record<string, any>): string {
-        if (!this._getSrc) {
-            return this.value.toString();
-        }
-
-        const { type, text } = this._getSrc;
-        switch (type) {
-            case GetFunctionType.Template:
-                return renderMustacheTemplate(text, view);
-            case GetFunctionType.Function:
-                return NumberFormItem.executeGetFunction(text, view);
-            case GetFunctionType.Value:
-                return text;
-            default:
-                throw 1;
-        }
+    protected getFunctionDefault(): string {
+        return this.value.toString();
     }
 
     private static getInitValue(src?: TemplateFunction<InitFunctionType>): number {
@@ -58,13 +43,13 @@ export class NumberFormItem extends FormItemBase<number> {
             case InitFunctionType.Function:
                 return NumberFormItem.executeInitFunction(text);
             default:
-                throw 1;
+                throw new Error(`Unsupported type: ${type}`);
         }
     }
 
     private static assertType(type: TemplateFormItemType) {
         if (type !== TemplateFormItemType.Number) {
-            throw 1;
+            throw new Error(`Unsupported type: ${type}`);
         }
     }
 }

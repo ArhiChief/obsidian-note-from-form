@@ -1,35 +1,27 @@
-import { FormDisplay, GetFunctionType, TemplateFormItemType, TemplateFunction} from "src/template/template";
+import { FormDisplay, GetFunctionType, Template, TemplateFormItemType, TemplateFunction} from "src/template/template";
 import { FormItemBase } from "./formItemBase";
-import { normalizePath, Setting } from "obsidian";
-import { renderMustacheTemplate } from "src/helpers";
+import { normalizePath } from "obsidian";
+import { SettingExtended } from "src/ui/settingExtensions";
+import { nameof } from "src/helpers";
 
 
 abstract class FileInfoFormItem extends FormItemBase<string> {
 
-    private readonly _getSrc?: TemplateFunction<GetFunctionType>;
-
     protected constructor (id: string, title: string, src?: TemplateFunction<GetFunctionType>) {
 
-        let formDisplay: FormDisplay | undefined;
-        let initValue: string;
+        let formDisplay: FormDisplay | undefined = undefined;
+        
+        const initValue: string = "";
         
         if (!src) {
-            initValue = "";
-            formDisplay = {
-                description: "",
-                title: title,
-                placeholder: "",
-            };
-        } else {
-            initValue = "";
+            formDisplay = { title: title };
         }
 
-        super(id, TemplateFormItemType.Text, initValue, formDisplay);
-        this._getSrc = src;
+        super(id, TemplateFormItemType.Text, initValue, src, formDisplay);
     }
     
     protected assignToFormImpl(contentEl: HTMLElement): void {
-        new Setting(contentEl)
+        new SettingExtended(contentEl)
             .setName(this._title)
             .setDesc(this._description)
             .addText(text => text
@@ -39,39 +31,24 @@ abstract class FileInfoFormItem extends FormItemBase<string> {
             );
     }
 
-    protected getImpl(view: Record<string, any>): string {
-        if (!this._getSrc) {
-            return normalizePath(this.value);
-        }
-
-        const {type, text } = this._getSrc;
-        let result: string;
-        switch(type) {
-            case GetFunctionType.Template:
-                result = renderMustacheTemplate(text, view);
-                break;
-            case GetFunctionType.Function:
-                result = FileInfoFormItem.executeGetFunction(text, view);
-                break;
-            case GetFunctionType.Value:
-                result = text;
-                break;
-            default: 
-                throw 1;
-        }
-
+    get(view: Record<string, any>): string {
+        const result = super.get(view);
         return normalizePath(result);
+    }
+
+    protected getFunctionDefault(): string {
+        return this.value;
     }
 }
 
 export class FileNameFormItem extends FileInfoFormItem {
     constructor (src?: TemplateFunction<GetFunctionType>){
-        super("fileName", "File Name", src);
+        super(nameof<Template>("fileName"), "File Name", src);
     }
 }
 
 export class FileLocationFormItem extends FileInfoFormItem {
     constructor (src?: TemplateFunction<GetFunctionType>) {
-        super("fileLocation", "File Name", src);
+        super(nameof<Template>("fileLocation"), "File Location", src);
     }
 }
