@@ -1,7 +1,8 @@
-import { Notice, TAbstractFile, TFile, TFolder, type Vault } from "obsidian";
+import { App, Notice, TAbstractFile, TFile, TFolder, type Vault } from "obsidian";
 import { NoteFromFormPluginSettings } from "src/pluginSettings";
-import { FormDisplay, GetFunctionType, InitFunctionType, Template, TemplateFormItem, TemplateFunction, TemplateInput } from "./template";
+import { FormDisplay, GetFunctionType, InitFunctionType, Template, TemplateFormItem, TemplateFormItemType, TemplateFunction, TemplateInput, TemplateInputFormItem } from "./template";
 import { base64Encode, nameof } from "src/helpers";
+import { showMessageBox } from "src/ui/messageBox";
 
 
 const TEMPLATE_PROPS_EXTRACTOR_REGEX = new RegExp("---(.*?)---(.*)$", "ms");
@@ -9,11 +10,13 @@ const TEMPLATE_FUNC_EXTRACTOR_REGEX = new RegExp("(.):(.+)$");
 
 export class TemplateParser {
 
-    private _vault: Vault;
-    private _settings: NoteFromFormPluginSettings
+    private readonly _app: App;
+    private readonly _vault: Vault;
+    private readonly  _settings: NoteFromFormPluginSettings
 
-    constructor(vault: Vault, settings: NoteFromFormPluginSettings) {
-        this._vault = vault;
+    constructor(app: App, settings: NoteFromFormPluginSettings) {
+        this._app = app;
+        this._vault = app.vault;
         this._settings = settings;
     }
 
@@ -22,7 +25,7 @@ export class TemplateParser {
         const folder = this._vault.getFolderByPath(this._settings.templatesFolderLocation);
 
         if (!folder) {
-            new Notice(`Folder '${this._settings.templatesFolderLocation}' doesn't exist!`, 0);
+            showMessageBox(this._app, "Error", `Directory "${this._settings.templatesFolderLocation}" was not found in Vault.`);
             return null;
         }
 
@@ -75,13 +78,14 @@ export class TemplateParser {
                     return this.createTemplate(file.basename, body, newProps, formTemplate, templateNamePrefix);
                 }
 
-            } catch (error) {
-                console.error("Couldn't parse template frontmatter: ", props)
-                console.error("Error: ", error)
+            } catch (e) {
+                const error = <Error>e;
+                showMessageBox(this._app, "Error", `Failed to parse template '${file.path}'. ${error.message}`);
+                return null;
             }
         }
 
-        console.debug("No properties were found in ", file.path);
+        showMessageBox(this._app, "Error", `File "${file.path}" doens't have frontmatter properties.`)
 
         return null;
     }
@@ -95,7 +99,12 @@ export class TemplateParser {
             body,
         ]).join("");
 
-        const formTemplate = <TemplateInput>JSON.parse(formTemplateText);
+        let formTemplate: TemplateInput
+        try {
+            formTemplate = <TemplateInput>JSON.parse(formTemplateText);
+        } catch(error) {
+            throw new Error(`${error}`);
+        }
 
         templateNamePrefix ??= "";
 
@@ -111,26 +120,29 @@ export class TemplateParser {
     }
 
     private getFileName(data: TemplateInput): TemplateFunction<GetFunctionType> | undefined {
-        return this.getTemplateGetFunction(data, nameof<TemplateInput>("file-name"));
+        const path =  nameof<TemplateInput>("file-name");
+        return this.getTemplateGetFunction(data, path, path);
     }
 
     private getOutputDir(data: TemplateInput) : TemplateFunction<GetFunctionType> {
-        const result = this.getTemplateGetFunction(data, nameof<TemplateInput>("file-location"));
+        const path = nameof<TemplateInput>("file-location");
+        const result = this.getTemplateGetFunction(data, path, path);
         return result 
             ? result
             : {
-                type: GetFunctionType.Template,
+                type: GetFunctionType.Value,
                 text: this._settings.outputDir,
             };
     }
 
-    private getTemplateGetFunction(data: any, prop: string) :  TemplateFunction<GetFunctionType> | undefined {
+    private getTemplateGetFunction(data: any, prop: string, path: string): TemplateFunction<GetFunctionType> | undefined {
         if (data[prop]) {
             
             const val:string = data[prop];
 
             const match = val.match(TEMPLATE_FUNC_EXTRACTOR_REGEX);
             if (match && match.length == 3) {
+                TemplateParser.assertGetFunction(path, match[1]);
                 return {
                     type: <GetFunctionType>match[1],
                     text: match[2],
@@ -141,13 +153,14 @@ export class TemplateParser {
         return undefined;
     }
 
-    private getTemplateInitFunction(data: any, prop: string) :  TemplateFunction<InitFunctionType> | undefined {
+    private getTemplateInitFunction(data: any, prop: string, path: string): TemplateFunction<InitFunctionType> | undefined {
         if (data[prop]) {
             
             const val:string = data[prop];
 
             const match = val.match(TEMPLATE_FUNC_EXTRACTOR_REGEX);
             if (match && match.length == 3) {
+                TemplateParser.assertInitFunction(path, match[1]);
                 return {
                     type: <InitFunctionType>match[1],
                     text: match[2],
@@ -160,19 +173,19 @@ export class TemplateParser {
 
     private getFormItems(data: TemplateInput): TemplateFormItem[] {
         if (!data["form-items"]) {
-            throw 1;
+            throw new Error(`'${nameof<TemplateInput>("form-items")}' are missing`);
         }
 
         const formItems: TemplateFormItem[] = [];
 
         for (let i = 0; i < data["form-items"].length; i++) {
-            const item = data["form-items"][i];
+            const item: TemplateInputFormItem = data["form-items"][i];
 
             let formItem: TemplateFormItem = {
-                id: item.id,
-                type: item.type,
-                get: this.getTemplateGetFunction(item, nameof<TemplateFormItem>("get")),
-                init: this.getTemplateInitFunction(item, nameof<TemplateFormItem>("init")),
+                id: TemplateParser.assertFormItemId(i, item.id),
+                type: <TemplateFormItemType>TemplateParser.assertFormItemType(i, item.type),
+                get: this.getTemplateGetFunction(item, nameof<TemplateFormItem>("get"), `${nameof<TemplateInput>("form-items")}[${i}].${nameof<TemplateFormItem>("get")}`),
+                init: this.getTemplateInitFunction(item, nameof<TemplateFormItem>("init"), `${nameof<TemplateInput>("form-items")}[${i}].${nameof<TemplateFormItem>("init")}`),
                 form: this.getForm(item),
             };
 
@@ -194,4 +207,69 @@ export class TemplateParser {
 
         return undefined;
     }
+
+    private static assertInitFunction(path: string, val?: string): string {
+        const predicate: (val?: string) => boolean  = v => {
+            if (!v || v.length === 0) return false;
+            switch(v) {
+                case InitFunctionType.Function:
+                case InitFunctionType.Value:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        return this.assert(predicate, `Failed to parse '${path}: unsupported ${val}:`, val);
+    }
+
+    private static assertGetFunction(path: string, val?: string): string {
+        const predicate: (val?: string) => boolean  = v => {
+            if (!v || v.length === 0) return false;
+            switch(v) {
+                case GetFunctionType.Function:
+                case GetFunctionType.Template:
+                case GetFunctionType.Value:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        return this.assert(predicate, `Failed to parse '${path}: unsupported ${val}:`, val);
+    }
+
+    private static assertFormItemId(index: number, val?: string): string {
+        const predicate: (val?: string) => boolean  = v => !(!v || v.length === 0);
+
+        return this.assert(predicate, `Failed to parse 'form-items' element ${index}: 'id' is missing, null, or empty`, val);
+    }
+
+    private static assertFormItemType(index: number, val?: string) {
+        const predicate: (val?: string) => boolean  = v => {
+            if (!v || v.length === 0) return false;    
+            switch (v) {
+                case TemplateFormItemType.Text:
+                case TemplateFormItemType.TextArea:
+                case TemplateFormItemType.Date:
+                case TemplateFormItemType.Time:
+                case TemplateFormItemType.DateTime:
+                case TemplateFormItemType.Number:
+                    return true;
+                default:
+                    return false;
+            }
+        };
+
+        return this.assert(predicate, `Failed to parse 'form-items' element ${index}: '${val}' is not supported item type`, val);
+    }
+
+    private static assert<TField>(predicate: (val?: TField) => boolean, message: string, field?: TField): TField {
+        if (!predicate(field)) {
+            throw new Error(message);
+        }
+
+        return <TField>field;
+    }
+
 }

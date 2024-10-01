@@ -7,6 +7,7 @@ import { InputFormModal } from './ui/inputFormModal';
 import { FormItem } from './form/formItemBase';
 import { FormItemsManager } from './form/formItemsManager';
 import { base64Decode, renderMustacheTemplate } from './helpers';
+import { showMessageBox } from './ui/messageBox';
 
 
 export default class NoteFromFormPlugin extends Plugin {
@@ -37,7 +38,7 @@ export default class NoteFromFormPlugin extends Plugin {
     }
     
     async reindexTemplates(): Promise<void> {
-        const parser = new TemplateParser(this.app.vault, this.settings);
+        const parser = new TemplateParser(this.app, this.settings);
         const result = await parser.parse();
 
         if (result) {
@@ -67,23 +68,40 @@ export default class NoteFromFormPlugin extends Plugin {
 
     private async useTemplate(template: Template): Promise<void> {
 
-        const items: FormItem[] = FormItemsManager.getFormItems(template);
-        new InputFormModal(this.app, template.name, items, async ()=> await this.createNewNote(template.text, items)).open();
-    }
-
-    private async createNewNote(noteTemplateText: string, src: FormItem[]): Promise<void> {
-        const view = FormItemsManager.getViewModel(src);
-        
-        noteTemplateText = base64Decode(noteTemplateText);
-        const noteText = renderMustacheTemplate(noteTemplateText, view);
-
-        const vault = this.app.vault;
-        if (!vault.getFolderByPath(normalizePath(view.fileLocation))) {
-            await vault.createFolder(normalizePath(view.fileLocation));
+        let items: FormItem[]
+        try {
+            items = FormItemsManager.getFormItems(template);
+        } catch(error) {
+            showMessageBox(this.app, "Error", `Failed to create input form for '${template.name}' template: ${error}`);
+            return;
         }
 
-        const path = normalizePath(`${view.fileLocation}/${view.fileName}.md`);
+        new InputFormModal(this.app, template.name, items, async () => await this.createNewNote(template, items)).open();
+    }
 
-        await vault.create(path, noteText);
+    private async createNewNote(template: Template, src: FormItem[]): Promise<void> {
+        
+        let view: Record<string, string>;
+        try {
+            view = FormItemsManager.getViewModel(src);
+        }catch(error) {
+            showMessageBox(this.app, "Error", `Failed to process input form for '${template.name}' template: ${error}`);
+            return;
+        }
+        
+        try {
+            const templateText = base64Decode(template.text);
+            const noteText = renderMustacheTemplate(templateText, view);
+
+            const vault = this.app.vault;
+            if (!vault.getFolderByPath(normalizePath(view.fileLocation))) {
+                await vault.createFolder(normalizePath(view.fileLocation));
+            }
+
+            const path = normalizePath(`${view.fileLocation}/${view.fileName}.md`);
+            await vault.create(path, noteText);
+        } catch(error) {
+            showMessageBox(this.app, "Error", `Failed to create new note: ${error}`);
+        }
     }
 }

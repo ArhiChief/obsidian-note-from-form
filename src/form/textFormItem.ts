@@ -1,22 +1,18 @@
-import { GetFunctionType, InitFunctionType, TemplateFormItem, TemplateFormItemType, TemplateFunction } from "src/template/template";
+import { InitFunctionType, TemplateFormItem, TemplateFormItemType, TemplateFunction } from "src/template/template";
 import { TextAreaComponent, TextComponent } from "obsidian";
 import { SettingExtended } from "src/ui/settingExtensions";
 import { FormItemBase } from "./formItemBase";
-import { renderMustacheTemplate } from "src/helpers";
 
 
 export class TextFormItem extends FormItemBase<string> {
     
-    private readonly _getSrc?: TemplateFunction<GetFunctionType>;
-    
     constructor (src: TemplateFormItem) {
+
         TextFormItem.assertType(src.type);
 
         const initValue =  TextFormItem.getInitValue(src.init);
 
-        super(src.id, src.type, initValue, src.form);
-
-        this._getSrc = src.get;
+        super(src.id, src.type, initValue, src.get, src.form);
     }
 
     protected assignToFormImpl(contentEl: HTMLElement): void {
@@ -32,7 +28,7 @@ export class TextFormItem extends FormItemBase<string> {
                 setting.addTextArea(this.configureComponent());
                 break;
             default:
-                throw 1;
+                throw new Error(`Unsupported type: ${this.type}`);
         }
     }
 
@@ -44,22 +40,8 @@ export class TextFormItem extends FormItemBase<string> {
             .onChange(newVal => this.value = newVal);
     }
 
-    protected getImpl(view: Record<string, any>): string {
-        if (!this._getSrc) {
-            return this.value;
-        }
-
-        const { type, text } = this._getSrc;
-        switch(type) {
-            case GetFunctionType.Template:
-                return renderMustacheTemplate(text, view);
-            case GetFunctionType.Function:
-                return TextFormItem.executeGetFunction(text, view);
-            case GetFunctionType.Value:
-                    return text;
-            default: 
-                throw 1;
-        }
+    protected getFunctionDefault(): string {
+        return this.value;
     }
 
     private static getInitValue(src?: TemplateFunction<InitFunctionType>): string {
@@ -85,7 +67,7 @@ export class TextFormItem extends FormItemBase<string> {
             case TemplateFormItemType.TextArea:
                 return;
             default:
-                throw 1;
+                throw new Error(`Unsupported type: ${type}`);
         }
     }
 }
