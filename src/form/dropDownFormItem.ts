@@ -16,17 +16,16 @@ interface InitResult {
     selected: string;
 }
 
-abstract class DropDownFormItemBase extends FormItemBase<DropDownItem[]> {
+export class DropDownFormItem extends FormItemBase<DropDownItem[]> {
     
-    private readonly _multi: boolean;
     private readonly _opts: Record<string, string>;
     private readonly _selected: string;
 
-    constructor(src: TemplateFormItem, multi: boolean) {
+    constructor(src: TemplateFormItem) {
         
-        DropDownFormItemBase.assertType(src.type);
+        DropDownFormItem.assertType(src.type);
 
-        const {opts, selected} = DropDownFormItemBase.initSource(src.id, src.init);
+        const {opts, selected} = DropDownFormItem.initSource(src.id, src.init);
         const initValue: DropDownItem[] = [{
             k: selected,
             v: opts[selected],
@@ -36,8 +35,6 @@ abstract class DropDownFormItemBase extends FormItemBase<DropDownItem[]> {
         
         this._opts = opts;
         this._selected = selected;
-
-        this._multi = multi;
     }
 
     protected assignToFormImpl(contentEl: HTMLElement): void {
@@ -96,18 +93,8 @@ abstract class DropDownFormItemBase extends FormItemBase<DropDownItem[]> {
     }
 
     private static assertType (type: TemplateFormItemType): void {
-        switch (type) {
-            case TemplateFormItemType.DropDown:
-            case TemplateFormItemType.DropDownMulti:
-                return;
-            default:
-                throw new Error(`Unsupported type: ${type}`);
+        if (type !== TemplateFormItemType.DropDown) {
+            throw new Error(`Unsupported type: ${type}`);
         }
-    }
-}
-
-export class DropDownFormItem extends DropDownFormItemBase {
-    constructor(src: TemplateFormItem) {
-        super(src, false);
     }
 }
