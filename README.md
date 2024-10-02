@@ -193,6 +193,8 @@ Following field types are supported:
 - `date`
 - `time`
 - `dateTime`
+- `checkbox`
+- `dropdown`
 
 #### `text` and `textArea`
 
@@ -236,3 +238,45 @@ If [`get` function](#get-function) is not set, latest user input will be returne
 This type extends `t:` definition of [`get`](#get-function). Instead of mustache template [moment.js|Format](https://momentjs.com/docs/#/displaying/format/) string can be specified, i.e. `t:t:YYYY-MM-DDTHH:mm:ss`.
 
 In model passed as argument to [`get` function](#get-function) field type would be `Date`.
+
+#### `checkbox`
+
+Generate widget with switcher to select betwean `true` and `false`;
+
+If [`init` function](#init-function) is not set, `false` will be used as initial value.
+
+If [`get` function](#get-function) is not set, latest user input will be returned.
+
+In model passed as argument to [`get` function](#get-function) field type would be `boolean`.
+
+#### `dropdown`
+
+Generates widget with options where one may be selected.
+
+Form item definition may look like this:
+
+```json
+{
+	"id": "dropdown",
+	"type": "dropdown",
+	"init": "v:[{\"k\":\"a\",\"v\":\"My A\"},{\"k\":\"b\",\"v\":\"My B\"},{\"k\":\"c\",\"s\":true,\"v\":\"My C\"}]",
+	"form": {
+		"title": "DropDown",
+		"description": "My DropDown"
+	}
+}
+```
+
+[`init` function](#init-function) must be set for this this type. As value it expects array of objects. Object should be following:
+
+```ts
+{
+	"k": "key", 
+	"v": "value",
+	"s": true // optional
+}
+```
+
+If [`get` function](#get-function) is not set, latest `v` of selected object will be returned. 
+
+In model passed as argument to [`get` function](#get-function) field type would be array of 1 element with object that have `k` and `v` fields.

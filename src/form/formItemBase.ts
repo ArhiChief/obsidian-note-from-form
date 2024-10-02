@@ -61,7 +61,7 @@ export abstract class FormItemBase<TValue> implements FormItem {
                 case GetFunctionType.Template:
                     return this.getFunctionTemplate(text, view);
                 case GetFunctionType.Value:
-                    return this.getFunctionFunction(text, view);
+                    return this.getFunctionValue(text, view);
                 default:
                     passException = true;
                     throw new Error(`Unsupported 'get' function for '${this.id}' form item: ${type}:${text}`);

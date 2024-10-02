@@ -31,6 +31,8 @@ export enum TemplateFormItemType {
     Time = 'time',
     DateTime = 'dateTime',
     Number = 'number',
+    CheckBox = 'checkbox',
+    DropDown = 'dropdown',
 }
 
 export interface TemplateFunction<TFunctionType> {
