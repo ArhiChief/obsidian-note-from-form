@@ -75,7 +75,7 @@ export class TemplateParser {
                     const formTemplate = matches[1];
                     const newProps = props.replace(formTemplateRegex, "")
 
-                    return this.createTemplate(file.basename, body, newProps, formTemplate, templateNamePrefix);
+                    return this.createTemplate(file, body, newProps, formTemplate, templateNamePrefix);
                 }
 
             } catch (e) {
@@ -90,7 +90,7 @@ export class TemplateParser {
         return null;
     }
 
-    private createTemplate(name: string, body: string, props: string, formTemplateText: string, templateNamePrefix?: string): Template {
+    private createTemplate(file: TFile, body: string, props: string, formTemplateText: string, templateNamePrefix?: string): Template {
         
         const templateText:string = (<string[]>[
             "---",
@@ -109,7 +109,8 @@ export class TemplateParser {
         templateNamePrefix ??= "";
 
         const result: Template = {
-            name: `${templateNamePrefix}${name}`,
+            name: `${templateNamePrefix}${file.basename}`,
+            path: file.path,
             text: base64Encode(templateText),
             fileLocation: this.getOutputDir(formTemplate),
             fileName: this.getFileName(formTemplate),
