@@ -1,5 +1,6 @@
 export interface Template {
     name: string;
+    path: string;
     
     // content of template that can be pasted into output. Encoded as base64 to avoid problem of storing inside JSON
     text: string;
