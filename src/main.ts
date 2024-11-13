@@ -54,7 +54,7 @@ export default class NoteFromFormPlugin extends Plugin {
             if (result.length > 0) {
                 this._templates = {};
                 result.forEach(template => this._templates[template.path] = template);
-                new Notice('Templates index rebuild succeeded');
+                new Notice('Templates index build succeeded');
             }
             
             this.updateCommands();
@@ -67,7 +67,7 @@ export default class NoteFromFormPlugin extends Plugin {
 
         this.addCommand({
             id: 'rerebuild-template-index',
-            name: 'Re-Build Template Index',
+            name: 'Build template index',
             callback: async () => await this.reindexTemplates(),
         });
 
@@ -129,7 +129,7 @@ export default class NoteFromFormPlugin extends Plugin {
                     const template = this._templates[file.path];
                     menu
                         .addItem(menuItem => menuItem
-                            .setTitle("Note From Form: Use Template")
+                            .setTitle("Note From Form: Use template")
                             .setIcon("file-input")
                             .onClick(() => this.useTemplate(template))
                         ).addSeparator();
