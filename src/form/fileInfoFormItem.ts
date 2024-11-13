@@ -43,12 +43,12 @@ abstract class FileInfoFormItem extends FormItemBase<string> {
 
 export class FileNameFormItem extends FileInfoFormItem {
     constructor (src?: TemplateFunction<GetFunctionType>){
-        super(nameof<Template>("fileName"), "File Name", src);
+        super(nameof<Template>("fileName"), "File name", src);
     }
 }
 
 export class FileLocationFormItem extends FileInfoFormItem {
     constructor (src?: TemplateFunction<GetFunctionType>) {
-        super(nameof<Template>("fileLocation"), "File Location", src);
+        super(nameof<Template>("fileLocation"), "File location", src);
     }
 }

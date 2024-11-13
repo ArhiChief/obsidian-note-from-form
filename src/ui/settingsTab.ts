@@ -18,7 +18,7 @@ export class NoteFromFormSettingTab extends PluginSettingTab {
         containerEl.empty();
 
         new SettingExtended(containerEl)
-            .setName('Template Folder Location')
+            .setName('Template folder location')
             .setDesc('Files in this folder will be available as templates')
             .addText(text => text
                 .setPlaceholder('Example: folder 1/folder 2')
@@ -30,7 +30,7 @@ export class NoteFromFormSettingTab extends PluginSettingTab {
             );
 
         new SettingExtended(containerEl)
-            .setName('Template Property Name')
+            .setName('Template property name')
             .setDesc('Set property used to define form')
             .addText(text => text
                 .setPlaceholder(`Example: ${TEMPLATE_PROPERTY_NAME}`)
@@ -42,7 +42,7 @@ export class NoteFromFormSettingTab extends PluginSettingTab {
             );
 
         new SettingExtended(containerEl)
-            .setName('Default Output Folder')
+            .setName('Default output folder')
             .addText(text => text
                 .setValue(this.plugin.settings.outputDir)
                 .onChange(async value => {
@@ -52,8 +52,8 @@ export class NoteFromFormSettingTab extends PluginSettingTab {
             );
 
         new SettingExtended(containerEl)
-            .setName('Re-build Template Index')
-            .setDesc('Run re-build of template index from templates specified in "Template Folder Location" setting')
+            .setName('Build template index')
+            .setDesc('Build of template index from templates specified in "Template folder location" setting')
             .addButton(button => button
                 .setButtonText('Re-build')
                 .onClick(async (_) => await this.plugin.reindexTemplates())

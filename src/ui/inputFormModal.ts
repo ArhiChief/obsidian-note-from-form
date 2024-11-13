@@ -20,7 +20,7 @@ export class InputFormModal extends Modal {
     onOpen(): void {
         const { contentEl } = this;
 
-        contentEl.createEl("h1", { text: `New Note: ${this._title}` });
+        contentEl.createEl("h1", { text: `New note: ${this._title}` });
 
         for (let i = 0; i < this._items.length; i++) {
             const item: FormItem = this._items[i];
