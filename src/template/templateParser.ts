@@ -1,6 +1,6 @@
-import { App, Notice, TAbstractFile, TFile, TFolder, type Vault } from "obsidian";
+import { App, TAbstractFile, TFile, TFolder, type Vault } from "obsidian";
 import { NoteFromFormPluginSettings } from "src/pluginSettings";
-import { FormDisplay, GetFunctionType, InitFunctionType, Template, TemplateFormItem, TemplateFormItemType, TemplateFunction, TemplateInput, TemplateInputFormItem } from "./template";
+import { FormDisplay, GetFunctionType, InitFunctionType, Template, TemplateFormItem, TemplateFormItemType, TemplateFunction, TemplateInput, TemplateInputFormItem, ValidateFunctionType } from "./template";
 import { base64Encode, nameof } from "src/helpers";
 import { showMessageBox } from "src/ui/messageBox";
 
@@ -147,7 +147,7 @@ export class TemplateParser {
                 return {
                     type: <GetFunctionType>match[1],
                     text: match[2],
-                }
+                };
             }
         }
 
@@ -165,7 +165,24 @@ export class TemplateParser {
                 return {
                     type: <InitFunctionType>match[1],
                     text: match[2],
-                }
+                };
+            }
+        }
+
+        return undefined;
+    }
+
+    private getTemplateValidateFunction(data: any, prop: string, path:string): TemplateFunction<ValidateFunctionType> | undefined {
+        if (data[prop]) {
+            const val:string = data[prop];
+            
+            const match = val.match(TEMPLATE_FUNC_EXTRACTOR_REGEX);
+            if (match && match.length == 3) {
+                TemplateParser.assertValidateFunction(path, match[1]);
+                return {
+                    type: <ValidateFunctionType>match[1],
+                    text: match[2],
+                };
             }
         }
 
@@ -187,7 +204,7 @@ export class TemplateParser {
                 type: <TemplateFormItemType>TemplateParser.assertFormItemType(i, item.type),
                 get: this.getTemplateGetFunction(item, nameof<TemplateFormItem>("get"), `${nameof<TemplateInput>("form-items")}[${i}].${nameof<TemplateFormItem>("get")}`),
                 init: this.getTemplateInitFunction(item, nameof<TemplateFormItem>("init"), `${nameof<TemplateInput>("form-items")}[${i}].${nameof<TemplateFormItem>("init")}`),
-                form: this.getForm(item),
+                form: this.getForm(item, i),
             };
 
             formItems.push(formItem);
@@ -196,13 +213,14 @@ export class TemplateParser {
         return formItems;
     }
 
-    private getForm(data: any): FormDisplay | undefined {
+    private getForm(data: any, i: number): FormDisplay | undefined {
         if (data[nameof<TemplateFormItem>("form")]) {
             data = data[nameof<TemplateFormItem>("form")];
             return {
                 title: data[nameof<FormDisplay>("title")],
                 description: data[nameof<FormDisplay>("description")],
-                placeholder: data[nameof<FormDisplay>("placeholder")]
+                placeholder: data[nameof<FormDisplay>("placeholder")],
+                validate: this.getTemplateValidateFunction(data, nameof<FormDisplay>("validate"), `${nameof<TemplateInput>("form-items")}[${i}].${nameof<FormDisplay>("validate")}`),
             };
         }
 
@@ -231,6 +249,20 @@ export class TemplateParser {
                 case GetFunctionType.Function:
                 case GetFunctionType.Template:
                 case GetFunctionType.Value:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        return this.assert(predicate, `Failed to parse '${path}: unsupported ${val}:`, val);
+    }
+
+    private static assertValidateFunction(path: string, val?: string): string {
+        const predicate: (val?:string) => boolean = v => {
+            if (!v || v.length === 0) return false;
+            switch(v) {
+                case ValidateFunctionType.Function:
                     return true;
                 default:
                     return false;
@@ -274,5 +306,4 @@ export class TemplateParser {
 
         return <TField>field;
     }
-
 }

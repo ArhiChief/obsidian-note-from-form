@@ -23,6 +23,7 @@ export interface FormDisplay {
     title: string;
     description?: string;
     placeholder?: string;
+    validate?: TemplateFunction<ValidateFunctionType>;
 }
 
 export enum TemplateFormItemType {
@@ -41,15 +42,19 @@ export interface TemplateFunction<TFunctionType> {
     text: string,
 }
 
+export enum ValidateFunctionType {
+    Function = 'f',
+}
+
 export enum InitFunctionType {
     Value = 'v',
     Function = 'f',
 }
 
 export enum GetFunctionType {
+    Value = 'v',
     Function = 'f',
     Template = 't',
-    Value = 'v',
 }
 
 export interface TemplateInput {
@@ -70,4 +75,5 @@ export interface TemplateInputForm {
     title: string;
     description?: string;
     placeholder?: string;
+    validate?: string;
 }

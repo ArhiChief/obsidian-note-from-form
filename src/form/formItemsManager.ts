@@ -47,18 +47,11 @@ export class FormItemsManager {
     }
 
     static getViewModel(src: FormItem[]): Record<string, string> {
-        const view: Record<string, any> = {};
+        
         const result: Record<string, string> = {};
 
         // get model needed as source for `get` functions of src
-        for(let i = 0; i < src.length; i++) {
-            const item = src[i];
-            if (item.id === nameof<Template>("fileName") || item.id === nameof<Template>("fileLocation")) {
-                continue;
-            }
-
-            view[item.id] = item.value;
-        }
+        const view: Record<string, any> = this.getRawViewModel(src);
 
         for(let i = 0; i < src.length; i++) {
             const item = src[i];
@@ -78,5 +71,36 @@ export class FormItemsManager {
         }
 
         return result;
+    }
+
+    static validate(src: FormItem[]): boolean {
+        const view: Record<string, any> = this.getRawViewModel(src);
+        let isValid: boolean = true;
+
+        for(let i = 0; i < src.length; i++) {
+            const item = src[i];
+            if (item.id === nameof<Template>("fileName") || item.id === nameof<Template>("fileLocation")) {
+                continue;
+            }
+
+            isValid &&= item.validate(view);
+        }
+
+        return isValid;
+    }
+
+    private static getRawViewModel(src: FormItem[]): Record<string, any> {
+        const view: Record<string, any> = {};
+
+        for(let i = 0; i < src.length; i++) {
+            const item = src[i];
+            if (item.id === nameof<Template>("fileName") || item.id === nameof<Template>("fileLocation")) {
+                continue;
+            }
+
+            view[item.id] = item.value;
+        }
+
+        return view;
     }
 }

@@ -1,6 +1,7 @@
 import { evaluateTextFunction } from "src/helpers";
-import { FormDisplay, GetFunctionType, TemplateFormItemType, TemplateFunction } from "src/template/template";
+import { FormDisplay, GetFunctionType, TemplateFormItemType, TemplateFunction, ValidateFunctionType } from "src/template/template";
 import { renderMustacheTemplate } from "src/helpers"
+import { SettingExtended } from "src/ui/settingExtensions";
 
 export interface FormItem {
     value: any;
@@ -10,6 +11,7 @@ export interface FormItem {
 
     assignToForm(contentEl: HTMLElement): void;
     get(view: Record<string, any>): string;
+    validate(view: Record<string, any>): boolean;
 }
 
 export abstract class FormItemBase<TValue> implements FormItem {
@@ -23,26 +25,35 @@ export abstract class FormItemBase<TValue> implements FormItem {
     protected readonly _description: string;
     protected readonly _placeholder: string;
 
-    private readonly _assignToForm: (contentEl: HTMLElement) => void | undefined;
+    private readonly _assignToForm?: (contentEl: HTMLElement) => SettingExtended;
     private readonly _getFunc?: TemplateFunction<GetFunctionType>;
+    private readonly _validateFunc?: TemplateFunction<ValidateFunctionType>;
 
-    protected constructor(id: string, type: TemplateFormItemType, initValue: TValue, getSrc: TemplateFunction<GetFunctionType> | undefined, formDisplay: FormDisplay | undefined) {
+    private _element?: SettingExtended = undefined;
+
+    protected constructor(
+            id: string, 
+            type: TemplateFormItemType, 
+            initValue: TValue, 
+            getSrc: TemplateFunction<GetFunctionType> | undefined, 
+            formDisplay: FormDisplay | undefined) {
         this.id = id;
         this.type = type;
         this.value = initValue;
         this._getFunc = getSrc;
-
+        
         if (formDisplay) {
-            this.assignToForm = this.assignToFormImpl;
+            this._assignToForm = this.assignToFormImpl;
             this._title = formDisplay.title;
             this._description = formDisplay.description ?? "";
             this._placeholder = formDisplay.placeholder ?? "";
+            this._validateFunc = formDisplay.validate;
         }
     }
 
     assignToForm(contentEl: HTMLElement): void {
         if (this._assignToForm) {
-            this._assignToForm(contentEl);
+            this. _element = this._assignToForm(contentEl);
         }
     }
 
@@ -74,7 +85,41 @@ export abstract class FormItemBase<TValue> implements FormItem {
         }
     }
 
-    protected abstract assignToFormImpl(contentEl: HTMLElement): void;
+    validate(view: Record<string, any>): boolean {
+        if (this._validateFunc) {
+            const validationResult = FormItemBase.executeValidateFunc(this._validateFunc.text, view);
+
+            if (validationResult !== true) {
+                this.setError(<string>validationResult);
+                return false;
+            }
+
+            this.resetError();
+        }
+
+        return true;
+    }
+
+    private setError(msg: string): void {
+        if (!this._element) return;
+
+        const span = createSpan({
+            text: msg,
+            cls: "mod-warning",
+        });
+
+        const br = createEl("br");
+
+        this._element.descEl.append(br);
+        this._element.descEl.append(span);
+    }
+
+    private resetError(): void {
+        if (!this._element) return;
+        this._element?.setDesc(this._description);
+    }
+
+    protected abstract assignToFormImpl(contentEl: HTMLElement): SettingExtended;
 
     protected abstract getFunctionDefault() : string;
 
@@ -90,7 +135,6 @@ export abstract class FormItemBase<TValue> implements FormItem {
         return valueText;
     }
 
-
     protected static executeInitFunction<TResult>(funcText: string): TResult {
         const func = evaluateTextFunction<TResult, []>(funcText);
         return func();
@@ -98,6 +142,11 @@ export abstract class FormItemBase<TValue> implements FormItem {
 
     protected static executeGetFunction(funcText: string, view: Record<string, any>) : string {
         const func = evaluateTextFunction<string, [Record<string, any>]>(funcText);
+        return func(view);
+    }
+
+    private static executeValidateFunc(funcText: string, view: Record<string, any>): boolean | string {
+        const func = evaluateTextFunction<boolean | string, [Record<string, any>]>(funcText);
         return func(view);
     }
 }

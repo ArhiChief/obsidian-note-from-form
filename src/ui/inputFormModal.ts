@@ -1,6 +1,7 @@
 import { App, Modal } from "obsidian";
 import { FormItem } from "../form/formItemBase";
 import { SettingExtended } from "src/ui/settingExtensions";
+import { FormItemsManager } from "src/form/formItemsManager";
 
 
 export class InputFormModal extends Modal {
@@ -33,8 +34,10 @@ export class InputFormModal extends Modal {
                 .setButtonText("Create")
                 .setCta()
                 .onClick(async _ =>{
-                     this.close();
-                     await this._callback();
+                    if (this.validate()) {
+                        this.close();
+                        await this._callback();
+                    }
                 })
             );
     }
@@ -42,5 +45,9 @@ export class InputFormModal extends Modal {
     onClose(): void {
         const { contentEl } = this;
         contentEl.empty();
+    }
+
+    validate(): boolean {
+        return FormItemsManager.validate(this._items);
     }
 }
