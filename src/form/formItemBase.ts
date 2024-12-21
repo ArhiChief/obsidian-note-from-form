@@ -24,7 +24,7 @@ export abstract class FormItemBase<TValue> implements FormItem {
     protected readonly _description: string;
     protected readonly _placeholder: string;
 
-    private readonly _assignToForm: (contentEl: HTMLElement) => SettingExtended;
+    private readonly _assignToForm?: (contentEl: HTMLElement) => SettingExtended;
     private readonly _getFunc?: TemplateFunction<GetFunctionType>;
 
     private _contentElement: SettingExtended;
