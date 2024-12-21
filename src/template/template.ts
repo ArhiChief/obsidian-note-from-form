@@ -23,7 +23,7 @@ export interface FormDisplay {
     title: string;
     description?: string;
     placeholder?: string;
-    validate?: TemplateFunction<ValidateFunctionType>;
+    isValid?: TemplateFunction<ValidateFunctionType>;
 }
 
 export enum TemplateFormItemType {
@@ -75,5 +75,5 @@ export interface TemplateInputForm {
     title: string;
     description?: string;
     placeholder?: string;
-    validate?: string;
+    isValid?: string;
 }

@@ -220,7 +220,7 @@ export class TemplateParser {
                 title: data[nameof<FormDisplay>("title")],
                 description: data[nameof<FormDisplay>("description")],
                 placeholder: data[nameof<FormDisplay>("placeholder")],
-                validate: this.getTemplateValidateFunction(data, nameof<FormDisplay>("validate"), `${nameof<TemplateInput>("form-items")}[${i}].${nameof<FormDisplay>("validate")}`),
+                isValid: this.getTemplateValidateFunction(data, nameof<FormDisplay>("isValid"), `${nameof<TemplateInput>("form-items")}[${i}].${nameof<FormDisplay>("isValid")}`),
             };
         }
 

@@ -11,7 +11,7 @@ export interface FormItem {
 
     assignToForm(contentEl: HTMLElement): void;
     get(view: Record<string, any>): string;
-    validate(view: Record<string, any>): boolean;
+    isValidUserInput(view: Record<string, any>): boolean;
 }
 
 export abstract class FormItemBase<TValue> implements FormItem {
@@ -27,16 +27,11 @@ export abstract class FormItemBase<TValue> implements FormItem {
 
     private readonly _assignToForm?: (contentEl: HTMLElement) => SettingExtended;
     private readonly _getFunc?: TemplateFunction<GetFunctionType>;
-    private readonly _validateFunc?: TemplateFunction<ValidateFunctionType>;
+    private readonly _isValidUserInputFunc?: TemplateFunction<ValidateFunctionType>;
 
-    private _element?: SettingExtended = undefined;
+    private _contentElement?: SettingExtended;
 
-    protected constructor(
-            id: string, 
-            type: TemplateFormItemType, 
-            initValue: TValue, 
-            getSrc: TemplateFunction<GetFunctionType> | undefined, 
-            formDisplay: FormDisplay | undefined) {
+    protected constructor(id: string, type: TemplateFormItemType, initValue: TValue, getSrc: TemplateFunction<GetFunctionType> | undefined, formDisplay: FormDisplay | undefined) {
         this.id = id;
         this.type = type;
         this.value = initValue;
@@ -47,13 +42,13 @@ export abstract class FormItemBase<TValue> implements FormItem {
             this._title = formDisplay.title;
             this._description = formDisplay.description ?? "";
             this._placeholder = formDisplay.placeholder ?? "";
-            this._validateFunc = formDisplay.validate;
+            this._isValidUserInputFunc = formDisplay.isValid;
         }
     }
 
     assignToForm(contentEl: HTMLElement): void {
         if (this._assignToForm) {
-            this. _element = this._assignToForm(contentEl);
+            this._contentElement = this._assignToForm(contentEl);
         }
     }
 
@@ -85,9 +80,9 @@ export abstract class FormItemBase<TValue> implements FormItem {
         }
     }
 
-    validate(view: Record<string, any>): boolean {
-        if (this._validateFunc) {
-            const validationResult = FormItemBase.executeValidateFunc(this._validateFunc.text, view);
+    isValidUserInput(view: Record<string, any>): boolean {
+        if (this._isValidUserInputFunc) {
+            const validationResult = FormItemBase.executeValidateFunc(this._isValidUserInputFunc.text, view);
 
             if (validationResult !== true) {
                 this.setError(<string>validationResult);
@@ -101,7 +96,7 @@ export abstract class FormItemBase<TValue> implements FormItem {
     }
 
     private setError(msg: string): void {
-        if (!this._element) return;
+        if (!this._contentElement) return;
 
         const span = createSpan({
             text: msg,
@@ -110,13 +105,13 @@ export abstract class FormItemBase<TValue> implements FormItem {
 
         const br = createEl("br");
 
-        this._element.descEl.append(br);
-        this._element.descEl.append(span);
+        this._contentElement.descEl.append(br);
+        this._contentElement.descEl.append(span);
     }
 
     private resetError(): void {
-        if (!this._element) return;
-        this._element?.setDesc(this._description);
+        if (!this._contentElement) return;
+        this._contentElement?.setDesc(this._description);
     }
 
     protected abstract assignToFormImpl(contentEl: HTMLElement): SettingExtended;

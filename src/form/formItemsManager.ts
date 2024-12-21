@@ -83,7 +83,7 @@ export class FormItemsManager {
                 continue;
             }
 
-            isValid &&= item.validate(view);
+            isValid &&= item.isValidUserInput(view);
         }
 
         return isValid;
