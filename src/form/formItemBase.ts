@@ -27,7 +27,7 @@ export abstract class FormItemBase<TValue> implements FormItem {
     private readonly _assignToForm?: (contentEl: HTMLElement) => SettingExtended;
     private readonly _getFunc?: TemplateFunction<GetFunctionType>;
 
-    private _contentElement: SettingExtended;
+    private _contentElement?: SettingExtended;
 
     protected constructor(id: string, type: TemplateFormItemType, initValue: TValue, getSrc: TemplateFunction<GetFunctionType> | undefined, formDisplay: FormDisplay | undefined) {
         this.id = id;
