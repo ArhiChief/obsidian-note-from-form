@@ -17,8 +17,8 @@ export class NumberFormItem extends FormItemBase<number> {
         this._getSrc = src.get;
     }
     
-    protected assignToFormImpl(contentEl: HTMLElement): void {
-        new SettingExtended(contentEl)
+    protected assignToFormImpl(contentEl: HTMLElement): SettingExtended {
+        return new SettingExtended(contentEl)
             .setName(this._title)
             .setDesc(this._description)
             .addNumber(comp => comp

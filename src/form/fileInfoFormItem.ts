@@ -20,8 +20,8 @@ abstract class FileInfoFormItem extends FormItemBase<string> {
         super(id, TemplateFormItemType.Text, initValue, src, formDisplay);
     }
     
-    protected assignToFormImpl(contentEl: HTMLElement): void {
-        new SettingExtended(contentEl)
+    protected assignToFormImpl(contentEl: HTMLElement): SettingExtended {
+        return new SettingExtended(contentEl)
             .setName(this._title)
             .setDesc(this._description)
             .addText(text => text

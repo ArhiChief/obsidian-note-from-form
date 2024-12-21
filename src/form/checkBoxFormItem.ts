@@ -13,8 +13,8 @@ export class CheckBoxFormItem extends FormItemBase<boolean> {
         super(src.id, src.type, initValue, src.get, src.form);
     }
 
-    protected assignToFormImpl(contentEl: HTMLElement): void {
-        new SettingExtended(contentEl)
+    protected assignToFormImpl(contentEl: HTMLElement): SettingExtended {
+        return new SettingExtended(contentEl)
             .setName(this._title)
             .setDesc(this._description)
             .addToggle(toggle => toggle

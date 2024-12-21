@@ -37,9 +37,8 @@ export class DropDownFormItem extends FormItemBase<DropDownItem[]> {
         this._selected = selected;
     }
 
-    protected assignToFormImpl(contentEl: HTMLElement): void {
-
-        new SettingExtended(contentEl)
+    protected assignToFormImpl(contentEl: HTMLElement): SettingExtended {
+        return new SettingExtended(contentEl)
             .setName(this._title)
             .setDesc(this._description)
             .addDropdown(dropDown => dropDown

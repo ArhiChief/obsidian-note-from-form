@@ -1,6 +1,7 @@
 import { evaluateTextFunction } from "src/helpers";
 import { FormDisplay, GetFunctionType, TemplateFormItemType, TemplateFunction } from "src/template/template";
 import { renderMustacheTemplate } from "src/helpers"
+import { SettingExtended } from "src/ui/settingExtensions";
 
 export interface FormItem {
     value: any;
@@ -23,8 +24,10 @@ export abstract class FormItemBase<TValue> implements FormItem {
     protected readonly _description: string;
     protected readonly _placeholder: string;
 
-    private readonly _assignToForm: (contentEl: HTMLElement) => void | undefined;
+    private readonly _assignToForm: (contentEl: HTMLElement) => SettingExtended;
     private readonly _getFunc?: TemplateFunction<GetFunctionType>;
+
+    private _contentElement: SettingExtended;
 
     protected constructor(id: string, type: TemplateFormItemType, initValue: TValue, getSrc: TemplateFunction<GetFunctionType> | undefined, formDisplay: FormDisplay | undefined) {
         this.id = id;
@@ -33,7 +36,7 @@ export abstract class FormItemBase<TValue> implements FormItem {
         this._getFunc = getSrc;
 
         if (formDisplay) {
-            this.assignToForm = this.assignToFormImpl;
+            this._assignToForm = this.assignToFormImpl;
             this._title = formDisplay.title;
             this._description = formDisplay.description ?? "";
             this._placeholder = formDisplay.placeholder ?? "";
@@ -42,7 +45,7 @@ export abstract class FormItemBase<TValue> implements FormItem {
 
     assignToForm(contentEl: HTMLElement): void {
         if (this._assignToForm) {
-            this._assignToForm(contentEl);
+            this._contentElement = this._assignToForm(contentEl);
         }
     }
 
@@ -74,7 +77,7 @@ export abstract class FormItemBase<TValue> implements FormItem {
         }
     }
 
-    protected abstract assignToFormImpl(contentEl: HTMLElement): void;
+    protected abstract assignToFormImpl(contentEl: HTMLElement): SettingExtended;
 
     protected abstract getFunctionDefault() : string;
 
