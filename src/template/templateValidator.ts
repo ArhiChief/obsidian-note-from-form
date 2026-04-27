@@ -3,7 +3,7 @@ import ajvErrors from "ajv-errors";
 import ajvKeywords from "ajv-keywords";
 import schema from "./schema.json";
 
-const ajv = new Ajv2020({ allErrors: true });
+const ajv = new Ajv2020({ allErrors: true, strictTypes: false });
 ajvErrors(ajv);
 ajvKeywords(ajv, ["uniqueItemProperties"]);
 

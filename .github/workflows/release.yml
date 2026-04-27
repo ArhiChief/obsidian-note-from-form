@@ -20,6 +20,7 @@ jobs:
       - name: Build Plugin
         run: |
           npm install
+          npm test
           npm run build
 
       - name: Create Release
