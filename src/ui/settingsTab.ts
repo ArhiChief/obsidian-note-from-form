@@ -30,7 +30,7 @@ export class NoteFromFormSettingsTab extends PluginSettingTab{
             .addText(text => text
                 .setPlaceholder(pathPlaceholder)
                 .setValue(this.pluginSettings.templatesFolderLocation)
-                .onChange(async (value) => await this.validateAndSave(value, templatesDirectory, templatesDirectoryDesc, invalidDirectoryPath))
+                .onChange(async (value) => await this.validateAndSave(value, templatesDirectory, templatesDirectoryDesc, invalidDirectoryPath, (v) => this.pluginSettings.templatesFolderLocation = v))
             );
         
         const templateProperty = new Setting(containerEl)
@@ -57,15 +57,15 @@ export class NoteFromFormSettingsTab extends PluginSettingTab{
             .addText(text => text
                 .setValue(this.pluginSettings.defaultOutputDir)
                 .setPlaceholder(pathPlaceholder)
-                .onChange(async (value) => await this.validateAndSave(value, defaultOutputDirectory, defaultOutputDirectoryDesc, invalidDirectoryPath))
+                .onChange(async (value) => await this.validateAndSave(value, defaultOutputDirectory, defaultOutputDirectoryDesc, invalidDirectoryPath, (v) => this.pluginSettings.defaultOutputDir = v))
             );
     }
 
-    private async validateAndSave(value: string, setting: Setting, description: string, errorMessage: string) {
+    private async validateAndSave(value: string, setting: Setting, description: string, errorMessage: string, setter: (value: string) => void) {
         this.updateDescription(setting, description, false);
 
         if (value.length == 0 || this.isValidFolderPath(value)) {
-            this.pluginSettings.defaultOutputDir = value;
+            setter(value);
             await this.saveData(this.pluginSettings);    
         } else {
             this.updateDescription(setting, errorMessage, true);

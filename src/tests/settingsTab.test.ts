@@ -348,6 +348,14 @@ describe("NoteFromFormSettingsTab", () => {
             expect(settings.defaultOutputDir).toBe("new/path");
         });
 
+        test("valid templates directory change updates templatesFolderLocation", async () => {
+            const settings = defaultSettings();
+            const { tab } = createTab(settings);
+            const { templatesDir } = displayAndGetTextComponents(tab);
+            await templatesDir.textComponent!.trigger("my/templates");
+            expect(settings.templatesFolderLocation).toBe("my/templates");
+        });
+
         test("invalid directory change does not update settings", async () => {
             const settings = defaultSettings();
             settings.defaultOutputDir = "original";

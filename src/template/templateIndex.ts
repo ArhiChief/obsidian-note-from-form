@@ -1,15 +1,28 @@
-import { App, normalizePath, TAbstractFile, TFile, TFolder } from 'obsidian';
+import { App, FileManager, normalizePath, TAbstractFile, TFile, TFolder, Vault } from 'obsidian';
 import { NoteFromFormPluginSettings } from '../pluginSettings';
 
+export interface TemplateIndexItem {
+    file: TFile;
+    label: string;
+}
+
 export class TemplateIndex {
-    private items: TFile[] = [];
+    private items: TemplateIndexItem[] = [];
+    private vault: Vault;
+    private fileManager: FileManager;
+    private onIndexChanged: () => void;
 
     constructor(
-        private app: App,
+        app: App,
         private settings: NoteFromFormPluginSettings,
-    ) {}
+        onIndexChanged: () => void,
+    ) {
+        this.vault = app.vault;
+        this.fileManager = app.fileManager;
+        this.onIndexChanged = onIndexChanged;
+    }
 
-    getItems(): TFile[] {
+    getItems(): TemplateIndexItem[] {
         return this.items;
     }
 
@@ -30,14 +43,14 @@ export class TemplateIndex {
     }
 
     async update(file: TFile) {
-        await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
+        await this.fileManager.processFrontMatter(file, (frontmatter) => {
             const hasTemplateProperty = this.settings.templatePropertyName in frontmatter;
-            const alreadyIndexed = this.items.some(f => f.path === file.path);
+            const alreadyIndexed = this.items.some(item => item.file.path === file.path);
 
             if (hasTemplateProperty && !alreadyIndexed) {
-                this.items.push(file);
+                this.items.push({ file, label: this.buildLabel(file.path) });
             } else if (!hasTemplateProperty && alreadyIndexed) {
-                this.items = this.items.filter(f => f.path !== file.path);
+                this.items = this.items.filter(item => item.file.path !== file.path);
             }
         });
     }
@@ -47,13 +60,15 @@ export class TemplateIndex {
         const templatesFolder = this.settings.templatesFolderLocation;
         if (templatesFolder.length === 0) return;
 
-        const folder = this.app.vault.getFolderByPath(normalizePath(templatesFolder));
+        const folder = this.vault.getFolderByPath(normalizePath(templatesFolder));
         if (!folder) return;
 
         const files = this.getFilesRecursively(folder);
         for (const file of files) {
             await this.update(file);
         }
+
+        this.onIndexChanged();
     }
 
     private getFilesRecursively(folder: TFolder): TFile[] {
@@ -66,5 +81,16 @@ export class TemplateIndex {
             }
         }
         return files;
+    }
+
+    private buildLabel(filePath: string): string {
+        const templatesFolder = this.settings.templatesFolderLocation;
+        const relativePath = filePath.startsWith(templatesFolder + '/')
+            ? filePath.slice(templatesFolder.length + 1)
+            : filePath;
+
+        const parts = relativePath.replace(/\.md$/, '').split('/');
+        if (parts.length === 1) return parts[0];
+        return parts.join(' -> ');
     }
 }

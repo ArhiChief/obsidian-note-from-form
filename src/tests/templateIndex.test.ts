@@ -40,6 +40,10 @@ function createMockApp(options: {
     } as any;
 }
 
+function createIndex(app: any, settings: NoteFromFormPluginSettings, onIndexChanged?: jest.Mock) {
+    return new TemplateIndex(app, settings, onIndexChanged ?? jest.fn());
+}
+
 function mockProcessFrontMatter(frontmatterByPath: Record<string, Record<string, any>>) {
     return jest.fn().mockImplementation(async (file: TFile, fn: (fm: any) => void) => {
         const fm = frontmatterByPath[file.path] ?? {};
@@ -58,7 +62,7 @@ describe("TemplateIndex", () => {
             const settings = defaultSettings();
             const processFrontMatter = jest.fn();
             const app = createMockApp({ processFrontMatter });
-            const index = new TemplateIndex(app, settings);
+            const index = createIndex(app, settings);
 
             const folder = createFolder('templates/subfolder');
             index.onVaultChange(folder);
@@ -70,7 +74,7 @@ describe("TemplateIndex", () => {
             const settings = defaultSettings();
             const processFrontMatter = jest.fn();
             const app = createMockApp({ processFrontMatter });
-            const index = new TemplateIndex(app, settings);
+            const index = createIndex(app, settings);
 
             const file = createFile('other/note.md');
             index.onVaultChange(file);
@@ -84,7 +88,7 @@ describe("TemplateIndex", () => {
                 'templates/note.md': { [TEMPLATE_PROPERTY_NAME]: true },
             });
             const app = createMockApp({ processFrontMatter });
-            const index = new TemplateIndex(app, settings);
+            const index = createIndex(app, settings);
 
             const file = createFile('templates/note.md');
             index.onVaultChange(file);
@@ -100,7 +104,7 @@ describe("TemplateIndex", () => {
             const settings = defaultSettings({ templatesFolderLocation: '' });
             const processFrontMatter = jest.fn();
             const app = createMockApp({ processFrontMatter });
-            const index = new TemplateIndex(app, settings);
+            const index = createIndex(app, settings);
 
             const file = createFile('templates/note.md');
             index.onVaultChange(file);
@@ -114,7 +118,7 @@ describe("TemplateIndex", () => {
                 'templates/sub/deep/note.md': { [TEMPLATE_PROPERTY_NAME]: true },
             });
             const app = createMockApp({ processFrontMatter });
-            const index = new TemplateIndex(app, settings);
+            const index = createIndex(app, settings);
 
             const file = createFile('templates/sub/deep/note.md');
             index.onVaultChange(file);
@@ -128,7 +132,7 @@ describe("TemplateIndex", () => {
             const settings = defaultSettings();
             const processFrontMatter = jest.fn();
             const app = createMockApp({ processFrontMatter });
-            const index = new TemplateIndex(app, settings);
+            const index = createIndex(app, settings);
 
             const file = createFile('templates-other/note.md');
             index.onVaultChange(file);
@@ -146,12 +150,12 @@ describe("TemplateIndex", () => {
                 'templates/note.md': { [TEMPLATE_PROPERTY_NAME]: { items: [] } },
             });
             const app = createMockApp({ processFrontMatter });
-            const index = new TemplateIndex(app, settings);
+            const index = createIndex(app, settings);
 
             const file = createFile('templates/note.md');
             await index.update(file);
 
-            expect(index.getItems()).toEqual([file]);
+            expect(index.getItems()).toEqual([{ file, label: 'note' }]);
         });
 
         test("does not add file when front matter lacks template property", async () => {
@@ -160,7 +164,7 @@ describe("TemplateIndex", () => {
                 'templates/note.md': { title: 'Just a note' },
             });
             const app = createMockApp({ processFrontMatter });
-            const index = new TemplateIndex(app, settings);
+            const index = createIndex(app, settings);
 
             const file = createFile('templates/note.md');
             await index.update(file);
@@ -174,7 +178,7 @@ describe("TemplateIndex", () => {
                 'templates/note.md': { [TEMPLATE_PROPERTY_NAME]: true },
             });
             const app = createMockApp({ processFrontMatter });
-            const index = new TemplateIndex(app, settings);
+            const index = createIndex(app, settings);
 
             const file = createFile('templates/note.md');
             await index.update(file);
@@ -190,7 +194,7 @@ describe("TemplateIndex", () => {
                 fn(frontmatter);
             });
             const app = createMockApp({ processFrontMatter });
-            const index = new TemplateIndex(app, settings);
+            const index = createIndex(app, settings);
 
             const file = createFile('templates/note.md');
 
@@ -210,12 +214,12 @@ describe("TemplateIndex", () => {
                 'templates/note.md': { 'my-form': { items: [] } },
             });
             const app = createMockApp({ processFrontMatter });
-            const index = new TemplateIndex(app, settings);
+            const index = createIndex(app, settings);
 
             const file = createFile('templates/note.md');
             await index.update(file);
 
-            expect(index.getItems()).toEqual([file]);
+            expect(index.getItems()).toEqual([{ file, label: 'note' }]);
         });
 
         test("does not add file when front matter has wrong property name", async () => {
@@ -224,7 +228,7 @@ describe("TemplateIndex", () => {
                 'templates/note.md': { [TEMPLATE_PROPERTY_NAME]: true },
             });
             const app = createMockApp({ processFrontMatter });
-            const index = new TemplateIndex(app, settings);
+            const index = createIndex(app, settings);
 
             const file = createFile('templates/note.md');
             await index.update(file);
@@ -250,7 +254,7 @@ describe("TemplateIndex", () => {
                 processFrontMatter,
                 getFolderByPath: jest.fn().mockReturnValue(folder),
             });
-            const index = new TemplateIndex(app, settings);
+            const index = createIndex(app, settings);
 
             await index.rebuild();
             expect(index.getItems()).toHaveLength(2);
@@ -264,7 +268,7 @@ describe("TemplateIndex", () => {
             const settings = defaultSettings({ templatesFolderLocation: '' });
             const getFolderByPath = jest.fn();
             const app = createMockApp({ getFolderByPath });
-            const index = new TemplateIndex(app, settings);
+            const index = createIndex(app, settings);
 
             await index.rebuild();
 
@@ -279,7 +283,7 @@ describe("TemplateIndex", () => {
                 processFrontMatter,
                 getFolderByPath: jest.fn().mockReturnValue(null),
             });
-            const index = new TemplateIndex(app, settings);
+            const index = createIndex(app, settings);
 
             await index.rebuild();
 
@@ -302,12 +306,12 @@ describe("TemplateIndex", () => {
                 processFrontMatter,
                 getFolderByPath: jest.fn().mockReturnValue(rootFolder),
             });
-            const index = new TemplateIndex(app, settings);
+            const index = createIndex(app, settings);
 
             await index.rebuild();
 
             expect(index.getItems()).toHaveLength(2);
-            expect(index.getItems().map(f => f.path)).toEqual(
+            expect(index.getItems().map(item => item.file.path)).toEqual(
                 expect.arrayContaining(['templates/top.md', 'templates/sub/deep.md'])
             );
         });
@@ -326,12 +330,12 @@ describe("TemplateIndex", () => {
                 processFrontMatter,
                 getFolderByPath: jest.fn().mockReturnValue(folder),
             });
-            const index = new TemplateIndex(app, settings);
+            const index = createIndex(app, settings);
 
             await index.rebuild();
 
             expect(index.getItems()).toHaveLength(1);
-            expect(index.getItems()[0].path).toBe('templates/form.md');
+            expect(index.getItems()[0].file.path).toBe('templates/form.md');
         });
 
         test("handles folder with trailing slash in settings", async () => {
@@ -346,7 +350,7 @@ describe("TemplateIndex", () => {
                 processFrontMatter,
                 getFolderByPath: jest.fn().mockReturnValue(folder),
             });
-            const index = new TemplateIndex(app, settings);
+            const index = createIndex(app, settings);
 
             await index.rebuild();
 
@@ -359,8 +363,64 @@ describe("TemplateIndex", () => {
     describe("getItems", () => {
         test("returns empty array initially", () => {
             const app = createMockApp();
-            const index = new TemplateIndex(app, defaultSettings());
+            const index = createIndex(app, defaultSettings());
             expect(index.getItems()).toEqual([]);
+        });
+    });
+
+    // ─── onIndexChanged callback ───
+
+    describe("onIndexChanged callback", () => {
+        test("is called after rebuild", async () => {
+            const settings = defaultSettings();
+            const folder = createFolder('templates', []);
+            const onIndexChanged = jest.fn();
+            const app = createMockApp({
+                getFolderByPath: jest.fn().mockReturnValue(folder),
+            });
+            const index = createIndex(app, settings, onIndexChanged);
+
+            await index.rebuild();
+
+            expect(onIndexChanged).toHaveBeenCalledTimes(1);
+        });
+
+        test("is called after rebuild even when folder is empty", async () => {
+            const settings = defaultSettings();
+            const folder = createFolder('templates', []);
+            const onIndexChanged = jest.fn();
+            const app = createMockApp({
+                getFolderByPath: jest.fn().mockReturnValue(folder),
+            });
+            const index = createIndex(app, settings, onIndexChanged);
+
+            await index.rebuild();
+
+            expect(onIndexChanged).toHaveBeenCalled();
+        });
+
+        test("is not called when templatesFolderLocation is empty", async () => {
+            const settings = defaultSettings({ templatesFolderLocation: '' });
+            const onIndexChanged = jest.fn();
+            const app = createMockApp();
+            const index = createIndex(app, settings, onIndexChanged);
+
+            await index.rebuild();
+
+            expect(onIndexChanged).not.toHaveBeenCalled();
+        });
+
+        test("is not called when folder does not exist", async () => {
+            const settings = defaultSettings();
+            const onIndexChanged = jest.fn();
+            const app = createMockApp({
+                getFolderByPath: jest.fn().mockReturnValue(null),
+            });
+            const index = createIndex(app, settings, onIndexChanged);
+
+            await index.rebuild();
+
+            expect(onIndexChanged).not.toHaveBeenCalled();
         });
     });
 });
