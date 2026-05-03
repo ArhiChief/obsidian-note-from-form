@@ -24,5 +24,8 @@
   },
   "include": [
     "**/*.ts",
+  ],
+  "exclude": [
+    "__mocks__"
   ]
 }
