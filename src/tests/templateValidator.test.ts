@@ -157,13 +157,10 @@ describe("validateTemplate", () => {
             ]));
         });
 
-        test("rejects item missing required 'form'", () => {
+        test("accepts item without optional 'form'", () => {
             const item = { id: "x", type: "text" };
             const result = validateTemplate(validTemplate({ "form-items": [item] }));
-            expect(result.valid).toBe(false);
-            expect(result.errors).toEqual(expect.arrayContaining([
-                "/form-items/0: must have required property 'form'",
-            ]));
+            expect(result.valid).toBe(true);
         });
 
         test("rejects invalid id (starts with number)", () => {

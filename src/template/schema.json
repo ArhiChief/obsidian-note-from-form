@@ -57,13 +57,20 @@
                     "required": ["title"]
                 },
                 "get": {
-                    "$ref": "#/$defs/getFunctionType"
+                    "oneOf": [
+                        { "$ref": "#/$defs/getFunctionType" },
+                        { "$ref": "#/$defs/templateType" },
+                        { "$ref": "#/$defs/valueType" }
+                    ]
                 },
                 "init": {
-                    "$ref": "#/$defs/initFunctionType"
+                    "oneOf": [
+                        { "$ref": "#/$defs/initFunctionType" },
+                        { "$ref": "#/$defs/valueType" }
+                    ]
                 }
             },
-            "required": ["id", "type", "form"]
+            "required": ["id", "type"]
         },
         "textFormItemType": {
             "allOf": [
