@@ -1,7 +1,7 @@
 {
 	"id": "note-from-form",
 	"name": "Note From Form",
-	"version": "1.0.2",
+	"version": "2.0.0",
 	"minAppVersion": "1.7.6",
 	"description": "Define dynamic input form and use it to create notes",
 	"author": "ArhiChief",
