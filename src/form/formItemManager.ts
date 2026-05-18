@@ -5,7 +5,6 @@ import { TextFormItem } from "./textFormItem";
 import { NumberFormItem } from "./numberFormItem";
 import { DateFormItem } from "./dateFormItem";
 import { CheckboxFormItem } from "./checkboxFormItem";
-import { DropDownFormItem } from "./dropdownFormItem";
 import { DropdownFormItem } from "./dropdownFormItem";
 
 export class FormItemsManager {

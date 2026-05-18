@@ -1,6 +1,6 @@
-import { App, Command, Notice, Plugin, type PluginManifest } from 'obsidian';
+import { App, Notice, Plugin, type PluginManifest } from 'obsidian';
 import { DEFAULT_PLUGIN_SETTINGS, NoteFromFormPluginSettings } from './pluginSettings';
-import { TemplateIndex, TemplateIndexItem } from './template/templateIndex';
+import { TemplateIndex } from './template/templateIndex';
 import { TemplateProcessor } from './template/templateProcessor';
 import { NoteFromFormSettingsTab } from './ui/settingsTab';
 

@@ -1,4 +1,3 @@
-import { Setting } from "obsidian";
 import { NumberFormItem as NumberFormItemTemplate, InitFunctionString, ValueString, FormItemType } from "src/template/templateTypes";
 import { FormItemBase } from "./formItem";
 import { ExtendedSetting } from "src/ui/settingsExtension";
