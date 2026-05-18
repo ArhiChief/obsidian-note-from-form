@@ -1,6 +1,6 @@
-import { Setting } from "obsidian";
 import { CheckboxFormItem as CheckboxFormItemTemplate, InitFunctionString, ValueString, FormItemType } from "src/template/templateTypes";
 import { FormItemBase } from "./formItem";
+import { ExtendedSetting } from "src/ui/settingsExtension";
 
 export class CheckboxFormItem extends FormItemBase<boolean> {
 
@@ -13,7 +13,7 @@ export class CheckboxFormItem extends FormItemBase<boolean> {
     }
 
     protected assignToFormImpl(contentEl: HTMLElement): void {
-        new Setting(contentEl)
+        new ExtendedSetting(contentEl)
             .setName(this._title)
             .setDesc(this._description)
             .addToggle(toggle => toggle

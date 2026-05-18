@@ -1,7 +1,8 @@
-import { Setting } from "obsidian";
 import { DateFormItem as DateFormItemTemplate, InitFunctionString, ValueString, FormItemType } from "src/template/templateTypes";
 import { FormItemBase } from "./formItem";
 import moment from "moment";
+import { ExtendedSetting } from "src/ui/settingsExtension";
+import { DateTimeComponent } from "src/ui/dateTimeComponent";
 
 export class DateFormItem extends FormItemBase<Date> {
 
@@ -14,19 +15,30 @@ export class DateFormItem extends FormItemBase<Date> {
     }
 
     protected assignToFormImpl(contentEl: HTMLElement): void {
-        new Setting(contentEl)
+        const setting = new ExtendedSetting(contentEl)
             .setName(this._title)
-            .setDesc(this._description)
-            .addText(text => text
-                .setPlaceholder(this.getPlaceholder())
-                .setValue(this.formatValue())
-                .onChange(newVal => {
-                    const parsed = new Date(newVal);
-                    if (!isNaN(parsed.getTime())) {
-                        this.value = parsed;
-                    }
-                })
-            );
+            .setDesc(this._description);
+
+        switch(this.type) {
+            case 'date':
+                setting.addDate(this.configureComponent());
+                break;
+            case 'time':
+                setting.addTime(this.configureComponent());
+                break;
+            case 'dateTime':
+                setting.addDateTime(this.configureComponent());
+                break;
+            default:
+                throw new Error(`Unsupported type: ${this.type}`);
+        }
+
+    }
+
+    private configureComponent(): (component: DateTimeComponent) => any {
+        return component => component
+            .setValue(this.value)
+            .onChange(newVal => this.value = newVal);
     }
 
     protected getFunctionDefault(): string {
@@ -42,19 +54,6 @@ export class DateFormItem extends FormItemBase<Date> {
                 throw new Error(`Unsupported type: ${this.type}`);
         }
     }
-
-    private formatValue(): string {
-        if (!this.value || isNaN(this.value.getTime())) return '';
-
-        switch (this.type) {
-            case 'date': return this.value.toISOString().slice(0, 10);
-            case 'time': return this.value.toISOString().slice(11, 19);
-            case 'dateTime': return this.value.toISOString().slice(0, 19);
-            default: return this.value.toISOString();
-        }
-    }
-
-    
 
     private static getInitValue(src?: InitFunctionString | ValueString): Date {
         if (!src) {

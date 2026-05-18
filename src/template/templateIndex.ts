@@ -91,6 +91,6 @@ export class TemplateIndex {
 
         const parts = relativePath.replace(/\.md$/, '').split('/');
         if (parts.length === 1) return parts[0];
-        return parts.join(' -> ');
+        return parts.join('/');
     }
 }

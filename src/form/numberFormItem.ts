@@ -1,6 +1,7 @@
 import { Setting } from "obsidian";
 import { NumberFormItem as NumberFormItemTemplate, InitFunctionString, ValueString, FormItemType } from "src/template/templateTypes";
 import { FormItemBase } from "./formItem";
+import { ExtendedSetting } from "src/ui/settingsExtension";
 
 export class NumberFormItem extends FormItemBase<number> {
 
@@ -13,11 +14,11 @@ export class NumberFormItem extends FormItemBase<number> {
     }
 
     protected assignToFormImpl(contentEl: HTMLElement): void {
-        new Setting(contentEl)
+        new ExtendedSetting(contentEl)
             .setName(this._title)
             .setDesc(this._description)
-            .addText(text => text
-                .setValue(String(this.value))
+            .addNumber(comp => comp
+                .setValue(this.value)
                 .onChange(newVal => {
                     const parsed = Number(newVal);
                     if (!isNaN(parsed)) {

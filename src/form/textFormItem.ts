@@ -1,6 +1,7 @@
-import { Setting, TextAreaComponent, TextComponent } from "obsidian";
+import { TextAreaComponent, TextComponent } from "obsidian";
 import { TextFormItem as TextFormItemTemplate, InitFunctionString, ValueString, FormItemType } from "src/template/templateTypes";
 import { FormItemBase } from "./formItem";
+import { ExtendedSetting } from "src/ui/settingsExtension";
 
 export class TextFormItem extends FormItemBase<string> {
     
@@ -20,7 +21,7 @@ export class TextFormItem extends FormItemBase<string> {
     }
 
     protected assignToFormImpl(contentEl: HTMLElement): void {
-        const setting = new Setting(contentEl)
+        const setting = new ExtendedSetting(contentEl)
             .setName(this._title)
             .setDesc(this._description);
         
@@ -36,8 +37,7 @@ export class TextFormItem extends FormItemBase<string> {
         }
     }
 
-    private configureComponent() : (component: TextAreaComponent | TextComponent) => any {
-
+    private configureComponent() : (component: TextAreaComponent | TextComponent) => TextAreaComponent | TextComponent {
         return component => component
             .setPlaceholder(this._placeholder)
             .setValue(this.value)

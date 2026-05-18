@@ -1,13 +1,13 @@
 import { App, Command, Notice, Plugin, type PluginManifest } from 'obsidian';
 import { DEFAULT_PLUGIN_SETTINGS, NoteFromFormPluginSettings } from './pluginSettings';
-import { TemplateIndex } from './template/templateIndex';
+import { TemplateIndex, TemplateIndexItem } from './template/templateIndex';
 import { TemplateProcessor } from './template/templateProcessor';
 import { NoteFromFormSettingsTab } from './ui/settingsTab';
 
 
 export default class NoteFromFormPlugin extends Plugin {
-    settings: NoteFromFormPluginSettings;
-    templateIndex!: TemplateIndex;
+    private settings: NoteFromFormPluginSettings;
+    private templateIndex!: TemplateIndex;
     private templateProcessor!: TemplateProcessor;
     private commandIds: string[] = [];
     
@@ -48,21 +48,21 @@ export default class NoteFromFormPlugin extends Plugin {
     }
 
     private rebuildCommands() {
-        // Remove previously registered template commands
         for (const id of this.commandIds) {
-            (this.app as any).commands.removeCommand(id);
+            this.removeCommand(id);
         }
+
         this.commandIds = [];
 
-        // Register a command for each indexed template
-        for (const { file, label } of this.templateIndex.getItems()) {
+        for (const item of this.templateIndex.getItems()) {
+            const { label } = item;
             const commandId = `use-template:${label}`;
             this.addCommand({
                 id: commandId,
-                name: label,
+                name: `use ${label}`,
                 callback: async () => {
                     try {
-                        await this.templateProcessor.process(file);
+                        await this.templateProcessor.process(item);
                     } catch (e) {
                         new Notice(e instanceof Error ? e.message : 'Failed to process template');
                     }
