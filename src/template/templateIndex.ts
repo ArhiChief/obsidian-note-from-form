@@ -34,7 +34,7 @@ export class TemplateIndex {
         }
     }
 
-    private isInTemplatesFolder(file: TFile): boolean {
+    isInTemplatesFolder(file: TFile): boolean {
         const templatesFolder = this.settings.templatesFolderLocation;
         if (templatesFolder.length === 0) return false;
 

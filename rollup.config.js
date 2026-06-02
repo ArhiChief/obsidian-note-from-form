@@ -24,6 +24,10 @@ export default {
     banner,
   },
   external: ['obsidian'],
+  onwarn(warning, warn) {
+    if (warning.code === 'EVAL') return;
+    warn(warning);
+  },
   plugins: [
     typescript(),
     nodeResolve({browser: true}),

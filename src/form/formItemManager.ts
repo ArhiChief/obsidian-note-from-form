@@ -15,7 +15,9 @@ export class FormItemsManager {
         ];
 
         for (const item of template["form-items"] ?? []) {
-            switch (item.type) {
+            const itemType = item.type;
+
+            switch (itemType) {
                 case 'text':
                 case 'textArea':
                     result.push(new TextFormItem(item));
@@ -35,12 +37,44 @@ export class FormItemsManager {
                     result.push(new DropdownFormItem(item));
                     break;
                 default:
-                    throw new Error(`Unsupported type: ${item.type}`);
+                    throw new Error(`Unsupported type: ${itemType}`);
             }
         }
 
         return result;
     }
 
-    
+    static getViewModel(src: FormItem[]): Record<string, string> {
+        const view: Record<string, any> = {};
+        const result: Record<string, string> = {};
+
+        // get model needed as source for `get` functions of src
+        for(let i = 0; i < src.length; i++) {
+            const item = src[i];
+            if (item.id === FileNameFormItem.FormFieldId || item.id === FileLocationFormItem.FormFieldId) {
+                continue;
+            }
+
+            view[item.id] = item.value;
+        }
+
+        for(let i = 0; i < src.length; i++) {
+            const item = src[i];
+            if (item.id === FileNameFormItem.FormFieldId || item.id === FileLocationFormItem.FormFieldId) {
+                continue;
+            }
+
+            result[item.id] = item.get(view);
+        }
+
+        // resolution of 'file-Name' and 'file-Location' should be done after all items from 'for-items' are resolved
+        for(let i = 0; i < src.length; i++) {
+            const item = src[i];
+            if (item.id === FileNameFormItem.FormFieldId || item.id === FileLocationFormItem.FormFieldId) {
+                result[item.id] = item.get(result);
+            }
+        }
+
+        return result;
+    }
 }

@@ -1,6 +1,6 @@
-import { App, Notice, Plugin, type PluginManifest } from 'obsidian';
+import { App, Notice, Plugin, TFile, type PluginManifest } from 'obsidian';
 import { DEFAULT_PLUGIN_SETTINGS, NoteFromFormPluginSettings } from './pluginSettings';
-import { TemplateIndex } from './template/templateIndex';
+import { TemplateIndex, TemplateIndexItem } from './template/templateIndex';
 import { TemplateProcessor } from './template/templateProcessor';
 import { NoteFromFormSettingsTab } from './ui/settingsTab';
 
@@ -18,9 +18,11 @@ export default class NoteFromFormPlugin extends Plugin {
 
     async onload() {
         await this.loadSettings();
-
-        this.templateIndex = new TemplateIndex(this.app, this.settings, () => this.rebuildCommands());
+        
+        this.templateIndex = new TemplateIndex(this.app, this.settings, this.rebuildCommands.bind(this));
         this.templateProcessor = new TemplateProcessor(this.app, this.settings);
+
+        
 
         // This adds a settings tab so the user can configure various aspects of the plugin
         this.addSettingTab(new NoteFromFormSettingsTab(this.app, this, this.settings, this.updateSettings.bind(this)));
@@ -30,6 +32,18 @@ export default class NoteFromFormPlugin extends Plugin {
         this.registerEvent(this.app.vault.on('delete', (file) => this.templateIndex.onVaultChange(file)));
         this.registerEvent(this.app.vault.on('modify', (file) => this.templateIndex.onVaultChange(file)));
         this.registerEvent(this.app.vault.on('rename', (file) => this.templateIndex.onVaultChange(file)));
+        this.registerEvent(this.app.workspace.on('file-menu', (menu, file) => {
+            if (file instanceof TFile && this.templateIndex.isInTemplatesFolder(file)) {
+                menu.addItem((item) => {
+                    item.setTitle('Note From Form: Use template')
+                        .setIcon('captions')
+                        .onClick(async () => {
+                            const templateItem = this.templateIndex.getItems().find(i => i.file.path === file.path);                            
+                            await  this.useTemplate(templateItem);
+                        });
+                });
+            }
+        }));
 
         await this.templateIndex.rebuild();
     }
@@ -60,15 +74,20 @@ export default class NoteFromFormPlugin extends Plugin {
             this.addCommand({
                 id: commandId,
                 name: `use ${label}`,
-                callback: async () => {
-                    try {
-                        await this.templateProcessor.process(item);
-                    } catch (e) {
-                        new Notice(e instanceof Error ? e.message : 'Failed to process template');
-                    }
-                },
+                callback: async () => await this.useTemplate(item)
             });
             this.commandIds.push(`${this.manifest.id}:${commandId}`);
+        }
+    }
+
+    private async useTemplate(indexedTemplate?: TemplateIndexItem) {
+        if (!indexedTemplate) {
+            return;
+        }
+        try {
+            await this.templateProcessor.useTemplate(indexedTemplate);
+        } catch (e) {
+            new Notice(e instanceof Error ? e.message : 'Failed to process template');
         }
     }
 }

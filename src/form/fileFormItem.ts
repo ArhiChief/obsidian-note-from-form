@@ -52,19 +52,24 @@ abstract class FileInfoFormItem extends FormItemBase<string> {
 
 export class FileNameFormItem extends FileInfoFormItem {
 
+    public static readonly FormFieldId: string = "file-name";
+
     private static readonly _title: string = "Name of created note";
     private static readonly _placeholder: string = "My Fancy Note";
 
     constructor (getFunc?: GetFunctionString | TemplateString | ValueString) {
-        super("fileName", "File name", FileNameFormItem._title, FileNameFormItem._placeholder, getFunc);
+        super(FileNameFormItem.FormFieldId, "File name", FileNameFormItem._title, FileNameFormItem._placeholder, getFunc);
     }
 }
 
 export class FileLocationFormItem extends FileInfoFormItem {
+
+    public static readonly FormFieldId: string = "file-location";
+
     private static readonly _title: string = "Folder where note will be placed";
     private static readonly _placeholder: string = "/some/path/";
 
     constructor (getFunc?: GetFunctionString | TemplateString | ValueString) {
-        super("fileLocation", "File location", FileLocationFormItem._title, FileLocationFormItem._placeholder, getFunc);
+        super(FileLocationFormItem.FormFieldId, "File location", FileLocationFormItem._title, FileLocationFormItem._placeholder, getFunc);
     }
 }

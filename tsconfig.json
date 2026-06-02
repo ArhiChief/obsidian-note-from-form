@@ -20,7 +20,7 @@
       "scripthost",
       "es2018"
     ],
-    "types": ["jest"]
+    "types": ["jest", "node"]
   },
   "include": [
     "**/*.ts",

@@ -1,5 +1,6 @@
 import { InputFormModal } from "../ui/inputFormModal";
 import { FormItem } from "../form/formItem";
+import { TemplateIndexItem } from "../template/templateIndex";
 
 // ── mocks ──
 
@@ -23,7 +24,7 @@ jest.mock("obsidian", () => {
         },
         Setting: jest.fn().mockImplementation(function (this: any) {
             this.addButton = jest.fn().mockImplementation((cb: any) => {
-                const button = {
+                const button: Record<string, jest.Mock> = {
                     setButtonText: jest.fn().mockReturnThis(),
                     setCta: jest.fn().mockReturnThis(),
                     onClick: jest.fn().mockImplementation((handler: any) => {
@@ -58,7 +59,8 @@ function createMockFormItem(id: string): FormItem {
 function createModal(items: FormItem[] = [], title = "Test", callback?: jest.Mock) {
     const app = {} as any;
     const cb = callback ?? jest.fn().mockResolvedValue(undefined);
-    const modal = new InputFormModal(app, title, items, cb);
+    const indexedTemplate = { file: {} as any, label: title } as TemplateIndexItem;
+    const modal = new InputFormModal(app, indexedTemplate, items, cb);
     return { modal, callback: cb };
 }
 
