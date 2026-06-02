@@ -103,7 +103,7 @@ describe("InputFormModal", () => {
 
         test("Create button invokes callback and closes modal", async () => {
             const closeSpy = jest.spyOn(InputFormModal.prototype, "close").mockImplementation(() => {});
-            const cb = jest.fn().mockResolvedValue(undefined);
+            const cb = jest.fn().mockResolvedValue(true);
             const { modal } = createModal([], "Test", cb);
 
             modal.onOpen();

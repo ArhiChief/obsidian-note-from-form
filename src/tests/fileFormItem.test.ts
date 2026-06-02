@@ -16,9 +16,9 @@ jest.mock("src/ui/settingsExtension", () => {
 describe("FileNameFormItem", () => {
 
     describe("constructor", () => {
-        test("has id 'fileName'", () => {
+        test("has id 'file-name'", () => {
             const item = new FileNameFormItem();
-            expect(item.id).toBe("fileName");
+            expect(item.id).toBe("file-name");
         });
 
         test("has type 'text'", () => {
@@ -69,9 +69,9 @@ describe("FileNameFormItem", () => {
 describe("FileLocationFormItem", () => {
 
     describe("constructor", () => {
-        test("has id 'fileLocation'", () => {
+        test("has id 'file-location'", () => {
             const item = new FileLocationFormItem();
-            expect(item.id).toBe("fileLocation");
+            expect(item.id).toBe("file-location");
         });
 
         test("has type 'text'", () => {

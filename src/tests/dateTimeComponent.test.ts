@@ -1,4 +1,10 @@
 import { DateTimeComponent, DateTimeType } from "../ui/dateTimeComponent";
+import moment from "moment";
+
+Object.defineProperty(globalThis, "window", {
+    value: { moment },
+    writable: true,
+});
 
 // ── helpers ──
 
