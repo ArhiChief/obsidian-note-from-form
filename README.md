@@ -100,10 +100,13 @@ Category: Work
 2. Open plugin settings and set location of template files. Also you can specify obsidian property that will point to template definition:
 ![image](readme_files/plugin_settings.png)
 3. Create set of templates that will be used by plugin to generate input form and new notes. See [Template Description](#template-description);
-4. In plugin settings press **Re-build** button or run `Note From Form: Re-Build Template Index` from [Command palette](https://help.obsidian.md/Plugins/Command+palette).
 
 
-If template files have no issues Obsidian command palette will be enriched with new commands in format `Note From Form: Your Template Name`. Use commands from command palette to create new note from template.
+If template files have no issues Obsidian command palette will be enriched with new commands in format `Note From Form: path/to/template`, and context menu option will appear for template file. Use commands from command palette to create new note from template:
+
+| Use template from commands | Use template from context menu |
+|-|-|
+| ![image](readme_files/command_pallete_cmd.png) | ![image](readme_files/context_menu_option.png) |
 
 
 
