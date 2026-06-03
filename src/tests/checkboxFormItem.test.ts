@@ -71,6 +71,16 @@ describe("CheckboxFormItem", () => {
             const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", get: "v:yes" });
             expect(item.get({})).toBe("yes");
         });
+
+        test("invokes arrow function for f: getFunc", () => {
+            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", get: "f:(view)=>true" });
+            expect(item.get({})).toBe(true);
+        });
+
+        test("invokes regular function for f: getFunc", () => {
+            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", get: "f:function(view) { return true; }" });
+            expect(item.get({})).toBe(true);
+        });
     });
 
     // ─── assignToForm ───

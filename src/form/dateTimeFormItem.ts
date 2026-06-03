@@ -4,12 +4,14 @@ import moment from "moment";
 import { ExtendedSetting } from "src/ui/settingsExtension";
 import { DateTimeComponent } from "src/ui/dateTimeComponent";
 
-export class DateFormItem extends FormItemBase<Date> {
+const MUSTACHE_TEMPLATE_REGEX = /[{]{2}.+[}]{2}/;
+
+export class DateTimeFormItem extends FormItemBase<Date> {
 
     constructor(src: DateFormItemTemplate) {
-        DateFormItem.assertType(src.type);
+        DateTimeFormItem.assertType(src.type);
 
-        const initValue = DateFormItem.getInitValue(src.init);
+        const initValue = DateTimeFormItem.getInitValue(src.init);
 
         super(src.id, src.type, initValue, src.get, src.form);
     }
@@ -53,6 +55,13 @@ export class DateFormItem extends FormItemBase<Date> {
             default:
                 throw new Error(`Unsupported type: ${this.type}`);
         }
+    }
+
+    protected getTemplateImpl(templateText: string, view: Record<string, any>): string {
+        if (MUSTACHE_TEMPLATE_REGEX.test(templateText)) {
+            return super.getTemplateImpl(templateText, view);
+        }
+        return moment(this.value).format(templateText);
     }
 
     private static getInitValue(src?: InitFunctionString | ValueString): Date {

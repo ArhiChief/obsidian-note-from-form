@@ -1,4 +1,4 @@
-import { DateFormItem } from "../form/dateFormItem";
+import { DateTimeFormItem as DateFormItem } from "../form/dateTimeFormItem";
 
 jest.mock("moment", () => {
     const fn = (date: any) => ({
@@ -108,6 +108,26 @@ describe("DateFormItem", () => {
         test("returns literal for v: getFunc", () => {
             const item = new DateFormItem({ id: "d1", type: "date", get: "v:custom-date" });
             expect(item.get({})).toBe("custom-date");
+        });
+
+        test("formats date with moment when template has no mustache expressions", () => {
+            const item = new DateFormItem({ id: "d1", type: "date", get: "t:L", init: "v:2025-01-15" });
+            expect(item.get({})).toBe("01/15/2025");
+        });
+
+        test("formats time with moment when template has no mustache expressions", () => {
+            const item = new DateFormItem({ id: "d1", type: "time", get: "t:LTS", init: "v:2025-01-15T14:30:45" });
+            expect(item.get({})).toBe("2:30:45 PM");
+        });
+
+        test("delegates to Mustache when template contains mustache expressions", () => {
+            const item = new DateFormItem({ id: "d1", type: "date", get: "t:{{label}}", init: "v:2025-01-15" });
+            expect(item.get({ label: "Jan 15" })).toBe("Jan 15");
+        });
+
+        test("delegates to Mustache for mixed mustache and text", () => {
+            const item = new DateFormItem({ id: "d1", type: "date", get: "t:Date: {{label}}", init: "v:2025-01-15" });
+            expect(item.get({ label: "2025" })).toBe("Date: 2025");
         });
     });
 

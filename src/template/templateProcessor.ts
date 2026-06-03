@@ -41,7 +41,7 @@ export class TemplateProcessor {
         }
 
         const template = templateData as NoteTemplate;
-        const formItems = FormItemsManager.getFormItems(template);
+        const formItems = FormItemsManager.getFormItems(template, this._settings);
 
         const inputForm = new InputFormModal(this._app, indexedTemplate, formItems, this.createNoteFromTemplate.bind(this));
         inputForm.open();

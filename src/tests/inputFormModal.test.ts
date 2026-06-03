@@ -19,6 +19,7 @@ jest.mock("obsidian", () => {
                     empty: jest.fn(),
                 };
             }
+            setTitle() {}
             open() {}
             close() {}
         },
@@ -75,11 +76,10 @@ describe("InputFormModal", () => {
     describe("onOpen", () => {
         test("creates a heading with the template title", () => {
             const { modal } = createModal([], "My Template");
+            const setTitleSpy = jest.spyOn(modal as any, "setTitle");
             modal.onOpen();
 
-            expect((modal as any).contentEl.createEl).toHaveBeenCalledWith("h1", {
-                text: "New note: My Template",
-            });
+            expect(setTitleSpy).toHaveBeenCalledWith("New note: My Template");
         });
 
         test("calls assignToForm on each form item", () => {

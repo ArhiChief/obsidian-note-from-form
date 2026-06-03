@@ -48,9 +48,7 @@ export default class NoteFromFormPlugin extends Plugin {
         await this.templateIndex.rebuild();
     }
 
-    onunload() { 
-
-    }
+    onunload() { }
 
     private async loadSettings() {
         this.settings = Object.assign({}, DEFAULT_PLUGIN_SETTINGS, await this.loadData());

@@ -138,6 +138,9 @@ module.exports = {
     TAbstractFile,
     TFile,
     TFolder,
+    Notice: class {
+        constructor(message: string) {}
+    },
     normalizePath(path: string) {
         // Strip trailing slashes, normalize backslashes
         return path.replace(/\\/g, '/').replace(/\/+$/, '');

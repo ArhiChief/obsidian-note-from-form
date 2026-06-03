@@ -1,3 +1,4 @@
+import Mustache from 'mustache';
 import { FormItemForm, FormItemType, GetFunctionString, TemplateString, ValueString } from "src/template/templateTypes";
 
 export interface FormItem {
@@ -73,11 +74,12 @@ export abstract class FormItemBase<TValue> implements FormItem {
     protected abstract getFunctionDefault() : string;
 
     protected getTemplateImpl(templateText: string, view: Record<string, any>): string {
-        return "a";
+        return Mustache.render(templateText, view, {}, { escape: (val: string) => val });
     }
 
     protected getFunctionImpl(functionText: string, view: Record<string, any>) : string {
-        return "b";
+        const func = eval(`(${functionText})`) as (view: Record<string, any>) => string;
+        return func(view);
     }
 
     protected getValueImpl(valueText: string, _: Record<string, any>) : string {

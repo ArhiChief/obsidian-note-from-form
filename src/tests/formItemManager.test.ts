@@ -2,10 +2,17 @@ import { FormItemsManager } from "../form/formItemManager";
 import { FileNameFormItem, FileLocationFormItem } from "../form/fileFormItem";
 import { TextFormItem } from "../form/textFormItem";
 import { NumberFormItem } from "../form/numberFormItem";
-import { DateFormItem } from "../form/dateFormItem";
+import { DateTimeFormItem } from "../form/dateTimeFormItem";
 import { CheckboxFormItem } from "../form/checkboxFormItem";
 import { DropdownFormItem } from "../form/dropdownFormItem";
 import { NoteTemplate } from "../template/templateTypes";
+import { NoteFromFormPluginSettings } from "../pluginSettings";
+
+const mockSettings: NoteFromFormPluginSettings = {
+    templatesFolderLocation: "/",
+    templatePropertyName: "note-from-form",
+    defaultOutputDir: "/",
+};
 
 jest.mock("moment", () => {
     const fn = (date: any) => ({
@@ -36,7 +43,7 @@ describe("FormItemsManager", () => {
     describe("getFormItems", () => {
         test("always creates FileNameFormItem and FileLocationFormItem", () => {
             const template: NoteTemplate = {};
-            const items = FormItemsManager.getFormItems(template);
+            const items = FormItemsManager.getFormItems(template, mockSettings);
 
             expect(items.length).toBeGreaterThanOrEqual(2);
             expect(items[0]).toBeInstanceOf(FileNameFormItem);
@@ -45,13 +52,13 @@ describe("FormItemsManager", () => {
 
         test("passes file-name getFunc to FileNameFormItem", () => {
             const template: NoteTemplate = { "file-name": "v:MyNote" };
-            const items = FormItemsManager.getFormItems(template);
+            const items = FormItemsManager.getFormItems(template, mockSettings);
             expect(items[0].get({})).toBe("MyNote");
         });
 
         test("passes file-location getFunc to FileLocationFormItem", () => {
             const template: NoteTemplate = { "file-location": "v:notes/folder" };
-            const items = FormItemsManager.getFormItems(template);
+            const items = FormItemsManager.getFormItems(template, mockSettings);
             expect(items[1].get({})).toBe("notes/folder");
         });
 
@@ -59,7 +66,7 @@ describe("FormItemsManager", () => {
             const template: NoteTemplate = {
                 "form-items": [{ id: "t", type: "text" }],
             };
-            const items = FormItemsManager.getFormItems(template);
+            const items = FormItemsManager.getFormItems(template, mockSettings);
             expect(items[2]).toBeInstanceOf(TextFormItem);
         });
 
@@ -67,7 +74,7 @@ describe("FormItemsManager", () => {
             const template: NoteTemplate = {
                 "form-items": [{ id: "t", type: "textArea" }],
             };
-            const items = FormItemsManager.getFormItems(template);
+            const items = FormItemsManager.getFormItems(template, mockSettings);
             expect(items[2]).toBeInstanceOf(TextFormItem);
         });
 
@@ -75,39 +82,39 @@ describe("FormItemsManager", () => {
             const template: NoteTemplate = {
                 "form-items": [{ id: "n", type: "number" }],
             };
-            const items = FormItemsManager.getFormItems(template);
+            const items = FormItemsManager.getFormItems(template, mockSettings);
             expect(items[2]).toBeInstanceOf(NumberFormItem);
         });
 
-        test("creates DateFormItem for date type", () => {
+        test("creates DateTimeFormItem for date type", () => {
             const template: NoteTemplate = {
                 "form-items": [{ id: "d", type: "date" }],
             };
-            const items = FormItemsManager.getFormItems(template);
-            expect(items[2]).toBeInstanceOf(DateFormItem);
+            const items = FormItemsManager.getFormItems(template, mockSettings);
+            expect(items[2]).toBeInstanceOf(DateTimeFormItem);
         });
 
-        test("creates DateFormItem for time type", () => {
+        test("creates DateTimeFormItem for time type", () => {
             const template: NoteTemplate = {
                 "form-items": [{ id: "d", type: "time" }],
             };
-            const items = FormItemsManager.getFormItems(template);
-            expect(items[2]).toBeInstanceOf(DateFormItem);
+            const items = FormItemsManager.getFormItems(template, mockSettings);
+            expect(items[2]).toBeInstanceOf(DateTimeFormItem);
         });
 
-        test("creates DateFormItem for dateTime type", () => {
+        test("creates DateTimeFormItem for dateTime type", () => {
             const template: NoteTemplate = {
                 "form-items": [{ id: "d", type: "dateTime" }],
             };
-            const items = FormItemsManager.getFormItems(template);
-            expect(items[2]).toBeInstanceOf(DateFormItem);
+            const items = FormItemsManager.getFormItems(template, mockSettings);
+            expect(items[2]).toBeInstanceOf(DateTimeFormItem);
         });
 
         test("creates CheckboxFormItem for checkbox type", () => {
             const template: NoteTemplate = {
                 "form-items": [{ id: "c", type: "checkbox" }],
             };
-            const items = FormItemsManager.getFormItems(template);
+            const items = FormItemsManager.getFormItems(template, mockSettings);
             expect(items[2]).toBeInstanceOf(CheckboxFormItem);
         });
 
@@ -118,7 +125,7 @@ describe("FormItemsManager", () => {
                     init: 'v:[{"k":"a","v":"A"}]',
                 }],
             };
-            const items = FormItemsManager.getFormItems(template);
+            const items = FormItemsManager.getFormItems(template, mockSettings);
             expect(items[2]).toBeInstanceOf(DropdownFormItem);
         });
 
@@ -130,21 +137,152 @@ describe("FormItemsManager", () => {
                     { id: "c", type: "checkbox" },
                 ],
             };
-            const items = FormItemsManager.getFormItems(template);
+            const items = FormItemsManager.getFormItems(template, mockSettings);
             // 2 file items + 3 form items
             expect(items.length).toBe(5);
         });
 
         test("returns only file items when form-items is undefined", () => {
             const template: NoteTemplate = {};
-            const items = FormItemsManager.getFormItems(template);
+            const items = FormItemsManager.getFormItems(template, mockSettings);
             expect(items.length).toBe(2);
         });
 
         test("returns only file items when form-items is empty", () => {
             const template: NoteTemplate = { "form-items": [] };
-            const items = FormItemsManager.getFormItems(template);
+            const items = FormItemsManager.getFormItems(template, mockSettings);
             expect(items.length).toBe(2);
+        });
+    });
+
+    describe("getViewModel", () => {
+        test("returns empty result for file-only items with no values", () => {
+            const template: NoteTemplate = {};
+            const items = FormItemsManager.getFormItems(template, mockSettings);
+            // file items have no user input, default get returns value (empty string)
+            const vm = FormItemsManager.getViewModel(items);
+            expect(vm["file-name"]).toBeDefined();
+            expect(vm["file-location"]).toBeDefined();
+        });
+
+        test("includes form item values in view model", () => {
+            const template: NoteTemplate = {
+                "form-items": [
+                    { id: "t1", type: "text" },
+                    { id: "t2", type: "text" },
+                ],
+            };
+            const items = FormItemsManager.getFormItems(template, mockSettings);
+            items[2].value = "hello";
+            items[3].value = "world";
+
+            const vm = FormItemsManager.getViewModel(items);
+            expect(vm["t1"]).toBe("hello");
+            expect(vm["t2"]).toBe("world");
+        });
+
+        test("resolves value-string get functions", () => {
+            const template: NoteTemplate = {
+                "form-items": [
+                    { id: "t", type: "text", get: "v:static-value" },
+                ],
+            };
+            const items = FormItemsManager.getFormItems(template, mockSettings);
+            const vm = FormItemsManager.getViewModel(items);
+            expect(vm["t"]).toBe("static-value");
+        });
+
+        test("excludes file-name and file-location from intermediate view but includes in result", () => {
+            const template: NoteTemplate = {
+                "file-name": "v:MyNote",
+                "file-location": "v:notes",
+                "form-items": [
+                    { id: "title", type: "text" },
+                ],
+            };
+            const items = FormItemsManager.getFormItems(template, mockSettings);
+            items[2].value = "Test Title";
+
+            const vm = FormItemsManager.getViewModel(items);
+            expect(vm["title"]).toBe("Test Title");
+            expect(vm["file-name"]).toBe("MyNote");
+            expect(vm["file-location"]).toBe("notes");
+        });
+
+        test("resolves file-name after form items", () => {
+            const template: NoteTemplate = {
+                "file-name": "v:NoteName",
+                "form-items": [
+                    { id: "t", type: "text" },
+                ],
+            };
+            const items = FormItemsManager.getFormItems(template, mockSettings);
+            items[2].value = "value";
+
+            const vm = FormItemsManager.getViewModel(items);
+            // file-name is resolved after form items
+            expect(vm["file-name"]).toBe("NoteName");
+            expect(vm["t"]).toBe("value");
+        });
+
+        test("handles number form item values", () => {
+            const template: NoteTemplate = {
+                "form-items": [
+                    { id: "n", type: "number" },
+                ],
+            };
+            const items = FormItemsManager.getFormItems(template, mockSettings);
+            items[2].value = 42;
+
+            const vm = FormItemsManager.getViewModel(items);
+            expect(vm["n"]).toBe("42");
+        });
+
+        test("handles checkbox form item values", () => {
+            const template: NoteTemplate = {
+                "form-items": [
+                    { id: "c", type: "checkbox" },
+                ],
+            };
+            const items = FormItemsManager.getFormItems(template, mockSettings);
+            items[2].value = true;
+
+            const vm = FormItemsManager.getViewModel(items);
+            expect(vm["c"]).toBeDefined();
+        });
+
+        test("handles mixed form item types", () => {
+            const template: NoteTemplate = {
+                "file-name": "v:TestNote",
+                "form-items": [
+                    { id: "t", type: "text" },
+                    { id: "n", type: "number" },
+                    { id: "c", type: "checkbox" },
+                ],
+            };
+            const items = FormItemsManager.getFormItems(template, mockSettings);
+            items[2].value = "text-val";
+            items[3].value = 7;
+            items[4].value = true;
+
+            const vm = FormItemsManager.getViewModel(items);
+            expect(vm["t"]).toBe("text-val");
+            expect(vm["n"]).toBeDefined();
+            expect(vm["c"]).toBeDefined();
+            expect(vm["file-name"]).toBe("TestNote");
+        });
+
+        test("returns only file items in view model when no form items", () => {
+            const template: NoteTemplate = {
+                "file-name": "v:OnlyFile",
+            };
+            const items = FormItemsManager.getFormItems(template, mockSettings);
+            const vm = FormItemsManager.getViewModel(items);
+
+            expect(Object.keys(vm)).toEqual(
+                expect.arrayContaining(["file-name", "file-location"])
+            );
+            expect(Object.keys(vm).length).toBe(2);
         });
     });
 });

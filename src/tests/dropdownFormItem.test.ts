@@ -80,6 +80,20 @@ describe("DropdownFormItem", () => {
             });
             expect(item.get({})).toBe("override");
         });
+
+        test("invokes arrow function for f: getFunc", () => {
+            const item = new DropdownFormItem({
+                id: "dd1", type: "dropdown", init: twoOptions, get: "f:(view) => view.label",
+            });
+            expect(item.get({ label: "from-view" })).toBe("from-view");
+        });
+
+        test("invokes regular function for f: getFunc", () => {
+            const item = new DropdownFormItem({
+                id: "dd1", type: "dropdown", init: twoOptions, get: "f:function(view) { return view.label; }",
+            });
+            expect(item.get({ label: "func-result" })).toBe("func-result");
+        });
     });
 
     // ─── assignToForm ───

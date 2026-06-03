@@ -3,15 +3,18 @@ import { FormItem } from "./formItem";
 import { FileLocationFormItem, FileNameFormItem } from "./fileFormItem";
 import { TextFormItem } from "./textFormItem";
 import { NumberFormItem } from "./numberFormItem";
-import { DateFormItem } from "./dateFormItem";
+import { DateTimeFormItem } from "./dateTimeFormItem";
 import { CheckboxFormItem } from "./checkboxFormItem";
 import { DropdownFormItem } from "./dropdownFormItem";
+import { NoteFromFormPluginSettings } from "src/pluginSettings";
 
 export class FormItemsManager {
-    static getFormItems(template: NoteTemplate): FormItem[] {
+    static getFormItems(template: NoteTemplate, settings: NoteFromFormPluginSettings): FormItem[] {
+        
+        const fileLocationsSrc = template["file-location"] ?? `v:${settings.templatesFolderLocation}`;
         const result: FormItem[] = [
             new FileNameFormItem(template["file-name"]),
-            new FileLocationFormItem(template["file-location"]),
+            new FileLocationFormItem(fileLocationsSrc),
         ];
 
         for (const item of template["form-items"] ?? []) {
@@ -28,7 +31,7 @@ export class FormItemsManager {
                 case 'date':
                 case 'time':
                 case 'dateTime':
-                    result.push(new DateFormItem(item));
+                    result.push(new DateTimeFormItem(item));
                     break;
                 case 'checkbox':
                     result.push(new CheckboxFormItem(item));

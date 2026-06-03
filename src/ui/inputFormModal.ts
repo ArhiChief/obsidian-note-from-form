@@ -8,8 +8,11 @@ export class InputFormModal extends Modal {
     private readonly _indexedTemplate: TemplateIndexItem;
     private readonly _callback: (items: FormItem[], indexedTemplate: TemplateIndexItem) => Promise<boolean>;
 
+    private readonly _app: App;
+
     constructor(app: App, indexedTemplate: TemplateIndexItem, formItems: FormItem[], callback: (items: FormItem[], indexedTemplate: TemplateIndexItem) => Promise<boolean>) {
         super(app);
+        this._app = app;
         this._indexedTemplate = indexedTemplate;
         this._items = formItems;
         this._callback = callback;
@@ -18,7 +21,7 @@ export class InputFormModal extends Modal {
     onOpen(): void {
         const { contentEl } = this;
 
-        contentEl.createEl("h1", { text: `New note: ${this._indexedTemplate.label}` });
+        this.setTitle(`New note: ${this._indexedTemplate.label}`);
 
         for (let i = 0; i < this._items.length; i++) {
             const item: FormItem = this._items[i];

@@ -123,6 +123,12 @@
             ],
             "properties": {
                 "type": { "const": "dropdown" }
+            },
+            "required": ["init"],
+            "errorMessage": {
+                "required": {
+                    "init": "dropdown form item must have an 'init' property with options"
+                }
             }
         }
     },

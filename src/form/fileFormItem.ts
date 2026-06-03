@@ -3,6 +3,7 @@ import { FormItemBase } from "./formItem";
 import { FormItemForm, GetFunctionString, TemplateString, ValueString } from "src/template/templateTypes";
 import { ExtendedSetting } from "src/ui/settingsExtension";
 
+// https://docs.obsidian.md/Plugins/User+interface/Modals#Select+from+list+of+suggestions
 abstract class FileInfoFormItem extends FormItemBase<string> {
 
     private readonly _placeholder: string;

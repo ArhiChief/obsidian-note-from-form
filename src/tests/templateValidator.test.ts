@@ -254,7 +254,7 @@ describe("validateTemplate", () => {
 
         test("accepts dropdown type", () => {
             const result = validateTemplate(validTemplate({
-                "form-items": [validTextItem({ id: "category", type: "dropdown" })],
+                "form-items": [validTextItem({ id: "category", type: "dropdown", init: 'v:[{"k":"a","v":"Alpha"}]' })],
             }));
             expect(result.valid).toBe(true);
         });
