@@ -166,11 +166,11 @@ describe("NoteFromFormSettingsTab", () => {
             expect(templatesDir.descEl.toggleClass).toHaveBeenCalledWith("nff-error-desc", true);
         });
 
-        test("shows error for path with colon", async () => {
+        test("accepts path with colon (valid on Unix)", async () => {
             const { tab, saveData } = createTab();
             const { templatesDir } = displayAndGetTextComponents(tab);
             await templatesDir.textComponent!.trigger("C:folder");
-            expect(saveData).not.toHaveBeenCalled();
+            expect(saveData).toHaveBeenCalled();
         });
 
         test("shows error for path with pipe character", async () => {
@@ -292,11 +292,11 @@ describe("NoteFromFormSettingsTab", () => {
         const invalidPaths = [
             { path: "has<angle", reason: "contains <" },
             { path: "has>angle", reason: "contains >" },
-            { path: "has:colon", reason: "contains :" },
             { path: 'has"quote', reason: 'contains "' },
             { path: "has|pipe", reason: "contains |" },
             { path: "has?question", reason: "contains ?" },
             { path: "has*star", reason: "contains *" },
+            { path: "has\\backslash", reason: "contains \\" },
             { path: "trailing/", reason: "ends with /" },
         ];
 
@@ -314,6 +314,7 @@ describe("NoteFromFormSettingsTab", () => {
             "with-dashes",
             "with_underscores",
             "with.dots",
+            "with:colon",
             "MixedCase/Path",
         ];
 
