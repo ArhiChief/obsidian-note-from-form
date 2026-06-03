@@ -4,7 +4,7 @@ import { NoteFromFormPluginSettings, TEMPLATE_PROPERTY_NAME } from "src/pluginSe
 
 const pathPlaceholder = 'folder1/folder2';
 const defaultOutputDirectoryDesc = `Used to create new notes if "file-location" property is not defined in template. Path should be relative to vault root and should not start or end with a slash. Example: ${pathPlaceholder}`;
-const invalidDirectoryPath = 'Invalid directory path. Please avoid characters like <>:"|?* and do not end with a slash';
+const invalidDirectoryPath = 'Invalid directory path. Please avoid characters like <>"|?*\\ and do not end with a slash';
 const templatesDirectoryDesc = `Files in this directory will be available as templates. Path should be relative to vault root and should not start or end with a slash. Example: ${pathPlaceholder}`;
 const templatePropertyNameDesc = 'Set property used to define form. Example: note-from-form';
 
@@ -79,7 +79,7 @@ export class NoteFromFormSettingsTab extends PluginSettingTab{
 
     private isValidFolderPath(path: string): boolean {
         // Simple validation: folder path should not contain invalid characters and should not end with a slash
-        const invalidChars = /[<>:"|?*]/;
+        const invalidChars = /[<>"|?*\\]/;
         if (invalidChars.test(path) || path.endsWith('/')) {
             return false;
         }

@@ -1,17 +1,16 @@
 import { DateTimeFormItem as DateFormItem } from "../form/dateTimeFormItem";
 
-jest.mock("moment", () => {
-    const fn = (date: any) => ({
-        format: (fmt?: string) => {
-            switch (fmt) {
-                case 'L': return '01/15/2025';
-                case 'LTS': return '2:30:45 PM';
-                default: return '2025-01-15T14:30:45Z';
-            }
+const momentMock = (date: any) => ({
+    format: (fmt?: string) => {
+        switch (fmt) {
+            case 'L': return '01/15/2025';
+            case 'LTS': return '2:30:45 PM';
+            default: return '2025-01-15T14:30:45Z';
         }
-    });
-    return { __esModule: true, default: fn };
+    }
 });
+
+(globalThis as any).window = { moment: momentMock };
 
 jest.mock("src/ui/settingsExtension", () => {
     const methods = ['setName', 'setDesc', 'addToggle', 'addText', 'addTextArea',
