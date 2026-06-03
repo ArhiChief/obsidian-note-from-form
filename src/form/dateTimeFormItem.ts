@@ -1,6 +1,5 @@
 import { DateFormItem as DateFormItemTemplate, InitFunctionString, ValueString, FormItemType } from "src/template/templateTypes";
 import { FormItemBase } from "./formItem";
-import moment from "moment";
 import { ExtendedSetting } from "src/ui/settingsExtension";
 import { DateTimeComponent } from "src/ui/dateTimeComponent";
 
@@ -44,7 +43,7 @@ export class DateTimeFormItem extends FormItemBase<Date> {
     }
 
     protected getFunctionDefault(): string {
-        const val = moment(this.value);
+        const val = window.moment(this.value);
         switch(this.type) {
             case 'date':
                 return val.format('L')
@@ -61,7 +60,7 @@ export class DateTimeFormItem extends FormItemBase<Date> {
         if (MUSTACHE_TEMPLATE_REGEX.test(templateText)) {
             return super.getTemplateImpl(templateText, view);
         }
-        return moment(this.value).format(templateText);
+        return window.moment(this.value).format(templateText);
     }
 
     private static getInitValue(src?: InitFunctionString | ValueString): Date {
