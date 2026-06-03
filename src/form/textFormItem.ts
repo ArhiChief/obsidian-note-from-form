@@ -1,30 +1,35 @@
-import { InitFunctionType, TemplateFormItem, TemplateFormItemType, TemplateFunction } from "src/template/template";
 import { TextAreaComponent, TextComponent } from "obsidian";
-import { SettingExtended } from "src/ui/settingExtensions";
-import { FormItemBase } from "./formItemBase";
-
+import { TextFormItem as TextFormItemTemplate, InitFunctionString, ValueString, FormItemType } from "src/template/templateTypes";
+import { FormItemBase } from "./formItem";
+import { ExtendedSetting } from "src/ui/settingsExtension";
 
 export class TextFormItem extends FormItemBase<string> {
     
-    constructor (src: TemplateFormItem) {
+    private readonly _placeholder: string = "";
+
+    constructor (src: TextFormItemTemplate) {
 
         TextFormItem.assertType(src.type);
 
         const initValue =  TextFormItem.getInitValue(src.init);
 
         super(src.id, src.type, initValue, src.get, src.form);
+
+        if (src.form?.placeholder) {
+            this._placeholder = src.form.placeholder;
+        }
     }
 
     protected assignToFormImpl(contentEl: HTMLElement): void {
-        const setting = new SettingExtended(contentEl)
+        const setting = new ExtendedSetting(contentEl)
             .setName(this._title)
             .setDesc(this._description);
         
         switch(this.type) {
-            case TemplateFormItemType.Text:
+            case 'text':
                 setting.addText(this.configureComponent());
                 break;
-            case TemplateFormItemType.TextArea:
+            case 'textArea':
                 setting.addTextArea(this.configureComponent());
                 break;
             default:
@@ -32,8 +37,7 @@ export class TextFormItem extends FormItemBase<string> {
         }
     }
 
-    private configureComponent() : (component: TextAreaComponent | TextComponent) => any {
-
+    private configureComponent() : (component: TextAreaComponent | TextComponent) => TextAreaComponent | TextComponent {
         return component => component
             .setPlaceholder(this._placeholder)
             .setValue(this.value)
@@ -44,27 +48,25 @@ export class TextFormItem extends FormItemBase<string> {
         return this.value;
     }
 
-    private static getInitValue(src?: TemplateFunction<InitFunctionType>): string {
+    private static getInitValue(src?: InitFunctionString | ValueString): string {
 
         if (!src) {
             return "";
         }
 
-        const { type, text } =  src;
-        switch(type) {
-            case InitFunctionType.Function:
-                return TextFormItem.executeInitFunction(text);
-            case InitFunctionType.Value:
-                return text;
-            default:
-                throw 1;
+        if (src.startsWith('f:')) {
+            return FormItemBase.executeInitFunction(src.slice(2));
+        } else if (src.startsWith('v:')) {
+            return src.slice(2);
+        } else {
+            throw new Error(`Unsupported init value: ${src}`);
         }
     }
 
-    private static assertType (type: TemplateFormItemType): void {
+    private static assertType (type: FormItemType): void {
         switch (type) {
-            case TemplateFormItemType.Text:
-            case TemplateFormItemType.TextArea:
+            case 'text':
+            case 'textArea':
                 return;
             default:
                 throw new Error(`Unsupported type: ${type}`);

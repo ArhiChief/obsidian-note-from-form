@@ -1,5 +1,4 @@
-import { ValueComponent, moment } from "obsidian";
-
+import { ValueComponent } from "obsidian";
 
 export enum DateTimeType {
     DateTime = "datetime-local",
@@ -51,7 +50,7 @@ export class DateTimeComponent extends ValueComponent<Date> {
                 break;
         }
 
-        const val = moment(value).format(format);
+        const val = window.moment(value).format(format);
 
         this._inputEl.value = val;
 

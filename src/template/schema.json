@@ -1,0 +1,167 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$defs": {
+        "templateType": {
+            "type": "string",
+            "pattern": "^t:.+$",
+            "errorMessage": "must be a template string starting with 't:' followed by at least one character"
+        },
+        "valueType": {
+            "type": "string",
+            "pattern": "^v:.+$",
+            "errorMessage": "must be a value string starting with 'v:' followed by at least one character"
+        },
+        "initFunctionType": {
+            "type": "string",
+            "pattern": "^f:(\\(.*\\)\\s*=>|function\\s*\\(.*\\)\\s*\\{).*$",
+            "errorMessage": "must be a function string starting with 'f:' followed by an anonymous function (e.g. f:() => value or f:function() { return value; })"
+        },
+        "getFunctionType": {
+            "type": "string",
+            "pattern": "^f:(\\(view\\)\\s*=>|function\\s*\\(view\\)\\s*\\{).*$",
+            "errorMessage": "must be a function string starting with 'f:' followed by an anonymous function that receives 'view' parameter (e.g. f:(view) => value or f:function(view) { return value; })"
+        },
+        "pathType": {
+            "type": "string",
+            "pattern": "^v:(/[^/]*)+$",
+            "errorMessage": "must be a path string starting with 'v:' followed by a valid Unix path (e.g. v:/folder/subfolder)"
+        },
+        "nonEmptyStringType": {
+            "type": "string",
+            "pattern": "^\\S.*$",
+            "errorMessage": "must not be empty or start with a space"
+        },
+        "baseFormItemType": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z_$][a-zA-Z0-9_$]*$",
+                    "not": {
+                        "enum": ["file-name", "file-location"]
+                    },
+                    "errorMessage": {
+                        "pattern": "id must be a valid JavaScript variable name",
+                        "not": "'file-name' and 'file-location' are reserved names and cannot be used as id"
+                    }
+                },
+                "type": {
+                    "type": "string",
+                    "enum": ["text", "textArea", "number", "date", "time", "dateTime", "checkbox", "dropdown"],
+                    "errorMessage": "type must be one of: text, textArea, number, date, time, dateTime, checkbox, dropdown"
+                },
+                "form": {
+                    "type": "object",
+                    "properties": {
+                        "title": {
+                            "$ref": "#/$defs/nonEmptyStringType"
+                        },
+                        "description": {
+                            "$ref": "#/$defs/nonEmptyStringType"
+                        }
+                    },
+                    "required": ["title"]
+                },
+                "get": {
+                    "oneOf": [
+                        { "$ref": "#/$defs/getFunctionType" },
+                        { "$ref": "#/$defs/templateType" },
+                        { "$ref": "#/$defs/valueType" }
+                    ]
+                },
+                "init": {
+                    "oneOf": [
+                        { "$ref": "#/$defs/initFunctionType" },
+                        { "$ref": "#/$defs/valueType" }
+                    ]
+                }
+            },
+            "required": ["id", "type"]
+        },
+        "textFormItemType": {
+            "allOf": [
+                { "$ref": "#/$defs/baseFormItemType" }
+            ],
+            "properties": {
+                "type": { "enum": ["text", "textArea"] },
+                "form": {
+                    "properties": {
+                        "placeholder": {
+                            "$ref": "#/$defs/nonEmptyStringType"
+                        }
+                    }
+                }
+            }
+        },
+        "numberFormItemType": {
+            "allOf": [
+                { "$ref": "#/$defs/baseFormItemType" }
+            ],
+            "properties": {
+                "type": { "const": "number" }
+            }
+        },
+        "dateFormItemType": {
+            "allOf": [
+                { "$ref": "#/$defs/baseFormItemType" }
+            ],
+            "properties": {
+                "type": { "enum": ["date", "time", "dateTime"] }
+            }
+        },
+        "checkboxFormItemType": {
+            "allOf": [
+                { "$ref": "#/$defs/baseFormItemType" }
+            ],
+            "properties": {
+                "type": { "const": "checkbox" }
+            }
+        },
+        "dropdownFormItemType": {
+            "allOf": [
+                { "$ref": "#/$defs/baseFormItemType" }
+            ],
+            "properties": {
+                "type": { "const": "dropdown" }
+            },
+            "required": ["init"],
+            "errorMessage": {
+                "required": {
+                    "init": "dropdown form item must have an 'init' property with options"
+                }
+            }
+        }
+    },
+    "type": "object",
+    "properties": {
+        "file-name": {
+            "oneOf": [
+                { "$ref": "#/$defs/templateType" },
+                { "$ref": "#/$defs/valueType" },
+                { "$ref": "#/$defs/getFunctionType" }
+            ]
+        },
+        "file-location": {
+            "oneOf": [
+                { "$ref": "#/$defs/templateType" },
+                { "$ref": "#/$defs/getFunctionType" },
+                { "$ref": "#/$defs/pathType" }
+            ]
+        },
+        "form-items": {
+            "type": "array",
+            "uniqueItemProperties": ["id"],
+            "items": {
+                "oneOf": [
+                    { "$ref": "#/$defs/textFormItemType" },
+                    { "$ref": "#/$defs/numberFormItemType" },
+                    { "$ref": "#/$defs/dateFormItemType" },
+                    { "$ref": "#/$defs/checkboxFormItemType" },
+                    { "$ref": "#/$defs/dropdownFormItemType" }
+                ],
+                "unevaluatedProperties": false
+            }
+        }
+    },
+    "additionalProperties": false
+}

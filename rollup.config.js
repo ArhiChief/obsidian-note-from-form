@@ -1,6 +1,7 @@
 import typescript from '@rollup/plugin-typescript';
 import {nodeResolve} from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
+import json from '@rollup/plugin-json';
 
 
 const isProd = (process.env.BUILD === 'production');
@@ -23,9 +24,14 @@ export default {
     banner,
   },
   external: ['obsidian'],
+  onwarn(warning, warn) {
+    if (warning.code === 'EVAL') return;
+    warn(warning);
+  },
   plugins: [
     typescript(),
     nodeResolve({browser: true}),
     commonjs(),
+    json(),
   ]
 };

@@ -1,54 +1,56 @@
-import { GetFunctionType, InitFunctionType, TemplateFormItem, TemplateFormItemType, TemplateFunction } from "src/template/template";
-import { FormItemBase } from "./formItemBase";
-import { SettingExtended } from "src/ui/settingExtensions";
-
+import { NumberFormItem as NumberFormItemTemplate, InitFunctionString, ValueString, FormItemType } from "src/template/templateTypes";
+import { FormItemBase } from "./formItem";
+import { ExtendedSetting } from "src/ui/settingsExtension";
 
 export class NumberFormItem extends FormItemBase<number> {
 
-    private readonly _getSrc?: TemplateFunction<GetFunctionType>;
-
-    constructor(src: TemplateFormItem) {
+    constructor(src: NumberFormItemTemplate) {
         NumberFormItem.assertType(src.type);
 
         const initValue = NumberFormItem.getInitValue(src.init);
 
         super(src.id, src.type, initValue, src.get, src.form);
-
-        this._getSrc = src.get;
     }
-    
+
     protected assignToFormImpl(contentEl: HTMLElement): void {
-        new SettingExtended(contentEl)
+        new ExtendedSetting(contentEl)
             .setName(this._title)
             .setDesc(this._description)
             .addNumber(comp => comp
                 .setValue(this.value)
-                .onChange(newVal => this.value = newVal)
+                .onChange(newVal => {
+                    const parsed = Number(newVal);
+                    if (!isNaN(parsed)) {
+                        this.value = parsed;
+                    }
+                })
             );
     }
 
     protected getFunctionDefault(): string {
-        return this.value.toString();
+        return String(this.value);
     }
 
-    private static getInitValue(src?: TemplateFunction<InitFunctionType>): number {
+    private static getInitValue(src?: InitFunctionString | ValueString): number {
         if (!src) {
             return 0;
         }
 
-        const { type, text } = src;
-        switch(type) {
-            case InitFunctionType.Value:
-                return Number.parseFloat(text);
-            case InitFunctionType.Function:
-                return NumberFormItem.executeInitFunction(text);
-            default:
-                throw new Error(`Unsupported type: ${type}`);
+        if (src.startsWith('f:')) {
+            return FormItemBase.executeInitFunction<number>(src.slice(2));
+        } else if (src.startsWith('v:')) {
+            const parsed = Number(src.slice(2));
+            if (isNaN(parsed)) {
+                throw new Error(`Invalid number init value: ${src}`);
+            }
+            return parsed;
+        } else {
+            throw new Error(`Unsupported init value: ${src}`);
         }
     }
 
-    private static assertType(type: TemplateFormItemType): void {
-        if (type !== TemplateFormItemType.Number) {
+    private static assertType(type: FormItemType): void {
+        if (type !== 'number') {
             throw new Error(`Unsupported type: ${type}`);
         }
     }

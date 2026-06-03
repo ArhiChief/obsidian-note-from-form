@@ -10,15 +10,22 @@
     "moduleResolution": "node",
     "importHelpers": true,
     "isolatedModules": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "strictNullChecks": true,
     "lib": [
       "dom",
       "es5",
       "scripthost",
       "es2018"
-    ]
+    ],
+    "types": ["jest", "node"]
   },
   "include": [
     "**/*.ts",
+  ],
+  "exclude": [
+    "__mocks__"
   ]
 }

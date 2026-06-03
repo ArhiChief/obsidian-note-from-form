@@ -1,43 +1,40 @@
-import { InitFunctionType, TemplateFormItem, TemplateFormItemType, TemplateFunction } from "src/template/template";
-import { FormItemBase } from "./formItemBase";
+import { DateFormItem as DateFormItemTemplate, InitFunctionString, ValueString, FormItemType } from "src/template/templateTypes";
+import { FormItemBase } from "./formItem";
+import moment from "moment";
+import { ExtendedSetting } from "src/ui/settingsExtension";
 import { DateTimeComponent } from "src/ui/dateTimeComponent";
-import { moment } from "obsidian";
-import { renderMustacheTemplate } from "src/helpers";
-import { SettingExtended } from "src/ui/settingExtensions";
 
-
-const MUSTACHE_TEMPLATE_REGEX = /[{]{2}.+[}]{2}/g;
+const MUSTACHE_TEMPLATE_REGEX = /[{]{2}.+[}]{2}/;
 
 export class DateTimeFormItem extends FormItemBase<Date> {
 
-    constructor (src: TemplateFormItem) {
-        
+    constructor(src: DateFormItemTemplate) {
         DateTimeFormItem.assertType(src.type);
 
-        const initValue : Date = DateTimeFormItem.getInitValue(src.init);
-        
+        const initValue = DateTimeFormItem.getInitValue(src.init);
+
         super(src.id, src.type, initValue, src.get, src.form);
     }
 
     protected assignToFormImpl(contentEl: HTMLElement): void {
-
-        const setting = new SettingExtended(contentEl)
+        const setting = new ExtendedSetting(contentEl)
             .setName(this._title)
             .setDesc(this._description);
 
         switch(this.type) {
-            case TemplateFormItemType.Date:
+            case 'date':
                 setting.addDate(this.configureComponent());
                 break;
-            case TemplateFormItemType.Time:
+            case 'time':
                 setting.addTime(this.configureComponent());
                 break;
-            case TemplateFormItemType.DateTime:
+            case 'dateTime':
                 setting.addDateTime(this.configureComponent());
                 break;
             default:
                 throw new Error(`Unsupported type: ${this.type}`);
         }
+
     }
 
     private configureComponent(): (component: DateTimeComponent) => any {
@@ -49,46 +46,47 @@ export class DateTimeFormItem extends FormItemBase<Date> {
     protected getFunctionDefault(): string {
         const val = moment(this.value);
         switch(this.type) {
-            case TemplateFormItemType.Date:
+            case 'date':
                 return val.format('L')
-            case TemplateFormItemType.Time:
+            case 'time':
                 return val.format('LTS');
-            case TemplateFormItemType.DateTime:
+            case 'dateTime':
                 return val.format();
             default:
                 throw new Error(`Unsupported type: ${this.type}`);
         }
     }
 
-    protected getFunctionTemplate(template: string, view: Record<string, any>): string {
-        if (template.match(MUSTACHE_TEMPLATE_REGEX)) {
-            return renderMustacheTemplate(template, view);
-        } else {
-            return moment(this.value).format(template);
+    protected getTemplateImpl(templateText: string, view: Record<string, any>): string {
+        if (MUSTACHE_TEMPLATE_REGEX.test(templateText)) {
+            return super.getTemplateImpl(templateText, view);
         }
+        return moment(this.value).format(templateText);
     }
 
-    private static getInitValue(src?: TemplateFunction<InitFunctionType>): Date {
+    private static getInitValue(src?: InitFunctionString | ValueString): Date {
         if (!src) {
-            return new Date(Date.now());
+            return new Date();
         }
 
-        const { type, text } = src;
-        switch (type) {
-            case InitFunctionType.Value:
-                return new Date(text);
-            case InitFunctionType.Function:
-                return DateTimeFormItem.executeInitFunction(text);
-            default:
-                throw 1;
+        if (src.startsWith('f:')) {
+            return FormItemBase.executeInitFunction<Date>(src.slice(2));
+        } else if (src.startsWith('v:')) {
+            const parsed = new Date(src.slice(2));
+            if (isNaN(parsed.getTime())) {
+                throw new Error(`Invalid date init value: ${src}`);
+            }
+            return parsed;
+        } else {
+            throw new Error(`Unsupported init value: ${src}`);
         }
     }
 
-    private static assertType (type: TemplateFormItemType): void {
+    private static assertType(type: FormItemType): void {
         switch (type) {
-            case TemplateFormItemType.Date:
-            case TemplateFormItemType.Time:
-            case TemplateFormItemType.DateTime:
+            case 'date':
+            case 'time':
+            case 'dateTime':
                 return;
             default:
                 throw new Error(`Unsupported type: ${type}`);

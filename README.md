@@ -1,56 +1,78 @@
 # Note From Form
 
+> **⚠️ Breaking Changes in v2.0**
+> Version 2.0 introduces breaking changes that are not backward compatible with previous versions. Templates created for v1.x may need to be updated. Please review the updated documentation below before upgrading.
+
 [Obsidian](https://obsidian.md/) plugin that allows to define form with different type of input fields and JavaScript support that will later be used together with template to generate notes.
 
-It behaves same as Templates Core plugin or [From Template](https://github.com/mo-seph/obsidian-note-from-template) but extend it functionality with strongly typed fields, allow initial values and support user defined JavaScript functions for value generations. 
+It behaves same as Templates Core plugin or [From Template](https://github.com/mo-seph/obsidian-note-from-template) but extends its functionality with strongly typed fields, allows initial values and supports user defined JavaScript functions for value generations.
 
 
 Consider having template like this
 
-```text
+```yaml
 ---
 tags: tag1, tag2
 aliases: alias1
-date: {{date}}
-note-from-form: {
-	"file-name": "t:My Note {{noteNum}}",
-	"file-location": "f:function(view){ return 'My Folder'; }",
-	"form-items": [
-		{
-			"id": "date",
-			"type": "dateTime",
-			"get": "t:yyyy-MM-DDTHH:mm:ss",
-			"form": {
-				"title": "Note Date"
-			}
-		},
-		{
-			"id": "chapterNum",
-			"type": "number",
-			"init": "v:1",
-			"form": {
-				"title": "Chapter number"
-			}
-		},
-		{
-			"id": "title",
-			"type": "text",
-			"form": {
-				"title": "Title",
-				"description": "Title of Note",
-				"placeholder": "My New Note"
-			}
-		},
-		{
-			"id": "noteNum",
-			"type": "number",
-			"get": "f:function (view) { return moment(view.date).format('x'); }"
-		}
-	]
-}
+date: "{{date}}"
+note-from-form: |
+  {
+    "file-name": "t:My Note {{noteNum}}",
+    "file-location": "f:function(view){ return 'My Folder'; }",
+    "form-items": [
+      {
+        "id": "date",
+        "type": "dateTime",
+        "get": "t:yyyy-MM-DDTHH:mm:ss",
+        "form": {
+          "title": "Note Date"
+        }
+      },
+      {
+        "id": "chapterNum",
+        "type": "number",
+        "init": "v:1",
+        "form": {
+          "title": "Chapter number"
+        }
+      },
+      {
+        "id": "title",
+        "type": "text",
+        "form": {
+          "title": "Title",
+          "description": "Title of Note",
+          "placeholder": "My New Note"
+        }
+      },
+      {
+        "id": "done",
+        "type": "checkbox",
+        "form": {
+          "title": "Mark as done"
+        }
+      },
+      {
+        "id": "category",
+        "type": "dropdown",
+        "init": "v:[{\"k\":\"work\",\"v\":\"Work\"},{\"k\":\"personal\",\"v\":\"Personal\"}]",
+        "form": {
+          "title": "Category"
+        }
+      },
+      {
+        "id": "noteNum",
+        "type": "number",
+        "get": "f:function (view) { return moment(view.date).format('x'); }"
+      }
+    ]
+  }
 ---
 
 # Chapter {{chapterNum}}: {{title}}
+
+Done: {{done}}
+Category: {{category}}
 ```
 
 After adding template to the index and call for template, following form will be displayed:
@@ -68,17 +90,23 @@ date: 2024-09-29T22:13:47
 ---
 
 # Chapter 1: This is title
+
+Done: false
+Category: Work
 ```
 
 ## Using
 1. Install plugin
-2. Open plugin settings and and set location of template files. Also you can specify obsidian property that will point to template definition:
+2. Open plugin settings and set location of template files. Also you can specify obsidian property that will point to template definition:
 ![image](readme_files/plugin_settings.png)
 3. Create set of templates that will be used by plugin to generate input form and new notes. See [Template Description](#template-description);
-4. In plugin settings press **Re-build** button or run `Note From Form: Re-Build Template Index` from [Command palette](https://help.obsidian.md/Plugins/Command+palette).
 
 
-If template files have no issues Obsidian command pallete wil be enriched with new commands in format `Note From Form: Your Template Name`. Use commands from command pallete to create new note from template.
+If template files have no issues Obsidian command palette will be enriched with new commands in format `Note From Form: path/to/template`, and context menu option will appear for template file. Use commands from command palette to create new note from template:
+
+| Use template from commands | Use template from context menu |
+|-|-|
+| ![image](readme_files/command_pallete_cmd.png) | ![image](readme_files/context_menu_option.png) |
 
 
 
@@ -96,9 +124,9 @@ Form template contains following fields:
 Used to specify name of the file for new note.
 
 This property should be initialized with following format `<type>:<value>`. `type` specifies outcome of the value and might be one of the following:
-- `v`. In this case content after `:` will be used as result/ For example `v:My File`;
+- `v`. In this case content after `:` will be used as result. For example `v:My File`;
 - `t`. In this case post-processed input form will be used as source for [mustache](https://mustache.github.io/) template passed after `:`. For example, `t:My Note {{noteNum}}`;
-- `f`. In this case user defined JavaScript function can be specified. Function accepts only one parameter that is object constructed from all fields defined in `form-items` after calling `get` function (see bellow) for each of them. This might be used in case if result should be computed based on some complex logic not supported by mustache templates. For example, `f:function(view) { return "My Value" + moment(Date.now()).format(); }`
+- `f`. In this case user defined JavaScript function can be specified. Function accepts only one parameter that is object constructed from all fields defined in `form-items` after calling `get` function (see below) for each of them. This might be used in case if result should be computed based on some complex logic not supported by mustache templates. For example, `f:function(view) { return "My Value" + moment(Date.now()).format(); }`
 
 `file-name` is optional and if not defined, textbox with input for new file name will be displayed on input form.
 
@@ -107,9 +135,9 @@ This property should be initialized with following format `<type>:<value>`. `typ
 Used to specify location of file with new note in Obsidian vault. 
 
 This property should be initialized with following format `<type>:<value>`. `type` specifies outcome of the value and might be one of the following:
-- `v`. In this case content after `:` will be used as result/ For example `v:My File`;
+- `v`. In this case content after `:` will be used as result. For example `v:/My Folder`;
 - `t`. In this case post-processed input form will be used as source for [mustache](https://mustache.github.io/) template passed after `:`. For example, `t:My Note {{noteNum}}`;
-- `f`. In this case user defined JavaScript function can be specified. Function accepts only one parameter that is object constructed from all fields defined in `form-items` after calling `get` function (see bellow) for each of them. This might be used in case if result should be computed based on some complex logic not supported by mustache templates. For example, `f:function(view) { return "My Value" + moment(Date.now()).format(); }`
+- `f`. In this case user defined JavaScript function can be specified. Function accepts only one parameter that is object constructed from all fields defined in `form-items` after calling `get` function (see below) for each of them. This might be used in case if result should be computed based on some complex logic not supported by mustache templates. For example, `f:function(view) { return "My Value" + moment(Date.now()).format(); }`
 
 `file-location` is optional and if not defined value specified in plugin settings would be used. In case if plugin settings are missing it, textbox for input will be displayed on input form.
 
@@ -120,36 +148,36 @@ Is array of items that are defining structure and content of input form and used
 Each item of array may have following structure:
 ```json
 {
-	"id": "filed Id",
+	"id": "field Id",
 	"type": "field type",
-	"init": "init funtion",
+	"init": "init function",
 	"get": "get function",
 	"form": {
 		"title": "title of field on form",
-		"placeholder": "for text filed shows some placeholder",
-		"description": "descrition of the filed on form"
+		"placeholder": "for text field shows some placeholder",
+		"description": "description of the field on form"
 	}
 }
 ```
 
 | Field Name | Is Mandatory | Description | Possible values |
 |-|-|-|-|
-| `id` | yes | Declare identifier of the filed in form. By this identifier field can be later referenced inside user defined function or mustache template | string with field name, i.e. `date` |
-| `type` | yes | Specify [type of input field](#input-type-fields). Type of the field allow you to control what user can input, what operations can be done and how field would be displayed | `text`, `textArea`, `date`, `time`, `dateTime`, `number` |
+| `id` | yes | Declare identifier of the field in form. By this identifier field can be later referenced inside user defined function or mustache template | string with field name, i.e. `date` |
+| `type` | yes | Specify [type of input field](#input-type-fields). Type of the field allow you to control what user can input, what operations can be done and how field would be displayed | `text`, `textArea`, `date`, `time`, `dateTime`, `number`, `checkbox`, `dropdown` |
 | `init` | no | [Init function](#init-function). Used to get initial value of field. In case if not specified, default value would be used | Pure values or user defined functions (see below) |
 | `get` | no | This is [function](#get-function) that is called after all input provided and used to create result object that will be used as source of values for template, `file-name` and `file-location` | Pure value, mustache template or user defined function |
 | `form` | no | Instructs plugin how to render field on form. This property might be skipped if some computed values are needed but shouldn't be changed by user | Complex object that have `title`, `placeholder` and `description` fields |
 | `title` | no | Used to provide user-friendly name of the field. | Any string |
-| `placeholder` | no | For fields of `text` and `textArea` types might be used as filed placeholder. For other types is not used | Any string |
+| `placeholder` | no | For fields of `text` and `textArea` types might be used as field placeholder. For other types is not used | Any string |
 | `description` | no | Used to provide user-friendly description of the field on input form | Any string |
 
 ### `get` function
-`get` function used to get final result of intput and generate model used as source for template `mustache` blocks. It might be defined in one of three variants:
+`get` function used to get final result of input and generate model used as source for template `mustache` blocks. It might be defined in one of three variants:
 
 - `v:<value>`. This instructs `get` function to return string value defined after `:`. For example, `v:Hello World!` will return `Hello World!` string and assign it to appropriate field in model used in mustache blocks of template;
-- `t:<mustache string>`. This instructs This instructs `get` function to collect all values defined in [`form-items`](#form-items) and use it as source for mustache template defined in `<mustache string>`. For example, 
-`t:Hello {{who}}!` will take filed from [`form-items`](#form-items) with `id` `who` and use it value for template. Consider, `who` is set to `world` than result of `t:Hello {{who}}!` would be `Hello world!` string;
-`f:<JS function text>`. This instructs `get` function to execute function defined in `<JS function text>`. For example, `f:function(view) { return view.myfield + '+ 1'; }`.
+- `t:<mustache string>`. This instructs `get` function to collect all values defined in [`form-items`](#form-items) and use it as source for mustache template defined in `<mustache string>`. For example, 
+`t:Hello {{who}}!` will take field from [`form-items`](#form-items) with `id` `who` and use its value for template. Consider, `who` is set to `world` then result of `t:Hello {{who}}!` would be `Hello world!` string;
+- `f:<JS function text>`. This instructs `get` function to execute function defined in `<JS function text>`. For example, `f:function(view) { return view.myfield + '+ 1'; }`.
 
 Function can be useful to produce values based on user input or values that do not need to be provided by user.
 
@@ -159,8 +187,7 @@ function(view: Record<string, any>): string;
 ```
 
 
->[!warning]:
->
+> [!WARNING]
 > `f:<JS function text>` use JavaScript `eval()` call to translate text into executable. Use it carefully!
 
 If not specified, default variant is used that returns string representation of field.
@@ -168,7 +195,7 @@ If not specified, default variant is used that returns string representation of 
 ### `init` function
 `init` function used to set initial values of fields declared in [`form-items`](#form-items). `init` function might be defined in one of two variants:
 
-- `v:<value>`. Instructs `init` function to initialize form field from string specified in `<value>`. Based on [filed type](#input-type-fields) appropriate casting will be done;
+- `v:<value>`. Instructs `init` function to initialize form field from string specified in `<value>`. Based on [field type](#input-type-fields) appropriate casting will be done;
 - `f:<JS function text>` use JavaScript function defined in `<JS function text>` to initialize form field.
 
 Function accept no arguments and expect to return object with type equivalent to defined in `type`. Function have following TS declaration:
@@ -176,8 +203,7 @@ Function accept no arguments and expect to return object with type equivalent to
 function<TFieldType>(): TFieldType;
 ```
 
->[!warning]:
->
+> [!WARNING]
 > `f:<JS function text>` use JavaScript `eval()` call to translate text into executable. Use it carefully!
 
 If not specified, default value will be used.
@@ -204,7 +230,7 @@ If [`init` function](#init-function) is not set, than empty string used as defau
 
 If [`get` function](#get-function) is not set, latest user input will be returned.
 
-For this type of field user can specifu `placeholder` inside `form` field of [`form-items`](#form-items) item.
+For this type of field user can specify `placeholder` inside `form` field of [`form-items`](#form-items) item.
 
 In model passed as argument to [`get` function](#get-function) field type would be `string`.
 
@@ -233,15 +259,15 @@ If [`get` function](#get-function) is not set, latest user input will be returne
 - `time` - `LTS` format will be used;
 - `dateTime` - will format time based on system locale.
 
-[moment.js](https://momentjs.com/) can be used inside [`get`](#get-function) or [`init`](#init-function) functions to manipulte date and time values.
+[moment.js](https://momentjs.com/) can be used inside [`get`](#get-function) or [`init`](#init-function) functions to manipulate date and time values.
 
-This type extends `t:` definition of [`get`](#get-function). Instead of mustache template [moment.js|Format](https://momentjs.com/docs/#/displaying/format/) string can be specified, i.e. `t:t:YYYY-MM-DDTHH:mm:ss`.
+This type extends `t:` definition of [`get`](#get-function). Instead of mustache template [moment.js|Format](https://momentjs.com/docs/#/displaying/format/) string can be specified, i.e. `t:YYYY-MM-DDTHH:mm:ss`.
 
 In model passed as argument to [`get` function](#get-function) field type would be `Date`.
 
 #### `checkbox`
 
-Generate widget with switcher to select betwean `true` and `false`;
+Generate widget with switcher to select between `true` and `false`;
 
 If [`init` function](#init-function) is not set, `false` will be used as initial value.
 
@@ -267,7 +293,7 @@ Form item definition may look like this:
 }
 ```
 
-[`init` function](#init-function) must be set for this this type. As value it expects array of objects. Object should be following:
+[`init` function](#init-function) must be set for this type. As value it expects array of objects. Object should be following:
 
 ```ts
 {

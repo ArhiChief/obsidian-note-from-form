@@ -1,26 +1,27 @@
-import { App, Modal } from "obsidian";
-import { FormItem } from "../form/formItemBase";
-import { SettingExtended } from "src/ui/settingExtensions";
-
+import { App, Modal, Setting } from "obsidian";
+import { FormItem } from "src/form/formItem";
+import { TemplateIndexItem } from "src/template/templateIndex";
 
 export class InputFormModal extends Modal {
 
     private readonly _items: FormItem[];
-    private readonly _title: string;
-    private readonly _callback: () => Promise<void>;
+    private readonly _indexedTemplate: TemplateIndexItem;
+    private readonly _callback: (items: FormItem[], indexedTemplate: TemplateIndexItem) => Promise<boolean>;
 
-    constructor(app: App, title: string, formItems: FormItem[], cb: () => Promise<void>) {
+    private readonly _app: App;
+
+    constructor(app: App, indexedTemplate: TemplateIndexItem, formItems: FormItem[], callback: (items: FormItem[], indexedTemplate: TemplateIndexItem) => Promise<boolean>) {
         super(app);
-
+        this._app = app;
+        this._indexedTemplate = indexedTemplate;
         this._items = formItems;
-        this._title = title;
-        this._callback = cb;
+        this._callback = callback;
     }
 
     onOpen(): void {
         const { contentEl } = this;
 
-        contentEl.createEl("h1", { text: `New note: ${this._title}` });
+        this.setTitle(`New note: ${this._indexedTemplate.label}`);
 
         for (let i = 0; i < this._items.length; i++) {
             const item: FormItem = this._items[i];
@@ -28,13 +29,14 @@ export class InputFormModal extends Modal {
             item.assignToForm(contentEl);
         }
 
-        new SettingExtended(contentEl)
-            .addButton(btn => btn
+        new Setting(contentEl)
+            .addButton(button => button
                 .setButtonText("Create")
                 .setCta()
-                .onClick(async _ =>{
-                     this.close();
-                     await this._callback();
+                .onClick(async () => {
+                    if (await this._callback(this._items, this._indexedTemplate)) {
+                        this.close();
+                    }
                 })
             );
     }

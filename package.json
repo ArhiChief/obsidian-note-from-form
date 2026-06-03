@@ -1,11 +1,12 @@
 {
 	"name": "note-from-form",
-	"version": "1.0.0",
+	"version": "2.0.0",
 	"description": "Plugin for Obsidian.md. Allows to define templates that creates input forms used as source for template.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "rollup --config rollup.config.js -w",
-		"build": "rollup --config rollup.config.js --environment BUILD:production"
+		"build": "rollup --config rollup.config.js --environment BUILD:production",
+		"test": "jest"
 	},
 	"keywords": [],
 	"author": "",
@@ -14,16 +15,24 @@
 		"@rollup/plugin-commonjs": "^18.0.0",
 		"@rollup/plugin-node-resolve": "^11.2.1",
 		"@rollup/plugin-typescript": "^8.2.1",
+		"@types/jest": "^30.0.0",
+		"@types/mustache": "^4.2.6",
 		"@types/node": "^16.11.6",
 		"@typescript-eslint/eslint-plugin": "5.29.0",
 		"@typescript-eslint/parser": "5.29.0",
 		"builtin-modules": "3.3.0",
+		"jest": "^30.3.0",
 		"obsidian": "latest",
 		"rollup": "^2.32.1",
+		"ts-jest": "^29.4.9",
 		"tslib": "2.4.0",
 		"typescript": "4.7.4"
 	},
 	"dependencies": {
+		"@rollup/plugin-json": "^6.1.0",
+		"ajv": "^8.18.0",
+		"ajv-errors": "^3.0.0",
+		"ajv-keywords": "^5.1.0",
 		"mustache": "^4.2.0"
 	}
 }
