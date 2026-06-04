@@ -100,7 +100,7 @@ describe("TemplateProcessor", () => {
     });
 
     describe("useTemplate", () => {
-        test("returns early when frontmatter property is null", async () => {
+        test("throws when frontmatter property is null", async () => {
             const processFrontMatter = jest.fn().mockImplementation(async (_file: TFile, fn: (fm: any) => void) => {
                 fn({});
             });
@@ -109,9 +109,21 @@ describe("TemplateProcessor", () => {
             const processor = new TemplateProcessor(app, settings);
 
             const indexed = createIndexedTemplate('templates/note.md', 'note');
-            await processor.useTemplate(indexed);
+            await expect(processor.useTemplate(indexed)).rejects.toThrow('No template found in "templates/note.md"');
 
             expect(capturedModalCallback).toBeNull();
+        });
+
+        test("throws when JSON string is malformed", async () => {
+            const processFrontMatter = jest.fn().mockImplementation(async (_file: TFile, fn: (fm: any) => void) => {
+                fn({ [TEMPLATE_PROPERTY_NAME]: '{ invalid json' });
+            });
+            const app = createMockApp({ processFrontMatter });
+            const settings = defaultSettings();
+            const processor = new TemplateProcessor(app, settings);
+
+            const indexed = createIndexedTemplate('templates/note.md', 'note');
+            await expect(processor.useTemplate(indexed)).rejects.toThrow('Error parsing template in "templates/note.md"');
         });
 
         test("throws on invalid template data", async () => {

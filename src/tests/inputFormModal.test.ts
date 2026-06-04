@@ -116,6 +116,22 @@ describe("InputFormModal", () => {
 
             closeSpy.mockRestore();
         });
+
+        test("Create button does not close modal when callback returns false", async () => {
+            const closeSpy = jest.spyOn(InputFormModal.prototype, "close").mockImplementation(() => {});
+            const cb = jest.fn().mockResolvedValue(false);
+            const { modal } = createModal([], "Test", cb);
+
+            modal.onOpen();
+
+            expect(capturedButtonOnClick).not.toBeNull();
+            await capturedButtonOnClick!();
+
+            expect(cb).toHaveBeenCalled();
+            expect(closeSpy).not.toHaveBeenCalled();
+
+            closeSpy.mockRestore();
+        });
     });
 
     describe("onClose", () => {

@@ -24,15 +24,31 @@ export class TemplateProcessor {
     async useTemplate(indexedTemplate: TemplateIndexItem) {
         let templateData: unknown = null;
 
+        let parsingError: Error | null = null;
+
         await this._app.fileManager.processFrontMatter(indexedTemplate.file, (frontmatter) => {
             const propertyName = this._settings.templatePropertyName;
             const raw = frontmatter[propertyName];
             if (raw == null) return;
 
-            templateData = typeof raw === 'string' ? JSON.parse(raw) : raw;
+            try {
+                if (typeof raw === 'string') {
+                    templateData = JSON.parse(raw);
+                } else {
+                    templateData =  raw;
+                }
+            } catch (e: unknown) {
+                parsingError = e as Error;
+            }
         });
 
-        if (templateData == null) return;
+        if (templateData == null) {
+            if (parsingError) {
+                throw new Error(`Error parsing template in "${indexedTemplate.file.path}":\n${(parsingError as Error).message}`);
+            }
+
+            throw new Error(`No template found in "${indexedTemplate.file.path}"`);
+        }
 
         const result = validateTemplate(templateData);
         if (!result.valid) {

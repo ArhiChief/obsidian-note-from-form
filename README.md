@@ -5,17 +5,76 @@
 
 [Obsidian](https://obsidian.md/) plugin that allows to define form with different type of input fields and JavaScript support that will later be used together with template to generate notes.
 
-It behaves same as Templates Core plugin or [From Template](https://github.com/mo-seph/obsidian-note-from-template) but extends its functionality with strongly typed fields, allows initial values and supports user defined JavaScript functions for value generations.
+It behaves same as Templates Core plugin or [From Template](https://github.com/mo-seph/obsidian-note-from-template) but extends its functionality with strongly typed fields, allows initial values and supports user defined JavaScript functions for value generations. 
+
+> [!TIP]
+> Template can be described in both YAML (just [like note properties](https://obsidian.md/help/properties#Property+format) in Obsidian) or JSON.
 
 
-Consider having template like this
+Consider having template like one of those
+
+<table>
+<tr>
+<th>YAML</th>
+<th>JSON</th>
+</tr>
+<tr>
+<td>
 
 ```yaml
 ---
 tags: tag1, tag2
 aliases: alias1
 date: "{{date}}"
-note-from-form: |
+note-from-form:
+  file-name: "t:My Note {{noteNum}}"
+  file-location: "f:function(view){ return 'My Folder'; }"
+  form-items:
+    - id: date
+      type: dateTime
+      get: "t:yyyy-MM-DDTHH:mm:ss"
+      form:
+        title: Note Date
+    - id: chapterNum
+      type: number
+      init: "v:1"
+      form:
+        title: Chapter number
+    - id: title
+      type: text
+      form:
+        title: Title
+        description: Title of Note
+        placeholder: My New Note
+    - id: done
+      type: checkbox
+      form:
+        title: Mark as done
+    - id: category
+      type: dropdown
+      init: 'v:[{"k":"work","v":"Work"},{"k":"personal","v":"Personal"}]'
+      form:
+        title: Category
+    - id: noteNum
+      type: number
+      get: "f:function (view) { return moment(view.date).format('x'); }"
+---
+
+# Chapter {{chapterNum}}: {{title}}
+
+Done: {{done}}
+Category: {{category}}
+```
+
+</td>
+<td>
+
+```yaml
+---
+tags: tag1, tag2
+aliases: alias1
+date: "{{date}}"
+note-from-form: |-
   {
     "file-name": "t:My Note {{noteNum}}",
     "file-location": "f:function(view){ return 'My Folder'; }",
@@ -75,6 +134,10 @@ Done: {{done}}
 Category: {{category}}
 ```
 
+</td>
+</tr>
+</table>
+
 After adding template to the index and call for template, following form will be displayed:
 
 ![image](readme_files/input_form.png)
@@ -112,7 +175,7 @@ If template files have no issues Obsidian command palette will be enriched with 
 
 ## Template Description
 
-Form and note template are defined as markdown files that supports [mustache](https://mustache.github.io/) syntax for values that need to be placed from form. Instructions for form itself are defined as [JSON](https://www.json.org/json-en.html) object inside [properties](https://help.obsidian.md/Editing+and+formatting/Properties). Property name might be defined in plugin settings or be a default value `note-from-form`.
+Form and note template are defined as markdown files that supports [mustache](https://mustache.github.io/) syntax for values that need to be placed from form. Instructions for form itself are defined as [JSON](https://www.json.org/json-en.html) or [YAML](https://yaml.org/) object inside [properties](https://help.obsidian.md/Editing+and+formatting/Properties). Property name might be defined in plugin settings or be a default value `note-from-form`.
 
 Form template contains following fields:
 - [`file-name`](#file-name) used to define name of the result file;
@@ -146,19 +209,46 @@ This property should be initialized with following format `<type>:<value>`. `typ
 Is array of items that are defining structure and content of input form and used as source for generating object that will be later used by plugin as source for **mustache** blocks inside template.
 
 Each item of array may have following structure:
+
+<table>
+<tr>
+<th>YAML</th>
+<th>JSON</th>
+</tr>
+<tr>
+<td>
+
+```yaml
+id: field Id
+type: field type
+init: init function
+get: get function
+form:
+  title: title of field on form
+  placeholder: for text field shows some placeholder
+  description: description of the field on form
+```
+
+</td>
+<td>
+
 ```json
 {
-	"id": "field Id",
-	"type": "field type",
-	"init": "init function",
-	"get": "get function",
-	"form": {
-		"title": "title of field on form",
-		"placeholder": "for text field shows some placeholder",
-		"description": "description of the field on form"
-	}
+  "id": "field Id",
+  "type": "field type",
+  "init": "init function",
+  "get": "get function",
+  "form": {
+    "title": "title of field on form",
+    "placeholder": "for text field shows some placeholder",
+    "description": "description of the field on form"
+  }
 }
 ```
+
+</td>
+</tr>
+</table>
 
 | Field Name | Is Mandatory | Description | Possible values |
 |-|-|-|-|
@@ -281,17 +371,41 @@ Generates widget with options where one may be selected.
 
 Form item definition may look like this:
 
+<table>
+<tr>
+<th>YAML</th>
+<th>JSON</th>
+</tr>
+<tr>
+<td>
+
+```yaml
+id: dropdown
+type: dropdown
+init: 'v:[{"k":"a","v":"My A"},{"k":"b","v":"My B"},{"k":"c","s":true,"v":"My C"}]'
+form:
+  title: DropDown
+  description: My DropDown
+```
+
+</td>
+<td>
+
 ```json
 {
-	"id": "dropdown",
-	"type": "dropdown",
-	"init": "v:[{\"k\":\"a\",\"v\":\"My A\"},{\"k\":\"b\",\"v\":\"My B\"},{\"k\":\"c\",\"s\":true,\"v\":\"My C\"}]",
-	"form": {
-		"title": "DropDown",
-		"description": "My DropDown"
-	}
+  "id": "dropdown",
+  "type": "dropdown",
+  "init": "v:[{\"k\":\"a\",\"v\":\"My A\"},{\"k\":\"b\",\"v\":\"My B\"},{\"k\":\"c\",\"s\":true,\"v\":\"My C\"}]",
+  "form": {
+    "title": "DropDown",
+    "description": "My DropDown"
+  }
 }
 ```
+
+</td>
+</tr>
+</table>
 
 [`init` function](#init-function) must be set for this type. As value it expects array of objects. Object should be following:
 
