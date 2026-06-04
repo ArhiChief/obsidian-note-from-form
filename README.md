@@ -13,9 +13,130 @@ It behaves same as Templates Core plugin or [From Template](https://github.com/m
 
 Consider having template like one of those
 
-| YAML | JSON |
-|-|-|
-| <pre lang="yaml">---<br>tags: tag1, tag2<br>aliases: alias1<br>date: "{{date}}"<br>note-from-form:<br>  file-name: "t:My Note {{noteNum}}"<br>  file-location: "f:function(view){ return 'My Folder'; }"<br>  form-items:<br>    - id: date<br>      type: dateTime<br>      get: "t:yyyy-MM-DDTHH:mm:ss"<br>      form:<br>        title: Note Date<br>    - id: chapterNum<br>      type: number<br>      init: "v:1"<br>      form:<br>        title: Chapter number<br>    - id: title<br>      type: text<br>      form:<br>        title: Title<br>        description: Title of Note<br>        placeholder: My New Note<br>    - id: done<br>      type: checkbox<br>      form:<br>        title: Mark as done<br>    - id: category<br>      type: dropdown<br>      init: 'v:[{"k":"work","v":"Work"},{"k":"personal","v":"Personal"}]'<br>      form:<br>        title: Category<br>    - id: noteNum<br>      type: number<br>      get: "f:function (view) { return moment(view.date).format('x'); }"<br>---<br><br># Chapter {{chapterNum}}: {{title}}<br><br>Done: {{done}}<br>Category: {{category}}</pre> | <pre lang="yaml">---<br>tags: tag1, tag2<br>aliases: alias1<br>date: "{{date}}"<br>note-from-form: \|-<br>  {<br>    "file-name": "t:My Note {{noteNum}}",<br>    "file-location": "f:function(view){ return 'My Folder'; }",<br>    "form-items": [<br>      {<br>        "id": "date",<br>        "type": "dateTime",<br>        "get": "t:yyyy-MM-DDTHH:mm:ss",<br>        "form": {<br>          "title": "Note Date"<br>        }<br>      },<br>      {<br>        "id": "chapterNum",<br>        "type": "number",<br>        "init": "v:1",<br>        "form": {<br>          "title": "Chapter number"<br>        }<br>      },<br>      {<br>        "id": "title",<br>        "type": "text",<br>        "form": {<br>          "title": "Title",<br>          "description": "Title of Note",<br>          "placeholder": "My New Note"<br>        }<br>      },<br>      {<br>        "id": "done",<br>        "type": "checkbox",<br>        "form": {<br>          "title": "Mark as done"<br>        }<br>      },<br>      {<br>        "id": "category",<br>        "type": "dropdown",<br>        "init": "v:[{\"k\":\"work\",\"v\":\"Work\"},{\"k\":\"personal\",\"v\":\"Personal\"}]",<br>        "form": {<br>          "title": "Category"<br>        }<br>      },<br>      {<br>        "id": "noteNum",<br>        "type": "number",<br>        "get": "f:function (view) { return moment(view.date).format('x'); }"<br>      }<br>    ]<br>  }<br>---<br><br># Chapter {{chapterNum}}: {{title}}<br><br>Done: {{done}}<br>Category: {{category}}</pre> |
+<table>
+<tr>
+<th>YAML</th>
+<th>JSON</th>
+</tr>
+<tr>
+<td>
+
+```yaml
+---
+tags: tag1, tag2
+aliases: alias1
+date: "{{date}}"
+note-from-form:
+  file-name: "t:My Note {{noteNum}}"
+  file-location: "f:function(view){ return 'My Folder'; }"
+  form-items:
+    - id: date
+      type: dateTime
+      get: "t:yyyy-MM-DDTHH:mm:ss"
+      form:
+        title: Note Date
+    - id: chapterNum
+      type: number
+      init: "v:1"
+      form:
+        title: Chapter number
+    - id: title
+      type: text
+      form:
+        title: Title
+        description: Title of Note
+        placeholder: My New Note
+    - id: done
+      type: checkbox
+      form:
+        title: Mark as done
+    - id: category
+      type: dropdown
+      init: 'v:[{"k":"work","v":"Work"},{"k":"personal","v":"Personal"}]'
+      form:
+        title: Category
+    - id: noteNum
+      type: number
+      get: "f:function (view) { return moment(view.date).format('x'); }"
+---
+
+# Chapter {{chapterNum}}: {{title}}
+
+Done: {{done}}
+Category: {{category}}
+```
+
+</td>
+<td>
+
+```yaml
+---
+tags: tag1, tag2
+aliases: alias1
+date: "{{date}}"
+note-from-form: |-
+  {
+    "file-name": "t:My Note {{noteNum}}",
+    "file-location": "f:function(view){ return 'My Folder'; }",
+    "form-items": [
+      {
+        "id": "date",
+        "type": "dateTime",
+        "get": "t:yyyy-MM-DDTHH:mm:ss",
+        "form": {
+          "title": "Note Date"
+        }
+      },
+      {
+        "id": "chapterNum",
+        "type": "number",
+        "init": "v:1",
+        "form": {
+          "title": "Chapter number"
+        }
+      },
+      {
+        "id": "title",
+        "type": "text",
+        "form": {
+          "title": "Title",
+          "description": "Title of Note",
+          "placeholder": "My New Note"
+        }
+      },
+      {
+        "id": "done",
+        "type": "checkbox",
+        "form": {
+          "title": "Mark as done"
+        }
+      },
+      {
+        "id": "category",
+        "type": "dropdown",
+        "init": "v:[{\"k\":\"work\",\"v\":\"Work\"},{\"k\":\"personal\",\"v\":\"Personal\"}]",
+        "form": {
+          "title": "Category"
+        }
+      },
+      {
+        "id": "noteNum",
+        "type": "number",
+        "get": "f:function (view) { return moment(view.date).format('x'); }"
+      }
+    ]
+  }
+---
+
+# Chapter {{chapterNum}}: {{title}}
+
+Done: {{done}}
+Category: {{category}}
+```
+
+</td>
+</tr>
+</table>
 
 After adding template to the index and call for template, following form will be displayed:
 
@@ -89,9 +210,45 @@ Is array of items that are defining structure and content of input form and used
 
 Each item of array may have following structure:
 
-| YAML | JSON |
-|-|-|
-| <pre lang="yaml">id: field Id<br>type: field type<br>init: init function<br>get: get function<br>form:<br>  title: title of field on form<br>  placeholder: for text field shows some placeholder<br>  description: description of the field on form</pre> | <pre lang="json">{<br>  "id": "field Id",<br>  "type": "field type",<br>  "init": "init function",<br>  "get": "get function",<br>  "form": {<br>    "title": "title of field on form",<br>    "placeholder": "for text field shows some placeholder",<br>    "description": "description of the field on form"<br>  }<br>}</pre> |
+<table>
+<tr>
+<th>YAML</th>
+<th>JSON</th>
+</tr>
+<tr>
+<td>
+
+```yaml
+id: field Id
+type: field type
+init: init function
+get: get function
+form:
+  title: title of field on form
+  placeholder: for text field shows some placeholder
+  description: description of the field on form
+```
+
+</td>
+<td>
+
+```json
+{
+  "id": "field Id",
+  "type": "field type",
+  "init": "init function",
+  "get": "get function",
+  "form": {
+    "title": "title of field on form",
+    "placeholder": "for text field shows some placeholder",
+    "description": "description of the field on form"
+  }
+}
+```
+
+</td>
+</tr>
+</table>
 
 | Field Name | Is Mandatory | Description | Possible values |
 |-|-|-|-|
@@ -214,9 +371,41 @@ Generates widget with options where one may be selected.
 
 Form item definition may look like this:
 
-| YAML | JSON |
-|-|-|
-| <pre lang="yaml">id: dropdown<br>type: dropdown<br>init: 'v:[{"k":"a","v":"My A"},{"k":"b","v":"My B"},{"k":"c","s":true,"v":"My C"}]'<br>form:<br>  title: DropDown<br>  description: My DropDown</pre> | <pre lang="json">{<br>  "id": "dropdown",<br>  "type": "dropdown",<br>  "init": "v:[{\"k\":\"a\",\"v\":\"My A\"},{\"k\":\"b\",\"v\":\"My B\"},{\"k\":\"c\",\"s\":true,\"v\":\"My C\"}]",<br>  "form": {<br>    "title": "DropDown",<br>    "description": "My DropDown"<br>  }<br>}</pre> |
+<table>
+<tr>
+<th>YAML</th>
+<th>JSON</th>
+</tr>
+<tr>
+<td>
+
+```yaml
+id: dropdown
+type: dropdown
+init: 'v:[{"k":"a","v":"My A"},{"k":"b","v":"My B"},{"k":"c","s":true,"v":"My C"}]'
+form:
+  title: DropDown
+  description: My DropDown
+```
+
+</td>
+<td>
+
+```json
+{
+  "id": "dropdown",
+  "type": "dropdown",
+  "init": "v:[{\"k\":\"a\",\"v\":\"My A\"},{\"k\":\"b\",\"v\":\"My B\"},{\"k\":\"c\",\"s\":true,\"v\":\"My C\"}]",
+  "form": {
+    "title": "DropDown",
+    "description": "My DropDown"
+  }
+}
+```
+
+</td>
+</tr>
+</table>
 
 [`init` function](#init-function) must be set for this type. As value it expects array of objects. Object should be following:
 
