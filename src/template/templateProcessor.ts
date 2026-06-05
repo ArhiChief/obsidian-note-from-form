@@ -106,6 +106,11 @@ export class TemplateProcessor {
             delete frontmatter[this._settings.templatePropertyName];
         });
 
+        const codeBlockPattern = this.getCodeBlockPattern();
+        await this._app.vault.process(file, (content: string) => {
+            return content.replace(codeBlockPattern, '');
+        });
+
         return file;
     }
 
@@ -113,5 +118,13 @@ export class TemplateProcessor {
         await this._app.vault.process(note, (content) => {
             return Mustache.render(content, viewModel, {}, { escape: (val: string) => val });
         });
+    }
+
+    private getCodeBlockPattern(): RegExp {
+        const propName = this._settings.templatePropertyName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return new RegExp(
+            '\\n?^```js:' + propName + ':[a-zA-Z_$][a-zA-Z0-9_$]*\\s*\\n[\\s\\S]*?\\n```$',
+            'gm'
+        );
     }
 }

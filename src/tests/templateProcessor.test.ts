@@ -362,6 +362,110 @@ describe("TemplateProcessor", () => {
             expect(capturedFrontmatters[0]).toHaveProperty("other", "keep");
         });
 
+        test("sanitizes new note by removing code blocks with template property name", async () => {
+            const folder = createFolder('out');
+            const getFolderByPath = jest.fn().mockReturnValue(folder);
+            const copy = jest.fn().mockImplementation(async (_src: TFile, newPath: string) => createFile(newPath));
+            const processFrontMatter = jest.fn().mockImplementation(async (file: TFile, fn: (fm: any) => void) => {
+                if (file.path === 'templates/note.md') {
+                    fn({ [TEMPLATE_PROPERTY_NAME]: {} });
+                } else {
+                    fn({});
+                }
+            });
+            let sanitizedContent: string | null = null;
+            let processCallCount = 0;
+            const process = jest.fn().mockImplementation(async (_file: TFile, cb: (content: string) => string) => {
+                processCallCount++;
+                if (processCallCount === 1) {
+                    // sanitizeNewNote call
+                    const input = [
+                        "# My Note",
+                        "",
+                        "Some content.",
+                        "",
+                        "```js:" + TEMPLATE_PROPERTY_NAME + ":myInit",
+                        "() => 'default'",
+                        "```",
+                        "",
+                        "More content.",
+                        "",
+                        "```js:" + TEMPLATE_PROPERTY_NAME + ":getTitle",
+                        "(view) => view.title",
+                        "```",
+                        "",
+                        "End of note.",
+                    ].join("\n");
+                    sanitizedContent = cb(input);
+                }
+            });
+
+            const { callback, indexed } = await setupAndGetCallback(
+                {},
+                { getFolderByPath, copy, processFrontMatter, process },
+            );
+
+            const { FormItemsManager } = require("../form/formItemManager");
+            const formItems = await FormItemsManager.getFormItems({}, mockFunctionProcessor, defaultSettings());
+            formItems[0].value = "Note";
+            formItems[1].value = "out";
+
+            await callback(formItems, indexed);
+
+            expect(sanitizedContent).not.toContain("```js:" + TEMPLATE_PROPERTY_NAME);
+            expect(sanitizedContent).toContain("# My Note");
+            expect(sanitizedContent).toContain("Some content.");
+            expect(sanitizedContent).toContain("More content.");
+            expect(sanitizedContent).toContain("End of note.");
+        });
+
+        test("does not remove code blocks with different tags", async () => {
+            const folder = createFolder('out');
+            const getFolderByPath = jest.fn().mockReturnValue(folder);
+            const copy = jest.fn().mockImplementation(async (_src: TFile, newPath: string) => createFile(newPath));
+            const processFrontMatter = jest.fn().mockImplementation(async (file: TFile, fn: (fm: any) => void) => {
+                if (file.path === 'templates/note.md') {
+                    fn({ [TEMPLATE_PROPERTY_NAME]: {} });
+                } else {
+                    fn({});
+                }
+            });
+            let sanitizedContent: string | null = null;
+            let processCallCount = 0;
+            const process = jest.fn().mockImplementation(async (_file: TFile, cb: (content: string) => string) => {
+                processCallCount++;
+                if (processCallCount === 1) {
+                    const input = [
+                        "# Note",
+                        "",
+                        "```js:other-plugin:func",
+                        "() => 42",
+                        "```",
+                        "",
+                        "```javascript",
+                        "const x = 1;",
+                        "```",
+                    ].join("\n");
+                    sanitizedContent = cb(input);
+                }
+            });
+
+            const { callback, indexed } = await setupAndGetCallback(
+                {},
+                { getFolderByPath, copy, processFrontMatter, process },
+            );
+
+            const { FormItemsManager } = require("../form/formItemManager");
+            const formItems = await FormItemsManager.getFormItems({}, mockFunctionProcessor, defaultSettings());
+            formItems[0].value = "Note";
+            formItems[1].value = "out";
+
+            await callback(formItems, indexed);
+
+            expect(sanitizedContent).toContain("```js:other-plugin:func");
+            expect(sanitizedContent).toContain("```javascript");
+        });
+
         test("applies Mustache view model to note content", async () => {
             const folder = createFolder('out');
             const getFolderByPath = jest.fn().mockReturnValue(folder);
