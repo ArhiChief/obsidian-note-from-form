@@ -1,7 +1,8 @@
 import { normalizePath } from "obsidian";
 import { FormItemBase } from "./formItem";
-import { FormItemForm, GetFunctionString, TemplateString, ValueString } from "src/template/templateTypes";
+import { FormItemForm, GetFunctionType, TemplateString, ValueString } from "src/template/templateTypes";
 import { ExtendedSetting } from "src/ui/settingsExtension";
+import { FormItemFunctionProcessor } from "./formItemFunctionProcessor";
 
 // https://docs.obsidian.md/Plugins/User+interface/Modals#Select+from+list+of+suggestions
 abstract class FileInfoFormItem extends FormItemBase<string> {
@@ -13,21 +14,28 @@ abstract class FileInfoFormItem extends FormItemBase<string> {
         title: string,
         description: string,
         placeholder: string,
-        getFunc?: GetFunctionString | TemplateString | ValueString) {
+        funtionProcessor: FormItemFunctionProcessor,
+        getFunc?: GetFunctionType | TemplateString | ValueString) {
 
         let formDisplay: FormItemForm | undefined = undefined;
         
-        const initValue: string = "";
-        
         if (!getFunc) {
-            formDisplay = { 
+            formDisplay = {
                 title: title,
                 description: description,
             };
         }
 
-        super(id, 'text', initValue, getFunc, formDisplay);
+        super(id, 'text', funtionProcessor, undefined, getFunc, formDisplay);
         this._placeholder = placeholder;
+    }
+
+    protected getInitValueFromString(valStr: string): string {
+        return valStr;
+    }
+
+    protected getInitValueDefault(): string {
+        return "";
     }
     
     protected assignToFormImpl(contentEl: HTMLElement): void {
@@ -36,7 +44,7 @@ abstract class FileInfoFormItem extends FormItemBase<string> {
             .setDesc(this._description)
             .addText(text => text
                 .setPlaceholder(this._placeholder)
-                .setValue(this.value)
+                .setValue(this.value!)
                 .onChange(newVal => this.value = newVal)
             );
     }
@@ -47,7 +55,7 @@ abstract class FileInfoFormItem extends FormItemBase<string> {
     }
 
     protected getFunctionDefault(): string {
-        return this.value;
+        return this.value!;
     }
 }
 
@@ -58,8 +66,8 @@ export class FileNameFormItem extends FileInfoFormItem {
     private static readonly _title: string = "Name of created note";
     private static readonly _placeholder: string = "My Fancy Note";
 
-    constructor (getFunc?: GetFunctionString | TemplateString | ValueString) {
-        super(FileNameFormItem.FormFieldId, "File name", FileNameFormItem._title, FileNameFormItem._placeholder, getFunc);
+    constructor (funtionProcessor: FormItemFunctionProcessor, getFunc?: GetFunctionType | TemplateString | ValueString) {
+        super(FileNameFormItem.FormFieldId, "File name", FileNameFormItem._title, FileNameFormItem._placeholder, funtionProcessor, getFunc);
     }
 }
 
@@ -70,7 +78,7 @@ export class FileLocationFormItem extends FileInfoFormItem {
     private static readonly _title: string = "Folder where note will be placed";
     private static readonly _placeholder: string = "/some/path/";
 
-    constructor (getFunc?: GetFunctionString | TemplateString | ValueString) {
-        super(FileLocationFormItem.FormFieldId, "File location", FileLocationFormItem._title, FileLocationFormItem._placeholder, getFunc);
+    constructor (funtionProcessor: FormItemFunctionProcessor, getFunc?: GetFunctionType | TemplateString | ValueString) {
+        super(FileLocationFormItem.FormFieldId, "File location", FileLocationFormItem._title, FileLocationFormItem._placeholder, funtionProcessor, getFunc);
     }
 }

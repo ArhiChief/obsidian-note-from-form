@@ -67,6 +67,26 @@ describe("validateTemplate", () => {
             expect(result.valid).toBe(true);
         });
 
+        test("accepts ref to function name", () => {
+            const result = validateTemplate(validTemplate({ "file-name": "ref:getFileName" }));
+            expect(result.valid).toBe(true);
+        });
+
+        test("accepts ref to file path and function name", () => {
+            const result = validateTemplate(validTemplate({ "file-name": "ref:/utils/helpers.md:getFileName" }));
+            expect(result.valid).toBe(true);
+        });
+
+        test("rejects ref with invalid function name", () => {
+            const result = validateTemplate(validTemplate({ "file-name": "ref:1bad" }));
+            expect(result.valid).toBe(false);
+        });
+
+        test("rejects ref with empty name", () => {
+            const result = validateTemplate(validTemplate({ "file-name": "ref:" }));
+            expect(result.valid).toBe(false);
+        });
+
         test("rejects plain string", () => {
             const result = validateTemplate(validTemplate({ "file-name": "just a name" }));
             expect(result.valid).toBe(false);
@@ -114,6 +134,26 @@ describe("validateTemplate", () => {
         test("accepts get-function type (f:function(view) { ... })", () => {
             const result = validateTemplate(validTemplate({ "file-location": 'f:function(view) { return "some text"; }' }));
             expect(result.valid).toBe(true);
+        });
+
+        test("accepts ref to function name", () => {
+            const result = validateTemplate(validTemplate({ "file-location": "ref:getLocation" }));
+            expect(result.valid).toBe(true);
+        });
+
+        test("accepts ref to file path and function name", () => {
+            const result = validateTemplate(validTemplate({ "file-location": "ref:/utils/helpers.md:getLocation" }));
+            expect(result.valid).toBe(true);
+        });
+
+        test("rejects ref with invalid function name", () => {
+            const result = validateTemplate(validTemplate({ "file-location": "ref:1bad" }));
+            expect(result.valid).toBe(false);
+        });
+
+        test("rejects ref with empty name", () => {
+            const result = validateTemplate(validTemplate({ "file-location": "ref:" }));
+            expect(result.valid).toBe(false);
         });
 
         test("rejects plain string", () => {
@@ -297,8 +337,111 @@ describe("validateTemplate", () => {
             }));
             expect(result.valid).toBe(false);
             expect(result.errors).toEqual(expect.arrayContaining([
-                "/form-items/0/get: must be a function string starting with 'f:' followed by an anonymous function that receives 'view' parameter (e.g. f:(view) => value or f:function(view) { return value; })",
+                "/form-items/0/get: must be a function string starting with 'f:' followed by an arrow function receiving 'view' parameter (e.g. f:(view) => value)",
             ]));
+        });
+
+        test("accepts get with ref to function name", () => {
+            const result = validateTemplate(validTemplate({
+                "form-items": [validTextItem({ get: "ref:myGetter" })],
+            }));
+            expect(result.valid).toBe(true);
+        });
+
+        test("accepts get with ref to file path and function name", () => {
+            const result = validateTemplate(validTemplate({
+                "form-items": [validTextItem({ get: "ref:/my/dir/functions.md:myGetter" })],
+            }));
+            expect(result.valid).toBe(true);
+        });
+
+        test("rejects get ref with invalid function name", () => {
+            const result = validateTemplate(validTemplate({
+                "form-items": [validTextItem({ get: "ref:1bad" })],
+            }));
+            expect(result.valid).toBe(false);
+        });
+
+        test("rejects get ref with empty function name", () => {
+            const result = validateTemplate(validTemplate({
+                "form-items": [validTextItem({ get: "ref:" })],
+            }));
+            expect(result.valid).toBe(false);
+        });
+
+        test("rejects get ref:path with invalid function name", () => {
+            const result = validateTemplate(validTemplate({
+                "form-items": [validTextItem({ get: "ref:/path/to/file.md:123bad" })],
+            }));
+            expect(result.valid).toBe(false);
+        });
+
+        test("accepts init with ref to function name", () => {
+            const result = validateTemplate(validTemplate({
+                "form-items": [validTextItem({ init: "ref:myFunction" })],
+            }));
+            expect(result.valid).toBe(true);
+        });
+
+        test("accepts init with ref to function name starting with $ or _", () => {
+            const result1 = validateTemplate(validTemplate({
+                "form-items": [validTextItem({ init: "ref:$helper" })],
+            }));
+            expect(result1.valid).toBe(true);
+
+            const result2 = validateTemplate(validTemplate({
+                "form-items": [validTextItem({ init: "ref:_private" })],
+            }));
+            expect(result2.valid).toBe(true);
+        });
+
+        test("accepts init with ref to file path and function name", () => {
+            const result = validateTemplate(validTemplate({
+                "form-items": [validTextItem({ init: "ref:/my/dir/functions.md:myFunc" })],
+            }));
+            expect(result.valid).toBe(true);
+        });
+
+        test("accepts init with ref to single-segment file path", () => {
+            const result = validateTemplate(validTemplate({
+                "form-items": [validTextItem({ init: "ref:/functions.md:init" })],
+            }));
+            expect(result.valid).toBe(true);
+        });
+
+        test("rejects init ref with invalid function name (starts with number)", () => {
+            const result = validateTemplate(validTemplate({
+                "form-items": [validTextItem({ init: "ref:1bad" })],
+            }));
+            expect(result.valid).toBe(false);
+        });
+
+        test("rejects init ref with empty function name", () => {
+            const result = validateTemplate(validTemplate({
+                "form-items": [validTextItem({ init: "ref:" })],
+            }));
+            expect(result.valid).toBe(false);
+        });
+
+        test("rejects init ref:path with invalid function name", () => {
+            const result = validateTemplate(validTemplate({
+                "form-items": [validTextItem({ init: "ref:/path/to/file.md:123bad" })],
+            }));
+            expect(result.valid).toBe(false);
+        });
+
+        test("rejects init ref:path without function name", () => {
+            const result = validateTemplate(validTemplate({
+                "form-items": [validTextItem({ init: "ref:/path/to/file.md:" })],
+            }));
+            expect(result.valid).toBe(false);
+        });
+
+        test("rejects init with plain ref (no prefix)", () => {
+            const result = validateTemplate(validTemplate({
+                "form-items": [validTextItem({ init: "myFunction" })],
+            }));
+            expect(result.valid).toBe(false);
         });
     });
 

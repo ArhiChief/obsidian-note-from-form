@@ -1,4 +1,4 @@
-import { App, FileManager, normalizePath, Notice, TFile, TFolder } from 'obsidian';
+import { App, normalizePath, Notice, TFile, TFolder } from 'obsidian';
 import Mustache from 'mustache';
 import { NoteFromFormPluginSettings } from '../pluginSettings';
 import { NoteTemplate } from './templateTypes';
@@ -8,6 +8,7 @@ import { InputFormModal } from 'src/ui/inputFormModal';
 import { TemplateIndexItem } from './templateIndex';
 import { FormItem } from 'src/form/formItem';
 import { FileLocationFormItem, FileNameFormItem } from 'src/form/fileFormItem';
+import { FormItemFunctionProcessor } from 'src/form/formItemFunctionProcessor';
 
 export class TemplateProcessor {
     private readonly _app: App;
@@ -57,7 +58,8 @@ export class TemplateProcessor {
         }
 
         const template = templateData as NoteTemplate;
-        const formItems = FormItemsManager.getFormItems(template, this._settings);
+        const functionProcessor = new FormItemFunctionProcessor(indexedTemplate, this._app, this._settings);
+        const formItems = await FormItemsManager.getFormItems(template, functionProcessor, this._settings);
 
         const inputForm = new InputFormModal(this._app, indexedTemplate, formItems, this.createNoteFromTemplate.bind(this));
         inputForm.open();

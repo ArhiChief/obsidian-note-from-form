@@ -1,19 +1,16 @@
 import { TextAreaComponent, TextComponent } from "obsidian";
-import { TextFormItem as TextFormItemTemplate, InitFunctionString, ValueString, FormItemType } from "src/template/templateTypes";
+import { TextFormItem as TextFormItemTemplate, FormItemType } from "src/template/templateTypes";
 import { FormItemBase } from "./formItem";
 import { ExtendedSetting } from "src/ui/settingsExtension";
+import { FormItemFunctionProcessor } from "./formItemFunctionProcessor";
 
 export class TextFormItem extends FormItemBase<string> {
     
     private readonly _placeholder: string = "";
 
-    constructor (src: TextFormItemTemplate) {
-
+    constructor (src: TextFormItemTemplate, funtionProcessor: FormItemFunctionProcessor) {
         TextFormItem.assertType(src.type);
-
-        const initValue =  TextFormItem.getInitValue(src.init);
-
-        super(src.id, src.type, initValue, src.get, src.form);
+        super(src.id, src.type, funtionProcessor, src.init, src.get, src.form);
 
         if (src.form?.placeholder) {
             this._placeholder = src.form.placeholder;
@@ -40,27 +37,20 @@ export class TextFormItem extends FormItemBase<string> {
     private configureComponent() : (component: TextAreaComponent | TextComponent) => TextAreaComponent | TextComponent {
         return component => component
             .setPlaceholder(this._placeholder)
-            .setValue(this.value)
+            .setValue(this.value!)
             .onChange(newVal => this.value = newVal);
     }
 
     protected getFunctionDefault(): string {
-        return this.value;
+        return this.value!;
     }
 
-    private static getInitValue(src?: InitFunctionString | ValueString): string {
+    protected getInitValueFromString(valStr: string): string {
+        return valStr;
+    }
 
-        if (!src) {
-            return "";
-        }
-
-        if (src.startsWith('f:')) {
-            return FormItemBase.executeInitFunction(src.slice(2));
-        } else if (src.startsWith('v:')) {
-            return src.slice(2);
-        } else {
-            throw new Error(`Unsupported init value: ${src}`);
-        }
+    protected getInitValueDefault(): string {
+        return "";
     }
 
     private static assertType (type: FormItemType): void {

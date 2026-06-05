@@ -1,15 +1,13 @@
-import { NumberFormItem as NumberFormItemTemplate, InitFunctionString, ValueString, FormItemType } from "src/template/templateTypes";
+import { NumberFormItem as NumberFormItemTemplate, FormItemType } from "src/template/templateTypes";
 import { FormItemBase } from "./formItem";
 import { ExtendedSetting } from "src/ui/settingsExtension";
+import { FormItemFunctionProcessor } from "./formItemFunctionProcessor";
 
 export class NumberFormItem extends FormItemBase<number> {
 
-    constructor(src: NumberFormItemTemplate) {
+    constructor(src: NumberFormItemTemplate, funtionProcessor: FormItemFunctionProcessor) {
         NumberFormItem.assertType(src.type);
-
-        const initValue = NumberFormItem.getInitValue(src.init);
-
-        super(src.id, src.type, initValue, src.get, src.form);
+        super(src.id, src.type, funtionProcessor, src.init, src.get, src.form);
     }
 
     protected assignToFormImpl(contentEl: HTMLElement): void {
@@ -17,7 +15,7 @@ export class NumberFormItem extends FormItemBase<number> {
             .setName(this._title)
             .setDesc(this._description)
             .addNumber(comp => comp
-                .setValue(this.value)
+                .setValue(this.value!)
                 .onChange(newVal => {
                     const parsed = Number(newVal);
                     if (!isNaN(parsed)) {
@@ -28,25 +26,19 @@ export class NumberFormItem extends FormItemBase<number> {
     }
 
     protected getFunctionDefault(): string {
-        return String(this.value);
+        return String(this.value!);
     }
 
-    private static getInitValue(src?: InitFunctionString | ValueString): number {
-        if (!src) {
-            return 0;
-        }
-
-        if (src.startsWith('f:')) {
-            return FormItemBase.executeInitFunction<number>(src.slice(2));
-        } else if (src.startsWith('v:')) {
-            const parsed = Number(src.slice(2));
+    protected getInitValueFromString(valStr: string): number {
+        const parsed = Number(valStr);
             if (isNaN(parsed)) {
-                throw new Error(`Invalid number init value: ${src}`);
+                throw new Error(`Invalid number init value: ${valStr}`);
             }
             return parsed;
-        } else {
-            throw new Error(`Unsupported init value: ${src}`);
-        }
+    }
+
+    protected getInitValueDefault(): number {
+        return 0;
     }
 
     private static assertType(type: FormItemType): void {

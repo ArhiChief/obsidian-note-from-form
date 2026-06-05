@@ -7,41 +7,50 @@ import { DateTimeFormItem } from "./dateTimeFormItem";
 import { CheckboxFormItem } from "./checkboxFormItem";
 import { DropdownFormItem } from "./dropdownFormItem";
 import { NoteFromFormPluginSettings } from "src/pluginSettings";
+import { FormItemFunctionProcessor } from "./formItemFunctionProcessor";
 
 export class FormItemsManager {
-    static getFormItems(template: NoteTemplate, settings: NoteFromFormPluginSettings): FormItem[] {
-        
+    
+    static async getFormItems(template: NoteTemplate, functionProcessor: FormItemFunctionProcessor, settings: NoteFromFormPluginSettings): Promise<FormItem[]> {
         const fileLocationsSrc = template["file-location"] ?? `v:${settings.templatesFolderLocation}`;
-        const result: FormItem[] = [
-            new FileNameFormItem(template["file-name"]),
-            new FileLocationFormItem(fileLocationsSrc),
-        ];
+        const result: FormItem[] = [];
+
+        let formItem: FormItem = new FileNameFormItem(functionProcessor, template["file-name"]);
+        await formItem.initialize();
+        result.push(formItem);
+
+        formItem = new FileLocationFormItem(functionProcessor, fileLocationsSrc);
+        await formItem.initialize();
+        result.push(formItem);
 
         for (const item of template["form-items"] ?? []) {
             const itemType = item.type;
-
+            
             switch (itemType) {
                 case 'text':
                 case 'textArea':
-                    result.push(new TextFormItem(item));
+                    formItem = new TextFormItem(item, functionProcessor);
                     break;
                 case 'number':
-                    result.push(new NumberFormItem(item));
+                    formItem = new NumberFormItem(item, functionProcessor);
                     break;
                 case 'date':
                 case 'time':
                 case 'dateTime':
-                    result.push(new DateTimeFormItem(item));
+                    formItem = new DateTimeFormItem(item, functionProcessor);
                     break;
                 case 'checkbox':
-                    result.push(new CheckboxFormItem(item));
+                    formItem = new CheckboxFormItem(item, functionProcessor);
                     break;
                 case 'dropdown':
-                    result.push(new DropdownFormItem(item));
+                    formItem = new DropdownFormItem(item, functionProcessor);
                     break;
                 default:
                     throw new Error(`Unsupported type: ${itemType}`);
             }
+
+            await formItem.initialize();
+            result.push(formItem);
         }
 
         return result;
