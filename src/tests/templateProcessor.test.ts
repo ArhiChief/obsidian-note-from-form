@@ -3,8 +3,17 @@ import { TemplateProcessor } from '../template/templateProcessor';
 import { NoteFromFormPluginSettings, TEMPLATE_PROPERTY_NAME } from '../pluginSettings';
 import { TemplateIndexItem } from '../template/templateIndex';
 import { FormItem } from '../form/formItem';
+import { FormItemFunctionProcessor } from '../form/formItemFunctionProcessor';
 
 // ── mocks ──
+
+const mockFunctionProcessor = {
+    renderMustacheTemplate: jest.fn((t: string, v: any) => t),
+    executeFunction: jest.fn((f: string) => eval(`(${f})()`)),
+    executeFunctionWithParam: jest.fn((f: string, ...args: any[]) => eval(`(${f})`).apply(null, args)),
+    executeRefFunction: jest.fn(),
+    executeRefFunctionWithParam: jest.fn(),
+} as unknown as FormItemFunctionProcessor;
 
 jest.mock("moment", () => {
     const fn = (date: any) => ({
@@ -247,7 +256,7 @@ describe("TemplateProcessor", () => {
             );
 
             const { FormItemsManager } = require("../form/formItemManager");
-            const formItems = FormItemsManager.getFormItems(template, defaultSettings());
+            const formItems = await FormItemsManager.getFormItems(template, mockFunctionProcessor, defaultSettings());
             formItems[2].value = "hello";
 
             const result = await callback(formItems, indexed);
@@ -282,7 +291,7 @@ describe("TemplateProcessor", () => {
             );
 
             const { FormItemsManager } = require("../form/formItemManager");
-            const formItems = FormItemsManager.getFormItems(template, defaultSettings());
+            const formItems = await FormItemsManager.getFormItems(template, mockFunctionProcessor, defaultSettings());
 
             const result = await callback(formItems, indexed);
 
@@ -310,7 +319,7 @@ describe("TemplateProcessor", () => {
             );
 
             const { FormItemsManager } = require("../form/formItemManager");
-            const formItems = FormItemsManager.getFormItems({}, defaultSettings());
+            const formItems = await FormItemsManager.getFormItems({}, mockFunctionProcessor, defaultSettings());
             formItems[0].value = "Note";
             formItems[1].value = "existing";
 
@@ -341,7 +350,7 @@ describe("TemplateProcessor", () => {
             );
 
             const { FormItemsManager } = require("../form/formItemManager");
-            const formItems = FormItemsManager.getFormItems({}, defaultSettings());
+            const formItems = await FormItemsManager.getFormItems({}, mockFunctionProcessor, defaultSettings());
             formItems[0].value = "Note";
             formItems[1].value = "out";
 
@@ -375,8 +384,9 @@ describe("TemplateProcessor", () => {
             );
 
             const { FormItemsManager } = require("../form/formItemManager");
-            const formItems = FormItemsManager.getFormItems(
+            const formItems = await FormItemsManager.getFormItems(
                 { "form-items": [{ id: "title", type: "text" }] },
+                mockFunctionProcessor,
                 defaultSettings(),
             );
             formItems[0].value = "Note";
@@ -410,8 +420,9 @@ describe("TemplateProcessor", () => {
             );
 
             const { FormItemsManager } = require("../form/formItemManager");
-            const formItems = FormItemsManager.getFormItems(
+            const formItems = await FormItemsManager.getFormItems(
                 { "form-items": [{ id: "content", type: "text" }] },
+                mockFunctionProcessor,
                 defaultSettings(),
             );
             formItems[0].value = "Note";
