@@ -28,12 +28,12 @@ export default class NoteFromFormPlugin extends Plugin {
         this.addSettingTab(new NoteFromFormSettingsTab(this.app, this, this.settings, this.updateSettings.bind(this)));
 
         // listen for changes in vault to rebuild template index on fly
-        this.registerEvent(this.app.vault.on('create', (file) => this.templateIndex.onVaultChange(file)));
-        this.registerEvent(this.app.vault.on('delete', (file) => this.templateIndex.onVaultChange(file)));
-        this.registerEvent(this.app.vault.on('modify', (file) => this.templateIndex.onVaultChange(file)));
-        this.registerEvent(this.app.vault.on('rename', (file) => this.templateIndex.onVaultChange(file)));
-        this.registerEvent(this.app.workspace.on('file-menu', (menu, file) => {
-            if (file instanceof TFile && this.templateIndex.isInTemplatesFolder(file)) {
+        this.registerEvent(this.app.vault.on('create', async (file) => await this.templateIndex.onVaultChange(file)));
+        this.registerEvent(this.app.vault.on('delete', async (file) => await this.templateIndex.onVaultChange(file)));
+        this.registerEvent(this.app.vault.on('modify', async (file) => await this.templateIndex.onVaultChange(file)));
+        this.registerEvent(this.app.vault.on('rename', async (file) => await this.templateIndex.onVaultChange(file)));
+        this.registerEvent(this.app.workspace.on('file-menu', async (menu, file) => {
+            if (file instanceof TFile && await this.templateIndex.isInTemplatesFolder(file)) {
                 menu.addItem((item) => {
                     item.setTitle('Note From Form: Use template')
                         .setIcon('captions')
@@ -82,6 +82,7 @@ export default class NoteFromFormPlugin extends Plugin {
         if (!indexedTemplate) {
             return;
         }
+        
         try {
             await this.templateProcessor.useTemplate(indexedTemplate);
         } catch (e) {

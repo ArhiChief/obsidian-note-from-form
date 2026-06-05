@@ -50,16 +50,16 @@ describe("DateFormItem", () => {
             const item = new DateFormItem({ id: "d1", type: "date" }, mockFunctionProcessor);
             await item.initialize();
             const after = Date.now();
-            expect(item.value.getTime()).toBeGreaterThanOrEqual(before);
-            expect(item.value.getTime()).toBeLessThanOrEqual(after);
+            expect(item.value!.getTime()).toBeGreaterThanOrEqual(before);
+            expect(item.value!.getTime()).toBeLessThanOrEqual(after);
         });
 
         test("parses v: date init value", async () => {
             const item = new DateFormItem({ id: "d1", type: "date", init: "v:2025-01-15" }, mockFunctionProcessor);
             await item.initialize();
-            expect(item.value.getFullYear()).toBe(2025);
-            expect(item.value.getMonth()).toBe(0);
-            expect(item.value.getDate()).toBe(15);
+            expect(item.value!.getFullYear()).toBe(2025);
+            expect(item.value!.getMonth()).toBe(0);
+            expect(item.value!.getDate()).toBe(15);
         });
 
         test("throws for invalid v: date init value", async () => {
@@ -73,7 +73,7 @@ describe("DateFormItem", () => {
                 init: "f:() => new Date(2025, 0, 1)",
             }, mockFunctionProcessor);
             await item.initialize();
-            expect(item.value.getFullYear()).toBe(2025);
+            expect(item.value!.getFullYear()).toBe(2025);
         });
 
         test("accepts date type", () => {
