@@ -427,4 +427,70 @@ describe("TemplateIndex", () => {
             expect(onIndexChanged).not.toHaveBeenCalled();
         });
     });
+
+    // ─── isTemplateFile ───
+
+    describe("isTemplateFile", () => {
+        test("returns false when index is empty", () => {
+            const app = createMockApp();
+            const index = createIndex(app, defaultSettings());
+            const file = createFile('templates/note.md');
+
+            expect(index.isTemplateFile(file)).toBe(false);
+        });
+
+        test("returns true for an indexed template file", async () => {
+            const settings = defaultSettings();
+            const file = createFile('templates/note.md');
+            const folder = createFolder('templates', [file]);
+            const processFrontMatter = mockProcessFrontMatter({
+                'templates/note.md': { [TEMPLATE_PROPERTY_NAME]: true },
+            });
+            const app = createMockApp({
+                processFrontMatter,
+                getFolderByPath: jest.fn().mockReturnValue(folder),
+            });
+            const index = createIndex(app, settings);
+            await index.rebuild();
+
+            expect(index.isTemplateFile(file)).toBe(true);
+        });
+
+        test("returns false for a file not in the index", async () => {
+            const settings = defaultSettings();
+            const indexedFile = createFile('templates/note.md');
+            const otherFile = createFile('templates/other.md');
+            const folder = createFolder('templates', [indexedFile]);
+            const processFrontMatter = mockProcessFrontMatter({
+                'templates/note.md': { [TEMPLATE_PROPERTY_NAME]: true },
+            });
+            const app = createMockApp({
+                processFrontMatter,
+                getFolderByPath: jest.fn().mockReturnValue(folder),
+            });
+            const index = createIndex(app, settings);
+            await index.rebuild();
+
+            expect(index.isTemplateFile(otherFile)).toBe(false);
+        });
+
+        test("matches by file path", async () => {
+            const settings = defaultSettings();
+            const file = createFile('templates/note.md');
+            const folder = createFolder('templates', [file]);
+            const processFrontMatter = mockProcessFrontMatter({
+                'templates/note.md': { [TEMPLATE_PROPERTY_NAME]: true },
+            });
+            const app = createMockApp({
+                processFrontMatter,
+                getFolderByPath: jest.fn().mockReturnValue(folder),
+            });
+            const index = createIndex(app, settings);
+            await index.rebuild();
+
+            // Different TFile instance but same path
+            const samePathFile = createFile('templates/note.md');
+            expect(index.isTemplateFile(samePathFile)).toBe(true);
+        });
+    });
 });

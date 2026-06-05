@@ -32,8 +32,8 @@ export default class NoteFromFormPlugin extends Plugin {
         this.registerEvent(this.app.vault.on('delete', async (file) => await this.templateIndex.onVaultChange(file)));
         this.registerEvent(this.app.vault.on('modify', async (file) => await this.templateIndex.onVaultChange(file)));
         this.registerEvent(this.app.vault.on('rename', async (file) => await this.templateIndex.onVaultChange(file)));
-        this.registerEvent(this.app.workspace.on('file-menu', async (menu, file) => {
-            if (file instanceof TFile && await this.templateIndex.isInTemplatesFolder(file)) {
+        this.registerEvent(this.app.workspace.on('file-menu', (menu, file) => {
+            if (file instanceof TFile && this.templateIndex.isTemplateFile(file)) {
                 menu.addItem((item) => {
                     item.setTitle('Note From Form: Use template')
                         .setIcon('captions')
