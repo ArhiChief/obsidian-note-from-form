@@ -57,13 +57,13 @@ describe("validateTemplate", () => {
             expect(result.valid).toBe(true);
         });
 
-        test("accepts get-function type (f:(view) => ...)", () => {
-            const result = validateTemplate(validTemplate({ "file-name": "f:(view) => view.title" }));
+        test("accepts get-function type (f:async (view) => ...)", () => {
+            const result = validateTemplate(validTemplate({ "file-name": "f:async (view) => view.title" }));
             expect(result.valid).toBe(true);
         });
 
-        test("accepts get-function type (f:function(view) { ... })", () => {
-            const result = validateTemplate(validTemplate({ "file-name": 'f:function(view) { return "some text"; }' }));
+        test("accepts get-function type (f:async function(view) { ... })", () => {
+            const result = validateTemplate(validTemplate({ "file-name": 'f:async function(view) { return "some text"; }' }));
             expect(result.valid).toBe(true);
         });
 
@@ -127,12 +127,12 @@ describe("validateTemplate", () => {
         });
 
         test("accepts get-function type", () => {
-            const result = validateTemplate(validTemplate({ "file-location": "f:(view) => '/notes'" }));
+            const result = validateTemplate(validTemplate({ "file-location": "f:async (view) => '/notes'" }));
             expect(result.valid).toBe(true);
         });
 
-        test("accepts get-function type (f:function(view) { ... })", () => {
-            const result = validateTemplate(validTemplate({ "file-location": 'f:function(view) { return "some text"; }' }));
+        test("accepts get-function type (f:async function(view) { ... })", () => {
+            const result = validateTemplate(validTemplate({ "file-location": 'f:async function(view) { return "some text"; }' }));
             expect(result.valid).toBe(true);
         });
 
@@ -305,39 +305,39 @@ describe("validateTemplate", () => {
     describe("init and get functions", () => {
         test("accepts valid init function (arrow)", () => {
             const result = validateTemplate(validTemplate({
-                "form-items": [validTextItem({ init: "f:() => 'default'" })],
+                "form-items": [validTextItem({ init: "f:async () => 'default'" })],
             }));
             expect(result.valid).toBe(true);
         });
 
         test("accepts valid init function (classic)", () => {
             const result = validateTemplate(validTemplate({
-                "form-items": [validTextItem({ init: "f:function() { return 'x'; }" })],
+                "form-items": [validTextItem({ init: "f:async function() { return 'x'; }" })],
             }));
             expect(result.valid).toBe(true);
         });
 
         test("accepts valid get function (arrow)", () => {
             const result = validateTemplate(validTemplate({
-                "form-items": [validTextItem({ get: "f:(view) => view.title" })],
+                "form-items": [validTextItem({ get: "f:async (view) => view.title" })],
             }));
             expect(result.valid).toBe(true);
         });
 
         test("accepts valid get function (classic)", () => {
             const result = validateTemplate(validTemplate({
-                "form-items": [validTextItem({ get: "f:function(view) { return view.title; }" })],
+                "form-items": [validTextItem({ get: "f:async function(view) { return view.title; }" })],
             }));
             expect(result.valid).toBe(true);
         });
 
         test("rejects get function without view parameter", () => {
             const result = validateTemplate(validTemplate({
-                "form-items": [validTextItem({ get: "f:() => 'oops'" })],
+                "form-items": [validTextItem({ get: "f:async () => 'oops'" })],
             }));
             expect(result.valid).toBe(false);
             expect(result.errors).toEqual(expect.arrayContaining([
-                "/form-items/0/get: must be a function string starting with 'f:' followed by an arrow function receiving 'view' parameter (e.g. f:(view) => value)",
+                "/form-items/0/get: must be a function string starting with 'f:' followed by an async arrow function receiving 'view' parameter (e.g. f:async (view) => value)",
             ]));
         });
 
@@ -450,25 +450,25 @@ describe("validateTemplate", () => {
     describe("validate function", () => {
         test("accepts valid validate function (arrow)", () => {
             const result = validateTemplate(validTemplate({
-                "form-items": [validTextItem({ validate: "f:(view) => view.title !== ''" })],
+                "form-items": [validTextItem({ validate: "f:async (view) => view.title !== ''" })],
             }));
             expect(result.valid).toBe(true);
         });
 
         test("accepts valid validate function (classic)", () => {
             const result = validateTemplate(validTemplate({
-                "form-items": [validTextItem({ validate: "f:function(view) { return view.title !== ''; }" })],
+                "form-items": [validTextItem({ validate: "f:async function(view) { return view.title !== ''; }" })],
             }));
             expect(result.valid).toBe(true);
         });
 
         test("rejects validate function without view parameter", () => {
             const result = validateTemplate(validTemplate({
-                "form-items": [validTextItem({ validate: "f:() => true" })],
+                "form-items": [validTextItem({ validate: "f:async () => true" })],
             }));
             expect(result.valid).toBe(false);
             expect(result.errors).toEqual(expect.arrayContaining([
-                "/form-items/0/validate: must be a function string starting with 'f:' followed by an arrow function receiving 'view' parameter (e.g. f:(view) => value)",
+                "/form-items/0/validate: must be a function string starting with 'f:' followed by an async arrow function receiving 'view' parameter (e.g. f:async (view) => value)",
             ]));
         });
 

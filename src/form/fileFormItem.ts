@@ -3,11 +3,14 @@ import { FormItemBase } from "./formItem";
 import { FormItemForm, GetFunctionType, TemplateString, ValueString } from "src/template/templateTypes";
 import { ExtendedSetting } from "src/ui/settingsExtension";
 import { FormItemFunctionProcessor } from "./formItemFunctionProcessor";
+import { IUserApi } from "src/userApi/userApi";
 
 // https://docs.obsidian.md/Plugins/User+interface/Modals#Select+from+list+of+suggestions
 abstract class FileInfoFormItem extends FormItemBase<string> {
 
     private readonly _placeholder: string;
+    private readonly _title: string;
+    private readonly _description: string;
 
     protected constructor (
         id: string, 
@@ -15,6 +18,7 @@ abstract class FileInfoFormItem extends FormItemBase<string> {
         description: string,
         placeholder: string,
         funtionProcessor: FormItemFunctionProcessor,
+        userApi: IUserApi,
         getFunc?: GetFunctionType | TemplateString | ValueString) {
 
         let formDisplay: FormItemForm | undefined = undefined;
@@ -26,7 +30,9 @@ abstract class FileInfoFormItem extends FormItemBase<string> {
             };
         }
 
-        super(id, 'text', funtionProcessor, undefined, getFunc, undefined, formDisplay);
+        super(id, 'text', funtionProcessor, userApi, undefined, getFunc, undefined, formDisplay);
+        this._title = title;
+        this._description = description;
         this._placeholder = placeholder;
     }
 
@@ -49,8 +55,8 @@ abstract class FileInfoFormItem extends FormItemBase<string> {
             );
     }
 
-    get(view: Record<string, any>): string {
-        const result = super.get(view);
+    async get(view: Record<string, any>): Promise<string> {
+        const result = await super.get(view);
         return normalizePath(result);
     }
 
@@ -63,11 +69,20 @@ export class FileNameFormItem extends FileInfoFormItem {
 
     public static readonly FormFieldId: string = "file-name";
 
-    private static readonly _title: string = "Name of created note";
+    private static readonly _description: string = "Name of created note";
     private static readonly _placeholder: string = "My Fancy Note";
+    private static readonly _title: string = "File name";
 
-    constructor (funtionProcessor: FormItemFunctionProcessor, getFunc?: GetFunctionType | TemplateString | ValueString) {
-        super(FileNameFormItem.FormFieldId, "File name", FileNameFormItem._title, FileNameFormItem._placeholder, funtionProcessor, getFunc);
+    constructor (funtionProcessor: FormItemFunctionProcessor, userApi: IUserApi, getFunc?: GetFunctionType | TemplateString | ValueString) {
+        super(
+            FileNameFormItem.FormFieldId, 
+            FileNameFormItem._title, 
+            FileNameFormItem._description, 
+            FileNameFormItem._placeholder, 
+            funtionProcessor, 
+            userApi, 
+            getFunc
+        );
     }
 }
 
@@ -75,10 +90,19 @@ export class FileLocationFormItem extends FileInfoFormItem {
 
     public static readonly FormFieldId: string = "file-location";
 
-    private static readonly _title: string = "Folder where note will be placed";
+    private static readonly _description: string = "Folder where note will be placed";
     private static readonly _placeholder: string = "/some/path/";
+    private static readonly _title: string = "File location";
 
-    constructor (funtionProcessor: FormItemFunctionProcessor, getFunc?: GetFunctionType | TemplateString | ValueString) {
-        super(FileLocationFormItem.FormFieldId, "File location", FileLocationFormItem._title, FileLocationFormItem._placeholder, funtionProcessor, getFunc);
+    constructor (funtionProcessor: FormItemFunctionProcessor, userApi: IUserApi,  getFunc?: GetFunctionType | TemplateString | ValueString) {
+        super(
+            FileLocationFormItem.FormFieldId, 
+            FileLocationFormItem._title, 
+            FileLocationFormItem._description, 
+            FileLocationFormItem._placeholder, 
+            funtionProcessor, 
+            userApi, 
+            getFunc
+        );
     }
 }

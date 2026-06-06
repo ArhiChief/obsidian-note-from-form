@@ -16,14 +16,13 @@ jest.mock("src/ui/settingsExtension", () => {
 
 const mockFunctionProcessor = {
     renderMustacheTemplate: jest.fn(),
-    executeFunction: jest.fn().mockImplementation((funcText: string) => {
+    executeFunction: jest.fn().mockImplementation((funcText: string, ...args: any[]) => {
         const func = eval(`(${funcText})`);
-        return func();
+        return func(...args);
     }),
-    executeFunctionWithParam: jest.fn(),
     executeRefFunction: jest.fn(),
-    executeRefFunctionWithParam: jest.fn(),
 } as any;
+const mockUserApi = {} as any;
 
 describe("TextFormItem", () => {
 
@@ -31,38 +30,38 @@ describe("TextFormItem", () => {
 
     describe("constructor", () => {
         test("defaults to empty string when no init provided", async () => {
-            const item = new TextFormItem({ id: "t1", type: "text" }, mockFunctionProcessor);
+            const item = new TextFormItem({ id: "t1", type: "text" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             expect(item.value).toBe("");
         });
 
         test("parses v: init value", async () => {
-            const item = new TextFormItem({ id: "t1", type: "text", init: "v:hello" }, mockFunctionProcessor);
+            const item = new TextFormItem({ id: "t1", type: "text", init: "v:hello" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             expect(item.value).toBe("hello");
         });
 
         test("evaluates f: init function", async () => {
-            const item = new TextFormItem({ id: "t1", type: "text", init: "f:() => 'computed'" }, mockFunctionProcessor);
+            const item = new TextFormItem({ id: "t1", type: "text", init: "f:async () => 'computed'" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             expect(item.value).toBe("computed");
         });
 
         test("accepts text type", () => {
-            expect(() => new TextFormItem({ id: "t1", type: "text" }, mockFunctionProcessor)).not.toThrow();
+            expect(() => new TextFormItem({ id: "t1", type: "text" }, mockFunctionProcessor, mockUserApi)).not.toThrow();
         });
 
         test("accepts textArea type", () => {
-            expect(() => new TextFormItem({ id: "t1", type: "textArea" }, mockFunctionProcessor)).not.toThrow();
+            expect(() => new TextFormItem({ id: "t1", type: "textArea" }, mockFunctionProcessor, mockUserApi)).not.toThrow();
         });
 
         test("throws for unsupported type", () => {
-            expect(() => new TextFormItem({ id: "t1", type: "number" as any }, mockFunctionProcessor))
+            expect(() => new TextFormItem({ id: "t1", type: "number" as any }, mockFunctionProcessor, mockUserApi))
                 .toThrow("Unsupported type");
         });
 
         test("sets id and type correctly", () => {
-            const item = new TextFormItem({ id: "myText", type: "textArea" }, mockFunctionProcessor);
+            const item = new TextFormItem({ id: "myText", type: "textArea" }, mockFunctionProcessor, mockUserApi);
             expect(item.id).toBe("myText");
             expect(item.type).toBe("textArea");
         });
@@ -72,21 +71,21 @@ describe("TextFormItem", () => {
 
     describe("get", () => {
         test("returns value when no getFunc", async () => {
-            const item = new TextFormItem({ id: "t1", type: "text", init: "v:world" }, mockFunctionProcessor);
+            const item = new TextFormItem({ id: "t1", type: "text", init: "v:world" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(item.get({})).toBe("world");
+            expect(await item.get({})).toBe("world");
         });
 
         test("returns empty string for default value", async () => {
-            const item = new TextFormItem({ id: "t1", type: "text" }, mockFunctionProcessor);
+            const item = new TextFormItem({ id: "t1", type: "text" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(item.get({})).toBe("");
+            expect(await item.get({})).toBe("");
         });
 
         test("returns literal for v: getFunc", async () => {
-            const item = new TextFormItem({ id: "t1", type: "text", get: "v:override" }, mockFunctionProcessor);
+            const item = new TextFormItem({ id: "t1", type: "text", get: "v:override" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(item.get({})).toBe("override");
+            expect(await item.get({})).toBe("override");
         });
     });
 
@@ -94,7 +93,7 @@ describe("TextFormItem", () => {
 
     describe("assignToForm", () => {
         test("does nothing when no form display is configured", async () => {
-            const item = new TextFormItem({ id: "t1", type: "text" }, mockFunctionProcessor);
+            const item = new TextFormItem({ id: "t1", type: "text" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             expect(() => item.assignToForm({} as HTMLElement)).not.toThrow();
         });
@@ -103,7 +102,7 @@ describe("TextFormItem", () => {
             const item = new TextFormItem({
                 id: "t1", type: "text",
                 form: { title: "Enter text", placeholder: "type here" },
-            }, mockFunctionProcessor);
+            }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             expect(() => item.assignToForm({} as HTMLElement)).not.toThrow();
         });
@@ -112,7 +111,7 @@ describe("TextFormItem", () => {
             const item = new TextFormItem({
                 id: "t1", type: "textArea",
                 form: { title: "Enter text" },
-            }, mockFunctionProcessor);
+            }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             expect(() => item.assignToForm({} as HTMLElement)).not.toThrow();
         });
@@ -122,13 +121,13 @@ describe("TextFormItem", () => {
 
     describe("initialize", () => {
         test("value is undefined before initialize", () => {
-            const item = new TextFormItem({ id: "t1", type: "text", init: "v:hello" }, mockFunctionProcessor);
+            const item = new TextFormItem({ id: "t1", type: "text", init: "v:hello" }, mockFunctionProcessor, mockUserApi);
             expect(item.value).toBeUndefined();
         });
 
         test("resolves ref: init via executeRefFunction", async () => {
             mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce("from-ref");
-            const item = new TextFormItem({ id: "t1", type: "text", init: "ref:myFunc" }, mockFunctionProcessor);
+            const item = new TextFormItem({ id: "t1", type: "text", init: "ref:myFunc" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("myFunc");
             expect(item.value).toBe("from-ref");
@@ -136,14 +135,14 @@ describe("TextFormItem", () => {
 
         test("resolves ref: with path via executeRefFunction", async () => {
             mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce("from-file-ref");
-            const item = new TextFormItem({ id: "t1", type: "text", init: "ref:/path/to/file.md:myFunc" }, mockFunctionProcessor);
+            const item = new TextFormItem({ id: "t1", type: "text", init: "ref:/path/to/file.md:myFunc" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("/path/to/file.md:myFunc");
             expect(item.value).toBe("from-file-ref");
         });
 
         test("throws for unsupported init prefix", async () => {
-            const item = new TextFormItem({ id: "t1", type: "text", init: "x:bad" as any }, mockFunctionProcessor);
+            const item = new TextFormItem({ id: "t1", type: "text", init: "x:bad" as any }, mockFunctionProcessor, mockUserApi);
             await expect(item.initialize()).rejects.toThrow("Unsupported init function");
         });
     });
@@ -152,7 +151,7 @@ describe("TextFormItem", () => {
 
     describe("validate", () => {
         test("returns true when no validateFunc is provided", async () => {
-            const item = new TextFormItem({ id: "t1", type: "text" }, mockFunctionProcessor);
+            const item = new TextFormItem({ id: "t1", type: "text" }, mockFunctionProcessor, mockUserApi);
             const result = await item.validate({ t1: "hello" });
             expect(result).toBe(true);
         });
@@ -160,35 +159,35 @@ describe("TextFormItem", () => {
         test("returns true when no element is assigned (no form)", async () => {
             const item = new TextFormItem({
                 id: "t1", type: "text",
-                validate: "f:(view) => ({ isValid: true })" as any,
-            }, mockFunctionProcessor);
+                validate: "f:async (view) => ({ isValid: true })" as any,
+            }, mockFunctionProcessor, mockUserApi);
             const result = await item.validate({ t1: "hello" });
             expect(result).toBe(true);
         });
 
         test("returns true for valid inline function", async () => {
-            mockFunctionProcessor.executeFunctionWithParam.mockReturnValueOnce({ isValid: true });
+            mockFunctionProcessor.executeFunction.mockReturnValueOnce({ isValid: true });
             const item = new TextFormItem({
                 id: "t1", type: "text",
                 form: { title: "Title" },
-                validate: "f:(view) => ({ isValid: true })" as any,
-            }, mockFunctionProcessor);
+                validate: "f:async (view) => ({ isValid: true })" as any,
+            }, mockFunctionProcessor, mockUserApi);
             item.assignToForm({} as HTMLElement);
             const result = await item.validate({ t1: "hello" });
             expect(result).toBe(true);
-            expect(mockFunctionProcessor.executeFunctionWithParam).toHaveBeenCalledWith(
-                "(view) => ({ isValid: true })",
+            expect(mockFunctionProcessor.executeFunction).toHaveBeenCalledWith(
+                "async (view) => ({ isValid: true })",
                 { t1: "hello" },
             );
         });
 
         test("returns false and calls setError for invalid inline function", async () => {
-            mockFunctionProcessor.executeFunctionWithParam.mockReturnValueOnce({ isValid: false, errMsg: "Required!" });
+            mockFunctionProcessor.executeFunction.mockReturnValueOnce({ isValid: false, errMsg: "Required!" });
             const item = new TextFormItem({
                 id: "t1", type: "text",
                 form: { title: "Title" },
-                validate: "f:(view) => ({ isValid: false, errMsg: 'Required!' })" as any,
-            }, mockFunctionProcessor);
+                validate: "f:async (view) => ({ isValid: false, errMsg: 'Required!' })" as any,
+            }, mockFunctionProcessor, mockUserApi);
             item.assignToForm({} as HTMLElement);
             const result = await item.validate({ t1: "" });
             expect(result).toBe(false);
@@ -200,12 +199,12 @@ describe("TextFormItem", () => {
 
             jest.resetModules();
             // Re-import after setting up specific mock tracking
-            mockFunctionProcessor.executeFunctionWithParam.mockReturnValueOnce({ isValid: true });
+            mockFunctionProcessor.executeFunction.mockReturnValueOnce({ isValid: true });
             const item = new TextFormItem({
                 id: "t1", type: "text",
                 form: { title: "Title" },
-                validate: "f:(view) => ({ isValid: true })" as any,
-            }, mockFunctionProcessor);
+                validate: "f:async (view) => ({ isValid: true })" as any,
+            }, mockFunctionProcessor, mockUserApi);
             item.assignToForm({} as HTMLElement);
 
             // Access the private _element to attach spies
@@ -219,12 +218,12 @@ describe("TextFormItem", () => {
         });
 
         test("calls setError with errMsg when validation fails", async () => {
-            mockFunctionProcessor.executeFunctionWithParam.mockReturnValueOnce({ isValid: false, errMsg: "Too short" });
+            mockFunctionProcessor.executeFunction.mockReturnValueOnce({ isValid: false, errMsg: "Too short" });
             const item = new TextFormItem({
                 id: "t1", type: "text",
                 form: { title: "Title" },
-                validate: "f:(view) => ({ isValid: false, errMsg: 'Too short' })" as any,
-            }, mockFunctionProcessor);
+                validate: "f:async (view) => ({ isValid: false, errMsg: 'Too short' })" as any,
+            }, mockFunctionProcessor, mockUserApi);
             item.assignToForm({} as HTMLElement);
 
             const element = (item as any)._element;
@@ -236,30 +235,30 @@ describe("TextFormItem", () => {
             expect(setError).toHaveBeenCalledWith("Too short");
         });
 
-        test("resolves ref: validate via executeRefFunctionWithParam", async () => {
-            mockFunctionProcessor.executeRefFunctionWithParam.mockResolvedValueOnce({ isValid: true });
+        test("resolves ref: validate via executeRefFunction", async () => {
+            mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce({ isValid: true });
             const item = new TextFormItem({
                 id: "t1", type: "text",
                 form: { title: "Title" },
                 validate: "ref:myValidator" as any,
-            }, mockFunctionProcessor);
+            }, mockFunctionProcessor, mockUserApi);
             item.assignToForm({} as HTMLElement);
             const result = await item.validate({ t1: "hello" });
             expect(result).toBe(true);
-            expect(mockFunctionProcessor.executeRefFunctionWithParam).toHaveBeenCalledWith("myValidator", { t1: "hello" });
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("myValidator", { t1: "hello" });
         });
 
-        test("resolves ref: with path via executeRefFunctionWithParam", async () => {
-            mockFunctionProcessor.executeRefFunctionWithParam.mockResolvedValueOnce({ isValid: false, errMsg: "Nope" });
+        test("resolves ref: with path via executeRefFunction", async () => {
+            mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce({ isValid: false, errMsg: "Nope" });
             const item = new TextFormItem({
                 id: "t1", type: "text",
                 form: { title: "Title" },
                 validate: "ref:/path/to/file.md:myValidator" as any,
-            }, mockFunctionProcessor);
+            }, mockFunctionProcessor, mockUserApi);
             item.assignToForm({} as HTMLElement);
             const result = await item.validate({ t1: "x" });
             expect(result).toBe(false);
-            expect(mockFunctionProcessor.executeRefFunctionWithParam).toHaveBeenCalledWith("/path/to/file.md:myValidator", { t1: "x" });
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("/path/to/file.md:myValidator", { t1: "x" });
         });
 
         test("throws for unsupported validate prefix", async () => {
@@ -267,7 +266,7 @@ describe("TextFormItem", () => {
                 id: "t1", type: "text",
                 form: { title: "Title" },
                 validate: "x:bad" as any,
-            }, mockFunctionProcessor);
+            }, mockFunctionProcessor, mockUserApi);
             item.assignToForm({} as HTMLElement);
             await expect(item.validate({ t1: "val" })).rejects.toThrow("Unsupported validate function");
         });

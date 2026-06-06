@@ -81,38 +81,38 @@ describe("FormItemFunctionProcessor", () => {
     // ─── executeFunction ───
 
     describe("executeFunction", () => {
-        test("evaluates arrow function", () => {
+        test("evaluates arrow function", async () => {
             const { processor } = createProcessor();
-            const result = processor.executeFunction<number>("() => 42");
+            const result = await processor.executeFunction<number, []>("() => 42");
             expect(result).toBe(42);
         });
 
-        test("evaluates function expression", () => {
+        test("evaluates function expression", async () => {
             const { processor } = createProcessor();
-            const result = processor.executeFunction<string>("function() { return 'hello'; }");
+            const result = await processor.executeFunction<string, []>("function() { return 'hello'; }");
             expect(result).toBe("hello");
         });
 
-        test("throws for invalid function text", () => {
+        test("throws for invalid function text", async () => {
             const { processor } = createProcessor();
-            expect(() => processor.executeFunction("not a function")).toThrow();
+            await expect(processor.executeFunction("'not a function'")).rejects.toThrow();
         });
     });
 
-    // ─── executeFunctionWithParam ───
+    // ─── executeFunction with args ───
 
-    describe("executeFunctionWithParam", () => {
-        test("passes arguments to arrow function", () => {
+    describe("executeFunction with args", () => {
+        test("passes arguments to arrow function", async () => {
             const { processor } = createProcessor();
-            const result = processor.executeFunctionWithParam<string, [Record<string, any>]>(
+            const result = await processor.executeFunction<string, [Record<string, any>]>(
                 "(view) => view.name", { name: "test" }
             );
             expect(result).toBe("test");
         });
 
-        test("passes arguments to function expression", () => {
+        test("passes arguments to function expression", async () => {
             const { processor } = createProcessor();
-            const result = processor.executeFunctionWithParam<number, [number, number]>(
+            const result = await processor.executeFunction<number, [number, number]>(
                 "function(a, b) { return a + b; }", 3, 4
             );
             expect(result).toBe(7);
@@ -132,7 +132,7 @@ describe("FormItemFunctionProcessor", () => {
                 fileContent,
             });
 
-            const result = await processor.executeRefFunction<string>("myInit");
+            const result = await processor.executeRefFunction<string, []>("myInit");
             expect(cachedRead).toHaveBeenCalledWith(templateFile);
             expect(result).toBe("from-template");
         });
@@ -147,7 +147,7 @@ describe("FormItemFunctionProcessor", () => {
                 fileContent,
             });
 
-            const result = await processor.executeRefFunction<number>("utils/helpers.md:getNum");
+            const result = await processor.executeRefFunction<number, []>("utils/helpers.md:getNum");
             expect(getFileByPath).toHaveBeenCalledWith("utils/helpers.md");
             expect(cachedRead).toHaveBeenCalledWith(externalFile);
             expect(result).toBe(99);
@@ -177,9 +177,9 @@ describe("FormItemFunctionProcessor", () => {
         });
     });
 
-    // ─── executeRefFunctionWithParam ───
+    // ─── executeRefFunction with args ───
 
-    describe("executeRefFunctionWithParam", () => {
+    describe("executeRefFunction with args", () => {
         test("passes arguments to referenced function", async () => {
             const templateFile = createMockFile("templates/tpl.md");
             const body = "(view) => view.x + 1";
@@ -190,7 +190,7 @@ describe("FormItemFunctionProcessor", () => {
                 fileContent,
             });
 
-            const result = await processor.executeRefFunctionWithParam<number, [Record<string, any>]>(
+            const result = await processor.executeRefFunction<number, [Record<string, any>]>(
                 "compute", { x: 10 }
             );
             expect(result).toBe(11);
@@ -211,7 +211,7 @@ describe("FormItemFunctionProcessor", () => {
                 fileContent,
             });
 
-            const result = await processor.executeRefFunction<string>("init");
+            const result = await processor.executeRefFunction<string, []>("init");
             expect(result).toBe("custom");
         });
 
@@ -251,7 +251,7 @@ describe("FormItemFunctionProcessor", () => {
                 fileContent,
             });
 
-            const result = await processor.executeRefFunction<number>("calc");
+            const result = await processor.executeRefFunction<number, []>("calc");
             expect(result).toBe(2);
         });
 
@@ -268,7 +268,7 @@ describe("FormItemFunctionProcessor", () => {
                 fileContent,
             });
 
-            const result1 = await processor.executeRefFunction<string>("first");
+            const result1 = await processor.executeRefFunction<string, []>("first");
             expect(result1).toBe("one");
         });
 
@@ -290,7 +290,7 @@ describe("FormItemFunctionProcessor", () => {
                 fileContent,
             });
 
-            const result = await processor.executeRefFunction<boolean>("isActive");
+            const result = await processor.executeRefFunction<boolean, []>("isActive");
             expect(result).toBe(true);
         });
     });

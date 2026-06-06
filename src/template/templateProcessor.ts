@@ -9,6 +9,7 @@ import { TemplateIndexItem } from './templateIndex';
 import { FormItem } from 'src/form/formItem';
 import { FileLocationFormItem, FileNameFormItem } from 'src/form/fileFormItem';
 import { FormItemFunctionProcessor } from 'src/form/formItemFunctionProcessor';
+import { UserApi } from 'src/userApi/userApi';
 
 export class TemplateProcessor {
     private readonly _app: App;
@@ -58,7 +59,8 @@ export class TemplateProcessor {
 
         const template = templateData as NoteTemplate;
         const functionProcessor = new FormItemFunctionProcessor(indexedTemplate, this._app, this._settings);
-        const formItems = await FormItemsManager.getFormItems(template, functionProcessor, this._settings);
+        const userApi = new UserApi(this._settings, this._app);
+        const formItems = await FormItemsManager.getFormItems(template, functionProcessor, this._settings, userApi);
 
         const inputForm = new InputFormModal(this._app, indexedTemplate, formItems, this.createNoteFromTemplate.bind(this));
         inputForm.open();
@@ -79,7 +81,7 @@ export class TemplateProcessor {
 
         let viewModel: Record<string, string>;
         try {
-            viewModel = FormItemsManager.getViewModel(formItems);
+            viewModel = await FormItemsManager.getViewModel(formItems);
         } catch (e) {
             new Notice(`Error processing form items: ${(e as Error).message}`);
             return false;

@@ -16,14 +16,13 @@ jest.mock("src/ui/settingsExtension", () => {
 
 const mockFunctionProcessor = {
     renderMustacheTemplate: jest.fn(),
-    executeFunction: jest.fn().mockImplementation((funcText: string) => {
+    executeFunction: jest.fn().mockImplementation((funcText: string, ...args: any[]) => {
         const func = eval(`(${funcText})`);
-        return func();
+        return func(...args);
     }),
-    executeFunctionWithParam: jest.fn(),
     executeRefFunction: jest.fn(),
-    executeRefFunctionWithParam: jest.fn(),
 } as any;
+const mockUserApi = {} as any;
 
 describe("CheckboxFormItem", () => {
 
@@ -31,41 +30,41 @@ describe("CheckboxFormItem", () => {
 
     describe("constructor", () => {
         test("defaults to false when no init provided", async () => {
-            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox" }, mockFunctionProcessor);
+            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             expect(item.value).toBe(false);
         });
 
         test("parses v:true init value", async () => {
-            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", init: "v:true" }, mockFunctionProcessor);
+            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", init: "v:true" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             expect(item.value).toBe(true);
         });
 
         test("parses v:false init value", async () => {
-            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", init: "v:false" }, mockFunctionProcessor);
+            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", init: "v:false" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             expect(item.value).toBe(false);
         });
 
         test("parses v:TRUE case-insensitively", async () => {
-            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", init: "v:TRUE" }, mockFunctionProcessor);
+            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", init: "v:TRUE" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             expect(item.value).toBe(true);
         });
 
         test("evaluates f: init function", async () => {
-            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", init: "f:() => true" }, mockFunctionProcessor);
+            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", init: "f:async () => true" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             expect(item.value).toBe(true);
         });
 
         test("throws for unsupported type", () => {
-            expect(() => new CheckboxFormItem({ id: "cb1", type: "text" as any }, mockFunctionProcessor)).toThrow("Unsupported type");
+            expect(() => new CheckboxFormItem({ id: "cb1", type: "text" as any }, mockFunctionProcessor, mockUserApi)).toThrow("Unsupported type");
         });
 
         test("sets id and type correctly", () => {
-            const item = new CheckboxFormItem({ id: "myCheck", type: "checkbox" }, mockFunctionProcessor);
+            const item = new CheckboxFormItem({ id: "myCheck", type: "checkbox" }, mockFunctionProcessor, mockUserApi);
             expect(item.id).toBe("myCheck");
             expect(item.type).toBe("checkbox");
         });
@@ -75,33 +74,33 @@ describe("CheckboxFormItem", () => {
 
     describe("get", () => {
         test("returns 'true' when value is true and no getFunc", async () => {
-            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", init: "v:true" }, mockFunctionProcessor);
+            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", init: "v:true" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(item.get({})).toBe("true");
+            expect(await item.get({})).toBe("true");
         });
 
         test("returns 'false' when value is false and no getFunc", async () => {
-            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox" }, mockFunctionProcessor);
+            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(item.get({})).toBe("false");
+            expect(await item.get({})).toBe("false");
         });
 
         test("returns literal for v: getFunc", async () => {
-            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", get: "v:yes" }, mockFunctionProcessor);
+            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", get: "v:yes" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(item.get({})).toBe("yes");
+            expect(await item.get({})).toBe("yes");
         });
 
         test("invokes arrow function for f: getFunc", async () => {
-            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", get: "f:(view)=>true" }, mockFunctionProcessor);
+            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", get: "f:async (view)=>true" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(item.get({})).toBe(true);
+            expect(await item.get({})).toBe(true);
         });
 
         test("invokes regular function for f: getFunc", async () => {
-            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", get: "f:function(view) { return true; }" }, mockFunctionProcessor);
+            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", get: "f:async function(view) { return true; }" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(item.get({})).toBe(true);
+            expect(await item.get({})).toBe(true);
         });
     });
 
@@ -109,7 +108,7 @@ describe("CheckboxFormItem", () => {
 
     describe("assignToForm", () => {
         test("does nothing when no form display is configured", async () => {
-            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox" }, mockFunctionProcessor);
+            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             // Should not throw
             expect(() => item.assignToForm({} as HTMLElement)).not.toThrow();
@@ -119,7 +118,7 @@ describe("CheckboxFormItem", () => {
             const item = new CheckboxFormItem({
                 id: "cb1", type: "checkbox",
                 form: { title: "My Checkbox", description: "desc" },
-            }, mockFunctionProcessor);
+            }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             expect(() => item.assignToForm({} as HTMLElement)).not.toThrow();
         });
@@ -129,13 +128,13 @@ describe("CheckboxFormItem", () => {
 
     describe("initialize", () => {
         test("value is undefined before initialize", () => {
-            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", init: "v:true" }, mockFunctionProcessor);
+            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", init: "v:true" }, mockFunctionProcessor, mockUserApi);
             expect(item.value).toBeUndefined();
         });
 
         test("resolves ref: init via executeRefFunction", async () => {
             mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce(true);
-            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", init: "ref:isChecked" }, mockFunctionProcessor);
+            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", init: "ref:isChecked" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("isChecked");
             expect(item.value).toBe(true);
@@ -143,14 +142,14 @@ describe("CheckboxFormItem", () => {
 
         test("resolves ref: with path via executeRefFunction", async () => {
             mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce(false);
-            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", init: "ref:/funcs.md:isChecked" }, mockFunctionProcessor);
+            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", init: "ref:/funcs.md:isChecked" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("/funcs.md:isChecked");
             expect(item.value).toBe(false);
         });
 
         test("throws for unsupported init prefix", async () => {
-            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", init: "x:bad" as any }, mockFunctionProcessor);
+            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", init: "x:bad" as any }, mockFunctionProcessor, mockUserApi);
             await expect(item.initialize()).rejects.toThrow("Unsupported init function");
         });
     });
@@ -159,7 +158,7 @@ describe("CheckboxFormItem", () => {
 
     describe("validate", () => {
         test("returns true when no validateFunc is provided", async () => {
-            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox" }, mockFunctionProcessor);
+            const item = new CheckboxFormItem({ id: "cb1", type: "checkbox" }, mockFunctionProcessor, mockUserApi);
             const result = await item.validate({ cb1: true });
             expect(result).toBe(true);
         });
@@ -167,31 +166,31 @@ describe("CheckboxFormItem", () => {
         test("returns true when no element is assigned (no form)", async () => {
             const item = new CheckboxFormItem({
                 id: "cb1", type: "checkbox",
-                validate: "f:(view) => ({ isValid: true })" as any,
-            }, mockFunctionProcessor);
+                validate: "f:async (view) => ({ isValid: true })" as any,
+            }, mockFunctionProcessor, mockUserApi);
             const result = await item.validate({ cb1: true });
             expect(result).toBe(true);
         });
 
         test("returns true for valid inline function", async () => {
-            mockFunctionProcessor.executeFunctionWithParam.mockReturnValueOnce({ isValid: true });
+            mockFunctionProcessor.executeFunction.mockReturnValueOnce({ isValid: true });
             const item = new CheckboxFormItem({
                 id: "cb1", type: "checkbox",
                 form: { title: "Check" },
-                validate: "f:(view) => ({ isValid: true })" as any,
-            }, mockFunctionProcessor);
+                validate: "f:async (view) => ({ isValid: true })" as any,
+            }, mockFunctionProcessor, mockUserApi);
             item.assignToForm({} as HTMLElement);
             const result = await item.validate({ cb1: true });
             expect(result).toBe(true);
         });
 
         test("returns false and calls setError for invalid result", async () => {
-            mockFunctionProcessor.executeFunctionWithParam.mockReturnValueOnce({ isValid: false, errMsg: "Must be checked" });
+            mockFunctionProcessor.executeFunction.mockReturnValueOnce({ isValid: false, errMsg: "Must be checked" });
             const item = new CheckboxFormItem({
                 id: "cb1", type: "checkbox",
                 form: { title: "Check" },
-                validate: "f:(view) => ({ isValid: false, errMsg: 'Must be checked' })" as any,
-            }, mockFunctionProcessor);
+                validate: "f:async (view) => ({ isValid: false, errMsg: 'Must be checked' })" as any,
+            }, mockFunctionProcessor, mockUserApi);
             item.assignToForm({} as HTMLElement);
 
             const element = (item as any)._element;
@@ -204,17 +203,17 @@ describe("CheckboxFormItem", () => {
             expect(setError).toHaveBeenCalledWith("Must be checked");
         });
 
-        test("resolves ref: validate via executeRefFunctionWithParam", async () => {
-            mockFunctionProcessor.executeRefFunctionWithParam.mockResolvedValueOnce({ isValid: true });
+        test("resolves ref: validate via executeRefFunction", async () => {
+            mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce({ isValid: true });
             const item = new CheckboxFormItem({
                 id: "cb1", type: "checkbox",
                 form: { title: "Check" },
                 validate: "ref:myValidator" as any,
-            }, mockFunctionProcessor);
+            }, mockFunctionProcessor, mockUserApi);
             item.assignToForm({} as HTMLElement);
             const result = await item.validate({ cb1: true });
             expect(result).toBe(true);
-            expect(mockFunctionProcessor.executeRefFunctionWithParam).toHaveBeenCalledWith("myValidator", { cb1: true });
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("myValidator", { cb1: true });
         });
 
         test("throws for unsupported validate prefix", async () => {
@@ -222,7 +221,7 @@ describe("CheckboxFormItem", () => {
                 id: "cb1", type: "checkbox",
                 form: { title: "Check" },
                 validate: "x:bad" as any,
-            }, mockFunctionProcessor);
+            }, mockFunctionProcessor, mockUserApi);
             item.assignToForm({} as HTMLElement);
             await expect(item.validate({ cb1: true })).rejects.toThrow("Unsupported validate function");
         });

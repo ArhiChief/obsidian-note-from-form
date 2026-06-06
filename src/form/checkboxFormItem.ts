@@ -2,12 +2,19 @@ import { CheckboxFormItem as CheckboxFormItemTemplate, FormItemType } from "src/
 import { FormItemBase } from "./formItem";
 import { ExtendedSetting } from "src/ui/settingsExtension";
 import { FormItemFunctionProcessor } from "./formItemFunctionProcessor";
+import { IUserApi } from "src/userApi/userApi";
 
 export class CheckboxFormItem extends FormItemBase<boolean> {
 
-    constructor(src: CheckboxFormItemTemplate, funtionProcessor: FormItemFunctionProcessor) {
+    private readonly _title: string;
+    private readonly _description: string;
+
+    constructor(src: CheckboxFormItemTemplate, funtionProcessor: FormItemFunctionProcessor, userApi: IUserApi) {
         CheckboxFormItem.assertType(src.type);
-        super(src.id, src.type, funtionProcessor, src.init, src.get, src.validate, src.form);
+        super(src.id, src.type, funtionProcessor, userApi, src.init, src.get, src.validate, src.form);
+        
+        this._title = src.form?.title ?? "";
+        this._description = src.form?.description ?? "";
     }
 
     protected assignToFormImpl(contentEl: HTMLElement): ExtendedSetting {
