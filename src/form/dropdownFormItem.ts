@@ -19,7 +19,7 @@ export class DropdownFormItem extends FormItemBase<DropdownOption[]> {
 
     constructor(src: DropdownFormItemTemplate, funtionProcessor: FormItemFunctionProcessor) {
         DropdownFormItem.assertType(src.type);
-        super(src.id, src.type, funtionProcessor, src.init, src.get, src.form);
+        super(src.id, src.type, funtionProcessor, src.init, src.get, src.validate, src.form);
 
         this._opts = {};
         this._selected = "";
@@ -29,9 +29,9 @@ export class DropdownFormItem extends FormItemBase<DropdownOption[]> {
         return this.value![0].v;
     }
 
-    protected assignToFormImpl(contentEl: HTMLElement): void {
+    protected assignToFormImpl(contentEl: HTMLElement): ExtendedSetting {
 
-        new ExtendedSetting(contentEl)
+        return new ExtendedSetting(contentEl)
             .setName(this._title)
             .setDesc(this._description)
             .addDropdown(dropDown => dropDown

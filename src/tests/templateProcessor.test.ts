@@ -562,6 +562,7 @@ describe("TemplateProcessor", () => {
                 assignToForm: jest.fn(),
                 get: () => { throw new Error("broken"); },
                 initialize: jest.fn().mockResolvedValue(undefined),
+                validate: jest.fn().mockResolvedValue(undefined),
             };
 
             const result = await callback([badItem], indexed);

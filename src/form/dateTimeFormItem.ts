@@ -10,10 +10,10 @@ export class DateTimeFormItem extends FormItemBase<Date> {
 
     constructor(src: DateFormItemTemplate, funtionProcessor: FormItemFunctionProcessor) {
         DateTimeFormItem.assertType(src.type);
-        super(src.id, src.type, funtionProcessor, src.init, src.get, src.form);
+        super(src.id, src.type, funtionProcessor, src.init, src.get, src.validate, src.form);
     }
 
-    protected assignToFormImpl(contentEl: HTMLElement): void {
+    protected assignToFormImpl(contentEl: HTMLElement): ExtendedSetting {
         const setting = new ExtendedSetting(contentEl)
             .setName(this._title)
             .setDesc(this._description);
@@ -32,6 +32,7 @@ export class DateTimeFormItem extends FormItemBase<Date> {
                 throw new Error(`Unsupported type: ${this.type}`);
         }
 
+        return setting;
     }
 
     private configureComponent(): (component: DateTimeComponent) => any {

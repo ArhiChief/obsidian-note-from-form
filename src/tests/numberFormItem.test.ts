@@ -3,7 +3,8 @@ import { NumberFormItem } from "../form/numberFormItem";
 jest.mock("src/ui/settingsExtension", () => {
     const methods = ['setName', 'setDesc', 'addToggle', 'addText', 'addTextArea',
         'addDropdown', 'addDate', 'addTime', 'addDateTime', 'addNumber',
-        'setValue', 'onChange', 'setPlaceholder', 'addOptions'];
+        'setValue', 'onChange', 'setPlaceholder', 'addOptions',
+        'setError', 'clearError'];
     const mock: Record<string, any> = {};
     const chain = (...args: any[]) => {
         if (typeof args[0] === 'function') args[0](mock);
@@ -144,6 +145,79 @@ describe("NumberFormItem", () => {
         test("throws for unsupported init prefix", async () => {
             const item = new NumberFormItem({ id: "n1", type: "number", init: "x:bad" as any }, mockFunctionProcessor);
             await expect(item.initialize()).rejects.toThrow("Unsupported init function");
+        });
+    });
+
+    // ─── validate ───
+
+    describe("validate", () => {
+        test("returns true when no validateFunc is provided", async () => {
+            const item = new NumberFormItem({ id: "n1", type: "number" }, mockFunctionProcessor);
+            const result = await item.validate({ n1: 42 });
+            expect(result).toBe(true);
+        });
+
+        test("returns true when no element is assigned (no form)", async () => {
+            const item = new NumberFormItem({
+                id: "n1", type: "number",
+                validate: "f:(view) => ({ isValid: true })" as any,
+            }, mockFunctionProcessor);
+            const result = await item.validate({ n1: 42 });
+            expect(result).toBe(true);
+        });
+
+        test("returns true for valid inline function", async () => {
+            mockFunctionProcessor.executeFunctionWithParam.mockReturnValueOnce({ isValid: true });
+            const item = new NumberFormItem({
+                id: "n1", type: "number",
+                form: { title: "Number" },
+                validate: "f:(view) => ({ isValid: true })" as any,
+            }, mockFunctionProcessor);
+            item.assignToForm({} as HTMLElement);
+            const result = await item.validate({ n1: 42 });
+            expect(result).toBe(true);
+        });
+
+        test("returns false and calls setError for invalid result", async () => {
+            mockFunctionProcessor.executeFunctionWithParam.mockReturnValueOnce({ isValid: false, errMsg: "Must be positive" });
+            const item = new NumberFormItem({
+                id: "n1", type: "number",
+                form: { title: "Number" },
+                validate: "f:(view) => ({ isValid: false, errMsg: 'Must be positive' })" as any,
+            }, mockFunctionProcessor);
+            item.assignToForm({} as HTMLElement);
+
+            const element = (item as any)._element;
+            const setError = jest.fn().mockReturnThis();
+            element.setError = setError;
+            element.clearError = jest.fn().mockReturnThis();
+
+            const result = await item.validate({ n1: -5 });
+            expect(result).toBe(false);
+            expect(setError).toHaveBeenCalledWith("Must be positive");
+        });
+
+        test("resolves ref: validate via executeRefFunctionWithParam", async () => {
+            mockFunctionProcessor.executeRefFunctionWithParam.mockResolvedValueOnce({ isValid: true });
+            const item = new NumberFormItem({
+                id: "n1", type: "number",
+                form: { title: "Number" },
+                validate: "ref:numValidator" as any,
+            }, mockFunctionProcessor);
+            item.assignToForm({} as HTMLElement);
+            const result = await item.validate({ n1: 10 });
+            expect(result).toBe(true);
+            expect(mockFunctionProcessor.executeRefFunctionWithParam).toHaveBeenCalledWith("numValidator", { n1: 10 });
+        });
+
+        test("throws for unsupported validate prefix", async () => {
+            const item = new NumberFormItem({
+                id: "n1", type: "number",
+                form: { title: "Number" },
+                validate: "x:bad" as any,
+            }, mockFunctionProcessor);
+            item.assignToForm({} as HTMLElement);
+            await expect(item.validate({ n1: 0 })).rejects.toThrow("Unsupported validate function");
         });
     });
 });

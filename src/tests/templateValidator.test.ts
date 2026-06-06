@@ -445,6 +445,83 @@ describe("validateTemplate", () => {
         });
     });
 
+    // ─── validate function ───
+
+    describe("validate function", () => {
+        test("accepts valid validate function (arrow)", () => {
+            const result = validateTemplate(validTemplate({
+                "form-items": [validTextItem({ validate: "f:(view) => view.title !== ''" })],
+            }));
+            expect(result.valid).toBe(true);
+        });
+
+        test("accepts valid validate function (classic)", () => {
+            const result = validateTemplate(validTemplate({
+                "form-items": [validTextItem({ validate: "f:function(view) { return view.title !== ''; }" })],
+            }));
+            expect(result.valid).toBe(true);
+        });
+
+        test("rejects validate function without view parameter", () => {
+            const result = validateTemplate(validTemplate({
+                "form-items": [validTextItem({ validate: "f:() => true" })],
+            }));
+            expect(result.valid).toBe(false);
+            expect(result.errors).toEqual(expect.arrayContaining([
+                "/form-items/0/validate: must be a function string starting with 'f:' followed by an arrow function receiving 'view' parameter (e.g. f:(view) => value)",
+            ]));
+        });
+
+        test("accepts validate with ref to function name", () => {
+            const result = validateTemplate(validTemplate({
+                "form-items": [validTextItem({ validate: "ref:myValidator" })],
+            }));
+            expect(result.valid).toBe(true);
+        });
+
+        test("accepts validate with ref to file path and function name", () => {
+            const result = validateTemplate(validTemplate({
+                "form-items": [validTextItem({ validate: "ref:/my/dir/functions.md:myValidator" })],
+            }));
+            expect(result.valid).toBe(true);
+        });
+
+        test("rejects validate ref with invalid function name", () => {
+            const result = validateTemplate(validTemplate({
+                "form-items": [validTextItem({ validate: "ref:1bad" })],
+            }));
+            expect(result.valid).toBe(false);
+        });
+
+        test("rejects validate ref with empty function name", () => {
+            const result = validateTemplate(validTemplate({
+                "form-items": [validTextItem({ validate: "ref:" })],
+            }));
+            expect(result.valid).toBe(false);
+        });
+
+        test("rejects validate ref:path with invalid function name", () => {
+            const result = validateTemplate(validTemplate({
+                "form-items": [validTextItem({ validate: "ref:/path/to/file.md:123bad" })],
+            }));
+            expect(result.valid).toBe(false);
+        });
+
+        test("rejects validate with plain string (no prefix)", () => {
+            const result = validateTemplate(validTemplate({
+                "form-items": [validTextItem({ validate: "myValidator" })],
+            }));
+            expect(result.valid).toBe(false);
+        });
+
+        test("accepts item without validate (optional)", () => {
+            const result = validateTemplate(validTemplate({
+                "form-items": [validTextItem()],
+            }));
+            expect(result.valid).toBe(true);
+        });
+    });
+
     // ─── additional properties ───
 
     test("rejects unknown top-level property", () => {

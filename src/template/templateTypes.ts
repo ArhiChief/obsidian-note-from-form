@@ -21,6 +21,9 @@ export type InitFunctionType = FuncStringType | FuncRefType | FuncFileRefType;
 /** A get function: inline function with view param, function reference, or file function reference */
 export type GetFunctionType = FuncStringType | FuncRefType | FuncFileRefType;
 
+/** A validate function: inline function with view param, function reference, or file function reference */
+export type ValidateFunctionType = FuncStringType | FuncRefType | FuncFileRefType;
+
 // ── Form item types ──
 
 export type FormItemType = 'text' | 'textArea' | 'number' | 'date' | 'time' | 'dateTime' | 'checkbox' | 'dropdown';
@@ -40,6 +43,7 @@ export interface BaseFormItem {
     form?: FormItemForm;
     get?: GetFunctionType | TemplateString | ValueString;
     init?: InitFunctionType | ValueString;
+    validate?: ValidateFunctionType;
 }
 
 export interface TextFormItem extends BaseFormItem {

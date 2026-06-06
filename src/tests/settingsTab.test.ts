@@ -24,15 +24,32 @@ class TextComponent {
 }
 
 class SettingMock {
-    descEl = { toggleClass: jest.fn() };
+    descEl = { toggleClass: jest.fn(), innerText: "" };
     private _name = "";
     private _desc = "";
+    private originDesc: string | null = null;
     textComponent: TextComponent | null = null;
 
     constructor(public containerEl: HTMLElement) {}
 
     setName(name: string) { this._name = name; return this; }
     setDesc(desc: string) { this._desc = desc; return this; }
+    setError(errMsg: string) {
+        if (!this.originDesc) {
+            this.originDesc = this.descEl.innerText;
+        }
+        this.descEl.toggleClass('nff-error-desc', true);
+        this.setDesc(errMsg);
+        return this;
+    }
+    clearError() {
+        this.descEl.toggleClass('nff-error-desc', false);
+        if (this.originDesc) {
+            this.setDesc(this.originDesc);
+            this.originDesc = null;
+        }
+        return this;
+    }
     addText(cb: (text: TextComponent) => void) {
         this.textComponent = new TextComponent();
         cb(this.textComponent);
@@ -59,6 +76,7 @@ jest.mock("obsidian", () => {
                 } as any;
             }
         },
+        ValueComponent: class {},
         Setting: jest.fn().mockImplementation(function (this: any, containerEl: HTMLElement) {
             const s = new SettingMock(containerEl);
             createdSettings.push(s);
@@ -67,6 +85,8 @@ jest.mock("obsidian", () => {
             this.descEl = s.descEl;
             this.setName = s.setName.bind(s);
             this.setDesc = s.setDesc.bind(s);
+            this.setError = s.setError.bind(s);
+            this.clearError = s.clearError.bind(s);
             this.addText = (cb: (text: TextComponent) => void) => {
                 s.addText(cb);
                 this.textComponent = s.textComponent;

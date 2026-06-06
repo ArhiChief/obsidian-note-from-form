@@ -15,7 +15,8 @@ const momentMock = (date: any) => ({
 jest.mock("src/ui/settingsExtension", () => {
     const methods = ['setName', 'setDesc', 'addToggle', 'addText', 'addTextArea',
         'addDropdown', 'addDate', 'addTime', 'addDateTime', 'addNumber',
-        'setValue', 'onChange', 'setPlaceholder', 'addOptions'];
+        'setValue', 'onChange', 'setPlaceholder', 'addOptions',
+        'setError', 'clearError'];
     const mock: Record<string, any> = {};
     const chain = (...args: any[]) => {
         if (typeof args[0] === 'function') args[0](mock);
@@ -218,6 +219,80 @@ describe("DateFormItem", () => {
         test("throws for unsupported init prefix", async () => {
             const item = new DateFormItem({ id: "d1", type: "date", init: "x:bad" as any }, mockFunctionProcessor);
             await expect(item.initialize()).rejects.toThrow("Unsupported init function");
+        });
+    });
+
+    // ─── validate ───
+
+    describe("validate", () => {
+        test("returns true when no validateFunc is provided", async () => {
+            const item = new DateFormItem({ id: "d1", type: "date" }, mockFunctionProcessor);
+            const result = await item.validate({ d1: new Date() });
+            expect(result).toBe(true);
+        });
+
+        test("returns true when no element is assigned (no form)", async () => {
+            const item = new DateFormItem({
+                id: "d1", type: "date",
+                validate: "f:(view) => ({ isValid: true })" as any,
+            }, mockFunctionProcessor);
+            const result = await item.validate({ d1: new Date() });
+            expect(result).toBe(true);
+        });
+
+        test("returns true for valid inline function", async () => {
+            mockFunctionProcessor.executeFunctionWithParam.mockReturnValueOnce({ isValid: true });
+            const item = new DateFormItem({
+                id: "d1", type: "date",
+                form: { title: "Date" },
+                validate: "f:(view) => ({ isValid: true })" as any,
+            }, mockFunctionProcessor);
+            item.assignToForm({} as HTMLElement);
+            const result = await item.validate({ d1: new Date() });
+            expect(result).toBe(true);
+        });
+
+        test("returns false and calls setError for invalid result", async () => {
+            mockFunctionProcessor.executeFunctionWithParam.mockReturnValueOnce({ isValid: false, errMsg: "Date too old" });
+            const item = new DateFormItem({
+                id: "d1", type: "date",
+                form: { title: "Date" },
+                validate: "f:(view) => ({ isValid: false, errMsg: 'Date too old' })" as any,
+            }, mockFunctionProcessor);
+            item.assignToForm({} as HTMLElement);
+
+            const element = (item as any)._element;
+            const setError = jest.fn().mockReturnThis();
+            element.setError = setError;
+            element.clearError = jest.fn().mockReturnThis();
+
+            const result = await item.validate({ d1: new Date(2000, 0, 1) });
+            expect(result).toBe(false);
+            expect(setError).toHaveBeenCalledWith("Date too old");
+        });
+
+        test("resolves ref: validate via executeRefFunctionWithParam", async () => {
+            mockFunctionProcessor.executeRefFunctionWithParam.mockResolvedValueOnce({ isValid: true });
+            const item = new DateFormItem({
+                id: "d1", type: "date",
+                form: { title: "Date" },
+                validate: "ref:dateValidator" as any,
+            }, mockFunctionProcessor);
+            item.assignToForm({} as HTMLElement);
+            const view = { d1: new Date() };
+            const result = await item.validate(view);
+            expect(result).toBe(true);
+            expect(mockFunctionProcessor.executeRefFunctionWithParam).toHaveBeenCalledWith("dateValidator", view);
+        });
+
+        test("throws for unsupported validate prefix", async () => {
+            const item = new DateFormItem({
+                id: "d1", type: "date",
+                form: { title: "Date" },
+                validate: "x:bad" as any,
+            }, mockFunctionProcessor);
+            item.assignToForm({} as HTMLElement);
+            await expect(item.validate({ d1: new Date() })).rejects.toThrow("Unsupported validate function");
         });
     });
 });

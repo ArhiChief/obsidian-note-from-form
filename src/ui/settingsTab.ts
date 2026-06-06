@@ -1,6 +1,7 @@
-import { App, PluginSettingTab, Setting } from "obsidian";
+import { App, PluginSettingTab } from "obsidian";
 import NoteFromFormPlugin from "src/main";
 import { NoteFromFormPluginSettings, TEMPLATE_PROPERTY_NAME } from "src/pluginSettings";
+import { ExtendedSetting } from "./settingsExtension";
 
 const pathPlaceholder = 'folder1/folder2';
 const defaultOutputDirectoryDesc = `Used to create new notes if "file-location" property is not defined in template. Path should be relative to vault root and should not start or end with a slash. Example: ${pathPlaceholder}`;
@@ -24,7 +25,7 @@ export class NoteFromFormSettingsTab extends PluginSettingTab{
         const { containerEl } = this;
         containerEl.empty();
 
-        const templatesDirectory = new Setting(containerEl)
+        const templatesDirectory = new ExtendedSetting(containerEl)
             .setName('Templates directory')
             .setDesc(templatesDirectoryDesc)
             .addText(text => text
@@ -33,7 +34,7 @@ export class NoteFromFormSettingsTab extends PluginSettingTab{
                 .onChange(async (value) => await this.validateAndSave(value, templatesDirectory, templatesDirectoryDesc, invalidDirectoryPath, (v) => this.pluginSettings.templatesFolderLocation = v))
             );
         
-        const templateProperty = new Setting(containerEl)
+        const templateProperty = new ExtendedSetting(containerEl)
             .setName('Template property name')
             .setDesc(templatePropertyNameDesc)
             .addText(text => text
@@ -51,7 +52,7 @@ export class NoteFromFormSettingsTab extends PluginSettingTab{
                 })
             );
 
-         const defaultOutputDirectory = new Setting(containerEl)
+         const defaultOutputDirectory = new ExtendedSetting(containerEl)
             .setName('Default output directory')
             .setDesc(defaultOutputDirectoryDesc)
             .addText(text => text
@@ -61,7 +62,7 @@ export class NoteFromFormSettingsTab extends PluginSettingTab{
             );
     }
 
-    private async validateAndSave(value: string, setting: Setting, description: string, errorMessage: string, setter: (value: string) => void) {
+    private async validateAndSave(value: string, setting: ExtendedSetting, description: string, errorMessage: string, setter: (value: string) => void) {
         this.updateDescription(setting, description, false);
 
         if (value.length == 0 || this.isValidFolderPath(value)) {
@@ -72,9 +73,12 @@ export class NoteFromFormSettingsTab extends PluginSettingTab{
         }
     }
 
-    private updateDescription(setting: Setting, val: string, setError: boolean) {
-        setting.descEl.toggleClass('nff-error-desc', setError);
-        setting.setDesc(val);
+    private updateDescription(setting: ExtendedSetting, val: string, setError: boolean) {
+        if (setError) {
+            setting.setError(val);
+        } else {
+            setting.clearError();
+        }
     }
 
     private isValidFolderPath(path: string): boolean {

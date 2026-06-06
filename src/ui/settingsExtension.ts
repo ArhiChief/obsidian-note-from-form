@@ -28,4 +28,27 @@ export class ExtendedSetting extends Setting {
         cb(component);
         return this;
     }
+
+    private originDesc: string | null = null;
+    setError(errMsg: string): this {
+        if (!this.originDesc) {
+            this.originDesc = this.descEl.innerText;
+        }
+
+        this.descEl.toggleClass('nff-error-desc', true);
+        this.setDesc(errMsg);
+
+        return this;
+    }
+
+    clearError(): this {
+        this.descEl.toggleClass('nff-error-desc', false);
+        
+        if (this.originDesc) {
+            this.setDesc(this.originDesc);
+            this.originDesc = null;
+        }
+
+        return this;
+    }
 }

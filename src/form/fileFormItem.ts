@@ -26,7 +26,7 @@ abstract class FileInfoFormItem extends FormItemBase<string> {
             };
         }
 
-        super(id, 'text', funtionProcessor, undefined, getFunc, formDisplay);
+        super(id, 'text', funtionProcessor, undefined, getFunc, undefined, formDisplay);
         this._placeholder = placeholder;
     }
 
@@ -38,8 +38,8 @@ abstract class FileInfoFormItem extends FormItemBase<string> {
         return "";
     }
     
-    protected assignToFormImpl(contentEl: HTMLElement): void {
-        new ExtendedSetting(contentEl)
+    protected assignToFormImpl(contentEl: HTMLElement): ExtendedSetting {
+        return new ExtendedSetting(contentEl)
             .setName(this._title)
             .setDesc(this._description)
             .addText(text => text

@@ -24,7 +24,6 @@ export class TemplateProcessor {
 
     async useTemplate(indexedTemplate: TemplateIndexItem) {
         let templateData: unknown = null;
-
         let parsingError: Error | null = null;
 
         await this._app.fileManager.processFrontMatter(indexedTemplate.file, (frontmatter) => {
@@ -66,6 +65,17 @@ export class TemplateProcessor {
     }
 
     private async createNoteFromTemplate(formItems: FormItem[], indexedTemplate: TemplateIndexItem): Promise<boolean> {
+
+        try {
+            const rawViewModel = FormItemsManager.getRawViewModel(formItems);
+            const isValid = await FormItemsManager.validateItems(formItems, rawViewModel);
+            if (!isValid) {
+                return false;
+            }
+        } catch (e) {
+            new Notice(`Error validating form items: ${(e as Error).message}`);
+            return false;
+        }
 
         let viewModel: Record<string, string>;
         try {
