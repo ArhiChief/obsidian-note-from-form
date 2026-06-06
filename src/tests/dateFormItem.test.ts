@@ -32,14 +32,13 @@ jest.mock("src/ui/dateTimeComponent", () => ({
 
 const mockFunctionProcessor = {
     renderMustacheTemplate: jest.fn(),
-    executeFunction: jest.fn().mockImplementation((funcText: string) => {
+    executeFunction: jest.fn().mockImplementation((funcText: string, ...args: any[]) => {
         const func = eval(`(${funcText})`);
-        return func();
+        return func(...args);
     }),
-    executeFunctionWithParam: jest.fn(),
     executeRefFunction: jest.fn(),
-    executeRefFunctionWithParam: jest.fn(),
 } as any;
+const mockUserApi = {} as any;
 
 describe("DateFormItem", () => {
 
@@ -48,7 +47,7 @@ describe("DateFormItem", () => {
     describe("constructor", () => {
         test("defaults to current date when no init provided", async () => {
             const before = Date.now();
-            const item = new DateFormItem({ id: "d1", type: "date" }, mockFunctionProcessor);
+            const item = new DateFormItem({ id: "d1", type: "date" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             const after = Date.now();
             expect(item.value!.getTime()).toBeGreaterThanOrEqual(before);
@@ -56,7 +55,7 @@ describe("DateFormItem", () => {
         });
 
         test("parses v: date init value", async () => {
-            const item = new DateFormItem({ id: "d1", type: "date", init: "v:2025-01-15" }, mockFunctionProcessor);
+            const item = new DateFormItem({ id: "d1", type: "date", init: "v:2025-01-15" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             expect(item.value!.getFullYear()).toBe(2025);
             expect(item.value!.getMonth()).toBe(0);
@@ -64,38 +63,38 @@ describe("DateFormItem", () => {
         });
 
         test("throws for invalid v: date init value", async () => {
-            const item = new DateFormItem({ id: "d1", type: "date", init: "v:not-a-date" }, mockFunctionProcessor);
+            const item = new DateFormItem({ id: "d1", type: "date", init: "v:not-a-date" }, mockFunctionProcessor, mockUserApi);
             await expect(item.initialize()).rejects.toThrow("Invalid date init value");
         });
 
         test("evaluates f: init function", async () => {
             const item = new DateFormItem({
                 id: "d1", type: "date",
-                init: "f:() => new Date(2025, 0, 1)",
-            }, mockFunctionProcessor);
+                init: "f:async () => new Date(2025, 0, 1)",
+            }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             expect(item.value!.getFullYear()).toBe(2025);
         });
 
         test("accepts date type", () => {
-            expect(() => new DateFormItem({ id: "d1", type: "date" }, mockFunctionProcessor)).not.toThrow();
+            expect(() => new DateFormItem({ id: "d1", type: "date" }, mockFunctionProcessor, mockUserApi)).not.toThrow();
         });
 
         test("accepts time type", () => {
-            expect(() => new DateFormItem({ id: "d1", type: "time" }, mockFunctionProcessor)).not.toThrow();
+            expect(() => new DateFormItem({ id: "d1", type: "time" }, mockFunctionProcessor, mockUserApi)).not.toThrow();
         });
 
         test("accepts dateTime type", () => {
-            expect(() => new DateFormItem({ id: "d1", type: "dateTime" }, mockFunctionProcessor)).not.toThrow();
+            expect(() => new DateFormItem({ id: "d1", type: "dateTime" }, mockFunctionProcessor, mockUserApi)).not.toThrow();
         });
 
         test("throws for unsupported type", () => {
-            expect(() => new DateFormItem({ id: "d1", type: "text" as any }, mockFunctionProcessor))
+            expect(() => new DateFormItem({ id: "d1", type: "text" as any }, mockFunctionProcessor, mockUserApi))
                 .toThrow("Unsupported type");
         });
 
         test("sets id and type correctly", () => {
-            const item = new DateFormItem({ id: "myDate", type: "time" }, mockFunctionProcessor);
+            const item = new DateFormItem({ id: "myDate", type: "time" }, mockFunctionProcessor, mockUserApi);
             expect(item.id).toBe("myDate");
             expect(item.type).toBe("time");
         });
@@ -105,51 +104,53 @@ describe("DateFormItem", () => {
 
     describe("get", () => {
         test("returns formatted date for date type (no getFunc)", async () => {
-            const item = new DateFormItem({ id: "d1", type: "date", init: "v:2025-01-15" }, mockFunctionProcessor);
+            const item = new DateFormItem({ id: "d1", type: "date", init: "v:2025-01-15" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(item.get({})).toBe("01/15/2025");
+            expect(await item.get({})).toBe("01/15/2025");
         });
 
         test("returns formatted time for time type (no getFunc)", async () => {
-            const item = new DateFormItem({ id: "d1", type: "time", init: "v:2025-01-15T14:30:45" }, mockFunctionProcessor);
+            const item = new DateFormItem({ id: "d1", type: "time", init: "v:2025-01-15T14:30:45" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(item.get({})).toBe("2:30:45 PM");
+            expect(await item.get({})).toBe("2:30:45 PM");
         });
 
         test("returns formatted dateTime for dateTime type (no getFunc)", async () => {
-            const item = new DateFormItem({ id: "d1", type: "dateTime", init: "v:2025-01-15T14:30:45" }, mockFunctionProcessor);
+            const item = new DateFormItem({ id: "d1", type: "dateTime", init: "v:2025-01-15T14:30:45" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(item.get({})).toBe("2025-01-15T14:30:45Z");
+            expect(await item.get({})).toBe("2025-01-15T14:30:45Z");
         });
 
         test("returns literal for v: getFunc", async () => {
-            const item = new DateFormItem({ id: "d1", type: "date", get: "v:custom-date" }, mockFunctionProcessor);
+            const item = new DateFormItem({ id: "d1", type: "date", get: "v:custom-date" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(item.get({})).toBe("custom-date");
+            expect(await item.get({})).toBe("custom-date");
         });
 
         test("formats date with moment when template has no mustache expressions", async () => {
-            const item = new DateFormItem({ id: "d1", type: "date", get: "t:L", init: "v:2025-01-15" }, mockFunctionProcessor);
+            const item = new DateFormItem({ id: "d1", type: "date", get: "t:L", init: "v:2025-01-15" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(item.get({})).toBe("01/15/2025");
+            expect(await item.get({})).toBe("01/15/2025");
         });
 
         test("formats time with moment when template has no mustache expressions", async () => {
-            const item = new DateFormItem({ id: "d1", type: "time", get: "t:LTS", init: "v:2025-01-15T14:30:45" }, mockFunctionProcessor);
+            const item = new DateFormItem({ id: "d1", type: "time", get: "t:LTS", init: "v:2025-01-15T14:30:45" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(item.get({})).toBe("2:30:45 PM");
+            expect(await item.get({})).toBe("2:30:45 PM");
         });
 
         test("delegates to Mustache when template contains mustache expressions", async () => {
-            const item = new DateFormItem({ id: "d1", type: "date", get: "t:{{label}}", init: "v:2025-01-15" }, mockFunctionProcessor);
+            mockFunctionProcessor.renderMustacheTemplate.mockReturnValueOnce("Jan 15");
+            const item = new DateFormItem({ id: "d1", type: "date", get: "t:{{label}}", init: "v:2025-01-15" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(item.get({ label: "Jan 15" })).toBe("Jan 15");
+            expect(await item.get({ label: "Jan 15" })).toBe("Jan 15");
         });
 
         test("delegates to Mustache for mixed mustache and text", async () => {
-            const item = new DateFormItem({ id: "d1", type: "date", get: "t:Date: {{label}}", init: "v:2025-01-15" }, mockFunctionProcessor);
+            mockFunctionProcessor.renderMustacheTemplate.mockReturnValueOnce("Date: 2025");
+            const item = new DateFormItem({ id: "d1", type: "date", get: "t:Date: {{label}}", init: "v:2025-01-15" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(item.get({ label: "2025" })).toBe("Date: 2025");
+            expect(await item.get({ label: "2025" })).toBe("Date: 2025");
         });
     });
 
@@ -157,7 +158,7 @@ describe("DateFormItem", () => {
 
     describe("assignToForm", () => {
         test("does nothing when no form display is configured", async () => {
-            const item = new DateFormItem({ id: "d1", type: "date" }, mockFunctionProcessor);
+            const item = new DateFormItem({ id: "d1", type: "date" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             expect(() => item.assignToForm({} as HTMLElement)).not.toThrow();
         });
@@ -166,7 +167,7 @@ describe("DateFormItem", () => {
             const item = new DateFormItem({
                 id: "d1", type: "date",
                 form: { title: "Pick a date" },
-            }, mockFunctionProcessor);
+            }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             expect(() => item.assignToForm({} as HTMLElement)).not.toThrow();
         });
@@ -175,7 +176,7 @@ describe("DateFormItem", () => {
             const item = new DateFormItem({
                 id: "d1", type: "time",
                 form: { title: "Pick a time" },
-            }, mockFunctionProcessor);
+            }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             expect(() => item.assignToForm({} as HTMLElement)).not.toThrow();
         });
@@ -184,7 +185,7 @@ describe("DateFormItem", () => {
             const item = new DateFormItem({
                 id: "d1", type: "dateTime",
                 form: { title: "Pick date and time" },
-            }, mockFunctionProcessor);
+            }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             expect(() => item.assignToForm({} as HTMLElement)).not.toThrow();
         });
@@ -194,30 +195,30 @@ describe("DateFormItem", () => {
 
     describe("initialize", () => {
         test("value is undefined before initialize", () => {
-            const item = new DateFormItem({ id: "d1", type: "date", init: "v:2025-01-15" }, mockFunctionProcessor);
+            const item = new DateFormItem({ id: "d1", type: "date", init: "v:2025-01-15" }, mockFunctionProcessor, mockUserApi);
             expect(item.value).toBeUndefined();
         });
 
         test("resolves ref: init via executeRefFunction", async () => {
             const refDate = new Date(2025, 5, 1);
             mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce(refDate);
-            const item = new DateFormItem({ id: "d1", type: "date", init: "ref:getDate" }, mockFunctionProcessor);
+            const item = new DateFormItem({ id: "d1", type: "date", init: "ref:getDate" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("getDate");
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("getDate", {}, mockUserApi);
             expect(item.value).toBe(refDate);
         });
 
         test("resolves ref: with path via executeRefFunction", async () => {
             const refDate = new Date(2024, 0, 1);
             mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce(refDate);
-            const item = new DateFormItem({ id: "d1", type: "date", init: "ref:/helpers.md:getDate" }, mockFunctionProcessor);
+            const item = new DateFormItem({ id: "d1", type: "date", init: "ref:/helpers.md:getDate" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("/helpers.md:getDate");
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("/helpers.md:getDate", {}, mockUserApi);
             expect(item.value).toBe(refDate);
         });
 
         test("throws for unsupported init prefix", async () => {
-            const item = new DateFormItem({ id: "d1", type: "date", init: "x:bad" as any }, mockFunctionProcessor);
+            const item = new DateFormItem({ id: "d1", type: "date", init: "x:bad" as any }, mockFunctionProcessor, mockUserApi);
             await expect(item.initialize()).rejects.toThrow("Unsupported init function");
         });
     });
@@ -226,7 +227,7 @@ describe("DateFormItem", () => {
 
     describe("validate", () => {
         test("returns true when no validateFunc is provided", async () => {
-            const item = new DateFormItem({ id: "d1", type: "date" }, mockFunctionProcessor);
+            const item = new DateFormItem({ id: "d1", type: "date" }, mockFunctionProcessor, mockUserApi);
             const result = await item.validate({ d1: new Date() });
             expect(result).toBe(true);
         });
@@ -234,31 +235,31 @@ describe("DateFormItem", () => {
         test("returns true when no element is assigned (no form)", async () => {
             const item = new DateFormItem({
                 id: "d1", type: "date",
-                validate: "f:(view) => ({ isValid: true })" as any,
-            }, mockFunctionProcessor);
+                validate: "f:async (view) => ({ isValid: true })" as any,
+            }, mockFunctionProcessor, mockUserApi);
             const result = await item.validate({ d1: new Date() });
             expect(result).toBe(true);
         });
 
         test("returns true for valid inline function", async () => {
-            mockFunctionProcessor.executeFunctionWithParam.mockReturnValueOnce({ isValid: true });
+            mockFunctionProcessor.executeFunction.mockReturnValueOnce({ isValid: true });
             const item = new DateFormItem({
                 id: "d1", type: "date",
                 form: { title: "Date" },
-                validate: "f:(view) => ({ isValid: true })" as any,
-            }, mockFunctionProcessor);
+                validate: "f:async (view) => ({ isValid: true })" as any,
+            }, mockFunctionProcessor, mockUserApi);
             item.assignToForm({} as HTMLElement);
             const result = await item.validate({ d1: new Date() });
             expect(result).toBe(true);
         });
 
         test("returns false and calls setError for invalid result", async () => {
-            mockFunctionProcessor.executeFunctionWithParam.mockReturnValueOnce({ isValid: false, errMsg: "Date too old" });
+            mockFunctionProcessor.executeFunction.mockReturnValueOnce({ isValid: false, errMsg: "Date too old" });
             const item = new DateFormItem({
                 id: "d1", type: "date",
                 form: { title: "Date" },
-                validate: "f:(view) => ({ isValid: false, errMsg: 'Date too old' })" as any,
-            }, mockFunctionProcessor);
+                validate: "f:async (view) => ({ isValid: false, errMsg: 'Date too old' })" as any,
+            }, mockFunctionProcessor, mockUserApi);
             item.assignToForm({} as HTMLElement);
 
             const element = (item as any)._element;
@@ -271,18 +272,18 @@ describe("DateFormItem", () => {
             expect(setError).toHaveBeenCalledWith("Date too old");
         });
 
-        test("resolves ref: validate via executeRefFunctionWithParam", async () => {
-            mockFunctionProcessor.executeRefFunctionWithParam.mockResolvedValueOnce({ isValid: true });
+        test("resolves ref: validate via executeRefFunction", async () => {
+            mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce({ isValid: true });
             const item = new DateFormItem({
                 id: "d1", type: "date",
                 form: { title: "Date" },
                 validate: "ref:dateValidator" as any,
-            }, mockFunctionProcessor);
+            }, mockFunctionProcessor, mockUserApi);
             item.assignToForm({} as HTMLElement);
             const view = { d1: new Date() };
             const result = await item.validate(view);
             expect(result).toBe(true);
-            expect(mockFunctionProcessor.executeRefFunctionWithParam).toHaveBeenCalledWith("dateValidator", view);
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("dateValidator", view, mockUserApi);
         });
 
         test("throws for unsupported validate prefix", async () => {
@@ -290,7 +291,7 @@ describe("DateFormItem", () => {
                 id: "d1", type: "date",
                 form: { title: "Date" },
                 validate: "x:bad" as any,
-            }, mockFunctionProcessor);
+            }, mockFunctionProcessor, mockUserApi);
             item.assignToForm({} as HTMLElement);
             await expect(item.validate({ d1: new Date() })).rejects.toThrow("Unsupported validate function");
         });

@@ -18,24 +18,14 @@ export class FormItemFunctionProcessor {
         return Mustache.render(templateText, view, {}, { escape: (val: string) => val });
     }
 
-    executeFunction<TResult>(funcText: string): TResult {
-        const func = eval(`(${funcText})`) as () => TResult;
-        return func();
+    async executeFunction<TResult, TArgs extends any[]>(funcText: string, ...args: TArgs): Promise<TResult> {
+        const func = eval(`(${funcText})`) as (...args: TArgs) => Promise<TResult>;
+        return await func(...args);
     }
 
-    executeFunctionWithParam<TResult, TArgs extends any[]>(funcText: string, ...args: TArgs): TResult {
-        const func = eval(`(${funcText})`) as (...args: TArgs) => TResult;
-        return func(...args);
-    }
-
-    async executeRefFunction<TResult>(ref: string): Promise<TResult> {
+    async executeRefFunction<TResult, TArgs extends any[]>(ref: string, ...args: TArgs): Promise<TResult> {
         const funcText = await this.getFunctionText(ref);
-        return this.executeFunction<TResult>(funcText);
-    }
-
-    async executeRefFunctionWithParam<TResult, TArgs extends any[]>(ref: string, ...args: TArgs): Promise<TResult> {
-        const funcText = await this.getFunctionText(ref);
-        return this.executeFunctionWithParam<TResult, TArgs>(funcText, ...args);
+        return await this.executeFunction<TResult, TArgs>(funcText, ...args);
     }
 
     private async getFunctionText(ref: string): Promise<string> {

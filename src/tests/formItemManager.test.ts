@@ -15,12 +15,12 @@ const mockSettings: NoteFromFormPluginSettings = {
     defaultOutputDir: "/",
 };
 
+const mockUserApi = {} as any;
+
 const mockFunctionProcessor = {
     renderMustacheTemplate: jest.fn((t: string, v: any) => t),
-    executeFunction: jest.fn((f: string) => eval(`(${f})()`)),
-    executeFunctionWithParam: jest.fn((f: string, ...args: any[]) => eval(`(${f})`).apply(null, args)),
+    executeFunction: jest.fn((f: string, ...args: any[]) => eval(`(${f})`).apply(null, args)),
     executeRefFunction: jest.fn(),
-    executeRefFunctionWithParam: jest.fn(),
 } as unknown as FormItemFunctionProcessor;
 
 jest.mock("moment", () => {
@@ -52,7 +52,7 @@ describe("FormItemsManager", () => {
     describe("getFormItems", () => {
         test("always creates FileNameFormItem and FileLocationFormItem", async () => {
             const template: NoteTemplate = {};
-            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings);
+            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings, mockUserApi);
 
             expect(items.length).toBeGreaterThanOrEqual(2);
             expect(items[0]).toBeInstanceOf(FileNameFormItem);
@@ -61,21 +61,21 @@ describe("FormItemsManager", () => {
 
         test("passes file-name getFunc to FileNameFormItem", async () => {
             const template: NoteTemplate = { "file-name": "v:MyNote" };
-            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings);
-            expect(items[0].get({})).toBe("MyNote");
+            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings, mockUserApi);
+            expect(await items[0].get({})).toBe("MyNote");
         });
 
         test("passes file-location getFunc to FileLocationFormItem", async () => {
             const template: NoteTemplate = { "file-location": "v:notes/folder" };
-            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings);
-            expect(items[1].get({})).toBe("notes/folder");
+            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings, mockUserApi);
+            expect(await items[1].get({})).toBe("notes/folder");
         });
 
         test("creates TextFormItem for text type", async () => {
             const template: NoteTemplate = {
                 "form-items": [{ id: "t", type: "text" }],
             };
-            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings);
+            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings, mockUserApi);
             expect(items[2]).toBeInstanceOf(TextFormItem);
         });
 
@@ -83,7 +83,7 @@ describe("FormItemsManager", () => {
             const template: NoteTemplate = {
                 "form-items": [{ id: "t", type: "textArea" }],
             };
-            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings);
+            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings, mockUserApi);
             expect(items[2]).toBeInstanceOf(TextFormItem);
         });
 
@@ -91,7 +91,7 @@ describe("FormItemsManager", () => {
             const template: NoteTemplate = {
                 "form-items": [{ id: "n", type: "number" }],
             };
-            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings);
+            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings, mockUserApi);
             expect(items[2]).toBeInstanceOf(NumberFormItem);
         });
 
@@ -99,7 +99,7 @@ describe("FormItemsManager", () => {
             const template: NoteTemplate = {
                 "form-items": [{ id: "d", type: "date" }],
             };
-            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings);
+            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings, mockUserApi);
             expect(items[2]).toBeInstanceOf(DateTimeFormItem);
         });
 
@@ -107,7 +107,7 @@ describe("FormItemsManager", () => {
             const template: NoteTemplate = {
                 "form-items": [{ id: "d", type: "time" }],
             };
-            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings);
+            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings, mockUserApi);
             expect(items[2]).toBeInstanceOf(DateTimeFormItem);
         });
 
@@ -115,7 +115,7 @@ describe("FormItemsManager", () => {
             const template: NoteTemplate = {
                 "form-items": [{ id: "d", type: "dateTime" }],
             };
-            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings);
+            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings, mockUserApi);
             expect(items[2]).toBeInstanceOf(DateTimeFormItem);
         });
 
@@ -123,7 +123,7 @@ describe("FormItemsManager", () => {
             const template: NoteTemplate = {
                 "form-items": [{ id: "c", type: "checkbox" }],
             };
-            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings);
+            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings, mockUserApi);
             expect(items[2]).toBeInstanceOf(CheckboxFormItem);
         });
 
@@ -134,7 +134,7 @@ describe("FormItemsManager", () => {
                     init: 'v:[{"k":"a","v":"A"}]',
                 }],
             };
-            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings);
+            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings, mockUserApi);
             expect(items[2]).toBeInstanceOf(DropdownFormItem);
         });
 
@@ -146,20 +146,20 @@ describe("FormItemsManager", () => {
                     { id: "c", type: "checkbox" },
                 ],
             };
-            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings);
+            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings, mockUserApi);
             // 2 file items + 3 form items
             expect(items.length).toBe(5);
         });
 
         test("returns only file items when form-items is undefined", async () => {
             const template: NoteTemplate = {};
-            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings);
+            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings, mockUserApi);
             expect(items.length).toBe(2);
         });
 
         test("returns only file items when form-items is empty", async () => {
             const template: NoteTemplate = { "form-items": [] };
-            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings);
+            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings, mockUserApi);
             expect(items.length).toBe(2);
         });
     });
@@ -167,9 +167,9 @@ describe("FormItemsManager", () => {
     describe("getViewModel", () => {
         test("returns empty result for file-only items with no values", async () => {
             const template: NoteTemplate = {};
-            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings);
+            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings, mockUserApi);
             // file items have no user input, default get returns value (empty string)
-            const vm = FormItemsManager.getViewModel(items);
+            const vm = await FormItemsManager.getViewModel(items);
             expect(vm["file-name"]).toBeDefined();
             expect(vm["file-location"]).toBeDefined();
         });
@@ -181,11 +181,11 @@ describe("FormItemsManager", () => {
                     { id: "t2", type: "text" },
                 ],
             };
-            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings);
+            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings, mockUserApi);
             items[2].value = "hello";
             items[3].value = "world";
 
-            const vm = FormItemsManager.getViewModel(items);
+            const vm = await FormItemsManager.getViewModel(items);
             expect(vm["t1"]).toBe("hello");
             expect(vm["t2"]).toBe("world");
         });
@@ -196,8 +196,8 @@ describe("FormItemsManager", () => {
                     { id: "t", type: "text", get: "v:static-value" },
                 ],
             };
-            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings);
-            const vm = FormItemsManager.getViewModel(items);
+            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings, mockUserApi);
+            const vm = await FormItemsManager.getViewModel(items);
             expect(vm["t"]).toBe("static-value");
         });
 
@@ -209,10 +209,10 @@ describe("FormItemsManager", () => {
                     { id: "title", type: "text" },
                 ],
             };
-            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings);
+            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings, mockUserApi);
             items[2].value = "Test Title";
 
-            const vm = FormItemsManager.getViewModel(items);
+            const vm = await FormItemsManager.getViewModel(items);
             expect(vm["title"]).toBe("Test Title");
             expect(vm["file-name"]).toBe("MyNote");
             expect(vm["file-location"]).toBe("notes");
@@ -225,10 +225,10 @@ describe("FormItemsManager", () => {
                     { id: "t", type: "text" },
                 ],
             };
-            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings);
+            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings, mockUserApi);
             items[2].value = "value";
 
-            const vm = FormItemsManager.getViewModel(items);
+            const vm = await FormItemsManager.getViewModel(items);
             // file-name is resolved after form items
             expect(vm["file-name"]).toBe("NoteName");
             expect(vm["t"]).toBe("value");
@@ -240,10 +240,10 @@ describe("FormItemsManager", () => {
                     { id: "n", type: "number" },
                 ],
             };
-            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings);
+            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings, mockUserApi);
             items[2].value = 42;
 
-            const vm = FormItemsManager.getViewModel(items);
+            const vm = await FormItemsManager.getViewModel(items);
             expect(vm["n"]).toBe("42");
         });
 
@@ -253,10 +253,10 @@ describe("FormItemsManager", () => {
                     { id: "c", type: "checkbox" },
                 ],
             };
-            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings);
+            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings, mockUserApi);
             items[2].value = true;
 
-            const vm = FormItemsManager.getViewModel(items);
+            const vm = await FormItemsManager.getViewModel(items);
             expect(vm["c"]).toBeDefined();
         });
 
@@ -269,12 +269,12 @@ describe("FormItemsManager", () => {
                     { id: "c", type: "checkbox" },
                 ],
             };
-            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings);
+            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings, mockUserApi);
             items[2].value = "text-val";
             items[3].value = 7;
             items[4].value = true;
 
-            const vm = FormItemsManager.getViewModel(items);
+            const vm = await FormItemsManager.getViewModel(items);
             expect(vm["t"]).toBe("text-val");
             expect(vm["n"]).toBeDefined();
             expect(vm["c"]).toBeDefined();
@@ -285,8 +285,8 @@ describe("FormItemsManager", () => {
             const template: NoteTemplate = {
                 "file-name": "v:OnlyFile",
             };
-            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings);
-            const vm = FormItemsManager.getViewModel(items);
+            const items = await FormItemsManager.getFormItems(template, mockFunctionProcessor, mockSettings, mockUserApi);
+            const vm = await FormItemsManager.getViewModel(items);
 
             expect(Object.keys(vm)).toEqual(
                 expect.arrayContaining(["file-name", "file-location"])

@@ -3,14 +3,20 @@ import { FormItemBase } from "./formItem";
 import { ExtendedSetting } from "src/ui/settingsExtension";
 import { DateTimeComponent } from "src/ui/dateTimeComponent";
 import { FormItemFunctionProcessor } from "./formItemFunctionProcessor";
+import { IUserApi } from "src/userApi/userApi";
 
 const MUSTACHE_TEMPLATE_REGEX = /[{]{2}.+[}]{2}/;
 
 export class DateTimeFormItem extends FormItemBase<Date> {
+    private readonly _title: string;
+    private readonly _description: string;
 
-    constructor(src: DateFormItemTemplate, funtionProcessor: FormItemFunctionProcessor) {
+    constructor(src: DateFormItemTemplate, funtionProcessor: FormItemFunctionProcessor, userApi: IUserApi) {
         DateTimeFormItem.assertType(src.type);
-        super(src.id, src.type, funtionProcessor, src.init, src.get, src.validate, src.form);
+        super(src.id, src.type, funtionProcessor, userApi, src.init, src.get, src.validate, src.form);
+        
+        this._title = src.form?.title ?? "";
+        this._description = src.form?.description ?? "";
     }
 
     protected assignToFormImpl(contentEl: HTMLElement): ExtendedSetting {

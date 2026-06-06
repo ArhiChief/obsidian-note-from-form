@@ -6,8 +6,8 @@ export type TemplateString = `t:${string}`;
 /** String prefixed with `v:` — a literal value, e.g. `"v:42"` */
 export type ValueString = `v:${string}`;
 
-/** String prefixed with `f:` — an inline function, e.g. `"f:() => 'default'"` */
-export type FuncStringType = `f:${string}`;
+/** String prefixed with `f:` — an inline async function, e.g. `"f:async () => 'default'"` */
+export type FuncStringType = `f:async ${string}`;
 
 /** String prefixed with `ref:` — a reference to a named function, e.g. `"ref:myFunc"` */
 export type FuncRefType = `ref:${string}`;

@@ -3,18 +3,21 @@ import { TextFormItem as TextFormItemTemplate, FormItemType } from "src/template
 import { FormItemBase } from "./formItem";
 import { ExtendedSetting } from "src/ui/settingsExtension";
 import { FormItemFunctionProcessor } from "./formItemFunctionProcessor";
+import { IUserApi } from "src/userApi/userApi";
 
 export class TextFormItem extends FormItemBase<string> {
     
-    private readonly _placeholder: string = "";
+    private readonly _placeholder: string;
+    private readonly _title: string;
+    private readonly _description: string;
 
-    constructor (src: TextFormItemTemplate, funtionProcessor: FormItemFunctionProcessor) {
+    constructor (src: TextFormItemTemplate, funtionProcessor: FormItemFunctionProcessor, userApi: IUserApi) {
         TextFormItem.assertType(src.type);
-        super(src.id, src.type, funtionProcessor, src.init, src.get, src.validate, src.form);
+        super(src.id, src.type, funtionProcessor, userApi, src.init, src.get, src.validate, src.form);
 
-        if (src.form?.placeholder) {
-            this._placeholder = src.form.placeholder;
-        }
+        this._placeholder = src.form?.placeholder ?? "";
+        this._title = src.form?.title ?? "";
+        this._description = src.form?.description ?? "";
     }
 
     protected assignToFormImpl(contentEl: HTMLElement): ExtendedSetting {

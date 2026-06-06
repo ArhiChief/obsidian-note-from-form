@@ -15,13 +15,13 @@
             "oneOf": [
                 {
                     "type": "string",
-                    "pattern": "^f:\\(.*\\)\\s*=>.*$",
-                    "errorMessage": "must be a function string starting with 'f:' followed by an arrow function (e.g. f:() => value)"
+                    "pattern": "^f:async\\s+\\(view,\\s*api\\)\\s*=>.*$",
+                    "errorMessage": "must be a function string starting with 'f:' followed by an async arrow function receiving 'view' and 'api' parameters (e.g. f:async (view, api) => value)"
                 },
                 {
                     "type": "string",
-                    "pattern": "^f:function\\s*\\(.*\\)\\s*\\{.*\\}$",
-                    "errorMessage": "must be a function string starting with 'f:' followed by a function expression (e.g. f:function() { return value; })"
+                    "pattern": "^f:async\\s+function\\s*\\(view,\\s*api\\)\\s*\\{.*\\}$",
+                    "errorMessage": "must be a function string starting with 'f:' followed by an async function expression receiving 'view' and 'api' parameters (e.g. f:async function(view, api) { return value; })"
                 },
                 {
                     "type": "string",
@@ -34,19 +34,19 @@
                     "errorMessage": "must be a reference starting with 'ref:' followed by a file path and function name (e.g. ref:/my/dir/functions.md:myFunc)"
                 }
             ],
-            "errorMessage": "must be one of: f:<arrow function>, f:<function expression>, ref:<funcName>, or ref:<path>:<funcName>"
+            "errorMessage": "must be one of: f:<async arrow function with view, api>, f:<async function expression with view, api>, ref:<funcName>, or ref:<path>:<funcName>"
         },
         "getFunctionType": {
             "oneOf": [
                 {
                     "type": "string",
-                    "pattern": "^f:\\(view\\)\\s*=>.*$",
-                    "errorMessage": "must be a function string starting with 'f:' followed by an arrow function receiving 'view' parameter (e.g. f:(view) => value)"
+                    "pattern": "^f:async\\s+\\(view,\\s*api\\)\\s*=>.*$",
+                    "errorMessage": "must be a function string starting with 'f:' followed by an async arrow function receiving 'view' and 'api' parameters (e.g. f:async (view, api) => value)"
                 },
                 {
                     "type": "string",
-                    "pattern": "^f:function\\s*\\(view\\)\\s*\\{.*\\}$",
-                    "errorMessage": "must be a function string starting with 'f:' followed by a function expression receiving 'view' parameter (e.g. f:function(view) { return value; })"
+                    "pattern": "^f:async\\s+function\\s*\\(view,\\s*api\\)\\s*\\{.*\\}$",
+                    "errorMessage": "must be a function string starting with 'f:' followed by an async function expression receiving 'view' and 'api' parameters (e.g. f:async function(view, api) { return value; })"
                 },
                 {
                     "type": "string",
@@ -59,19 +59,19 @@
                     "errorMessage": "must be a reference starting with 'ref:' followed by a file path and function name (e.g. ref:/my/dir/functions.md:myFunc)"
                 }
             ],
-            "errorMessage": "must be one of: f:<arrow function with view>, f:<function expression with view>, ref:<funcName>, or ref:<path>:<funcName>"
+            "errorMessage": "must be one of: f:<async arrow function with view, api>, f:<async function expression with view, api>, ref:<funcName>, or ref:<path>:<funcName>"
         },
         "validateFunctionType": {
             "oneOf": [
                 {
                     "type": "string",
-                    "pattern": "^f:\\(view\\)\\s*=>.*$",
-                    "errorMessage": "must be a function string starting with 'f:' followed by an arrow function receiving 'view' parameter (e.g. f:(view) => value)"
+                    "pattern": "^f:async\\s+\\(view,\\s*api\\)\\s*=>.*$",
+                    "errorMessage": "must be a function string starting with 'f:' followed by an async arrow function receiving 'view' and 'api' parameters (e.g. f:async (view, api) => value)"
                 },
                 {
                     "type": "string",
-                    "pattern": "^f:function\\s*\\(view\\)\\s*\\{.*\\}$",
-                    "errorMessage": "must be a function string starting with 'f:' followed by a function expression receiving 'view' parameter (e.g. f:function(view) { return value; })"
+                    "pattern": "^f:async\\s+function\\s*\\(view,\\s*api\\)\\s*\\{.*\\}$",
+                    "errorMessage": "must be a function string starting with 'f:' followed by an async function expression receiving 'view' and 'api' parameters (e.g. f:async function(view, api) { return value; })"
                 },
                 {
                     "type": "string",
@@ -84,7 +84,7 @@
                     "errorMessage": "must be a reference starting with 'ref:' followed by a file path and function name (e.g. ref:/my/dir/functions.md:myFunc)"
                 }
             ],
-            "errorMessage": "must be one of: f:<arrow function with view>, f:<function expression with view>, ref:<funcName>, or ref:<path>:<funcName>"
+            "errorMessage": "must be one of: f:<async arrow function with view, api>, f:<async function expression with view, api>, ref:<funcName>, or ref:<path>:<funcName>"
         },
         "pathType": {
             "type": "string",

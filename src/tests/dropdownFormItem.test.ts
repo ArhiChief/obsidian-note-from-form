@@ -16,14 +16,13 @@ jest.mock("src/ui/settingsExtension", () => {
 
 const mockFunctionProcessor = {
     renderMustacheTemplate: jest.fn(),
-    executeFunction: jest.fn().mockImplementation((funcText: string) => {
+    executeFunction: jest.fn().mockImplementation((funcText: string, ...args: any[]) => {
         const func = eval(`(${funcText})`);
-        return func();
+        return func(...args);
     }),
-    executeFunctionWithParam: jest.fn(),
     executeRefFunction: jest.fn(),
-    executeRefFunctionWithParam: jest.fn(),
 } as any;
+const mockUserApi = {} as any;
 
 describe("DropdownFormItem", () => {
 
@@ -34,13 +33,13 @@ describe("DropdownFormItem", () => {
 
     describe("constructor", () => {
         test("parses v: JSON init and selects first option by default", async () => {
-            const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: twoOptions }, mockFunctionProcessor);
+            const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: twoOptions }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             expect(item.value).toEqual([{ k: "a", v: "Alpha" }, { k: "b", v: "Beta" }]);
         });
 
         test("selects option marked with s:true", async () => {
-            const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: withSelected }, mockFunctionProcessor);
+            const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: withSelected }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             expect(item.value).toEqual([{ k: "a", v: "Alpha" }, { k: "b", v: "Beta", s: true }]);
         });
@@ -48,29 +47,29 @@ describe("DropdownFormItem", () => {
         test("evaluates f: init function", async () => {
             const item = new DropdownFormItem({
                 id: "dd1", type: "dropdown",
-                init: 'f:() => [{"k":"x","v":"X-ray"}]',
-            }, mockFunctionProcessor);
+                init: 'f:async () => [{"k":"x","v":"X-ray"}]',
+            }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             expect(item.value).toEqual([{ k: "x", v: "X-ray" }]);
         });
 
         test("throws when no init is provided", async () => {
-            const item = new DropdownFormItem({ id: "dd1", type: "dropdown" }, mockFunctionProcessor);
+            const item = new DropdownFormItem({ id: "dd1", type: "dropdown" }, mockFunctionProcessor, mockUserApi);
             await expect(item.initialize()).rejects.toThrow("Default value is not supported");
         });
 
         test("throws for empty array init", async () => {
-            const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: "v:[]" }, mockFunctionProcessor);
+            const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: "v:[]" }, mockFunctionProcessor, mockUserApi);
             await expect(item.initialize()).rejects.toThrow("Init value can't be empty");
         });
 
         test("throws for unsupported type", () => {
-            expect(() => new DropdownFormItem({ id: "dd1", type: "text" as any, init: twoOptions }, mockFunctionProcessor))
+            expect(() => new DropdownFormItem({ id: "dd1", type: "text" as any, init: twoOptions }, mockFunctionProcessor, mockUserApi))
                 .toThrow("Unsupported type");
         });
 
         test("sets id and type correctly", () => {
-            const item = new DropdownFormItem({ id: "myDd", type: "dropdown", init: twoOptions }, mockFunctionProcessor);
+            const item = new DropdownFormItem({ id: "myDd", type: "dropdown", init: twoOptions }, mockFunctionProcessor, mockUserApi);
             expect(item.id).toBe("myDd");
             expect(item.type).toBe("dropdown");
         });
@@ -80,39 +79,39 @@ describe("DropdownFormItem", () => {
 
     describe("get", () => {
         test("returns selected option value when no getFunc", async () => {
-            const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: twoOptions }, mockFunctionProcessor);
+            const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: twoOptions }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(item.get({})).toBe("Alpha");
+            expect(await item.get({})).toBe("Alpha");
         });
 
         test("returns selected value when s:true option", async () => {
-            const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: withSelected }, mockFunctionProcessor);
+            const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: withSelected }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(item.get({})).toBe("Alpha");
+            expect(await item.get({})).toBe("Alpha");
         });
 
         test("returns literal for v: getFunc", async () => {
             const item = new DropdownFormItem({
                 id: "dd1", type: "dropdown", init: twoOptions, get: "v:override",
-            }, mockFunctionProcessor);
+            }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(item.get({})).toBe("override");
+            expect(await item.get({})).toBe("override");
         });
 
         test("invokes arrow function for f: getFunc", async () => {
             const item = new DropdownFormItem({
-                id: "dd1", type: "dropdown", init: twoOptions, get: "f:(view) => view.label",
-            }, mockFunctionProcessor);
+                id: "dd1", type: "dropdown", init: twoOptions, get: "f:async (view) => view.label",
+            }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(item.get({ label: "from-view" })).toBe("from-view");
+            expect(await item.get({ label: "from-view" })).toBe("from-view");
         });
 
         test("invokes regular function for f: getFunc", async () => {
             const item = new DropdownFormItem({
-                id: "dd1", type: "dropdown", init: twoOptions, get: "f:function(view) { return view.label; }",
-            }, mockFunctionProcessor);
+                id: "dd1", type: "dropdown", init: twoOptions, get: "f:async function(view) { return view.label; }",
+            }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(item.get({ label: "func-result" })).toBe("func-result");
+            expect(await item.get({ label: "func-result" })).toBe("func-result");
         });
     });
 
@@ -120,7 +119,7 @@ describe("DropdownFormItem", () => {
 
     describe("assignToForm", () => {
         test("does nothing when no form display is configured", async () => {
-            const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: twoOptions }, mockFunctionProcessor);
+            const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: twoOptions }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             expect(() => item.assignToForm({} as HTMLElement)).not.toThrow();
         });
@@ -129,7 +128,7 @@ describe("DropdownFormItem", () => {
             const item = new DropdownFormItem({
                 id: "dd1", type: "dropdown", init: twoOptions,
                 form: { title: "Pick one" },
-            }, mockFunctionProcessor);
+            }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             expect(() => item.assignToForm({} as HTMLElement)).not.toThrow();
         });
@@ -139,30 +138,30 @@ describe("DropdownFormItem", () => {
 
     describe("initialize", () => {
         test("value is undefined before initialize", () => {
-            const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: twoOptions }, mockFunctionProcessor);
+            const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: twoOptions }, mockFunctionProcessor, mockUserApi);
             expect(item.value).toBeUndefined();
         });
 
         test("resolves ref: init via executeRefFunction", async () => {
             const refOptions = [{k: "r", v: "Ref"}];
             mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce(refOptions);
-            const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: "ref:getOptions" }, mockFunctionProcessor);
+            const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: "ref:getOptions" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("getOptions");
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("getOptions", {}, mockUserApi);
             expect(item.value).toEqual(refOptions);
         });
 
         test("resolves ref: with path via executeRefFunction", async () => {
             const refOptions = [{k: "a", v: "Alpha"}, {k: "b", v: "Beta"}];
             mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce(refOptions);
-            const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: "ref:/data.md:getOptions" }, mockFunctionProcessor);
+            const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: "ref:/data.md:getOptions" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("/data.md:getOptions");
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("/data.md:getOptions", {}, mockUserApi);
             expect(item.value).toEqual(refOptions);
         });
 
         test("throws for unsupported init prefix", async () => {
-            const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: "x:bad" as any }, mockFunctionProcessor);
+            const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: "x:bad" as any }, mockFunctionProcessor, mockUserApi);
             await expect(item.initialize()).rejects.toThrow("Unsupported init function");
         });
     });
@@ -171,7 +170,7 @@ describe("DropdownFormItem", () => {
 
     describe("validate", () => {
         test("returns true when no validateFunc is provided", async () => {
-            const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: twoOptions }, mockFunctionProcessor);
+            const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: twoOptions }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             const result = await item.validate({ dd1: "Alpha" });
             expect(result).toBe(true);
@@ -180,20 +179,20 @@ describe("DropdownFormItem", () => {
         test("returns true when no element is assigned (no form)", async () => {
             const item = new DropdownFormItem({
                 id: "dd1", type: "dropdown", init: twoOptions,
-                validate: "f:(view) => ({ isValid: true })" as any,
-            }, mockFunctionProcessor);
+                validate: "f:async (view) => ({ isValid: true })" as any,
+            }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             const result = await item.validate({ dd1: "Alpha" });
             expect(result).toBe(true);
         });
 
         test("returns true for valid inline function", async () => {
-            mockFunctionProcessor.executeFunctionWithParam.mockReturnValueOnce({ isValid: true });
+            mockFunctionProcessor.executeFunction.mockReturnValueOnce({ isValid: true });
             const item = new DropdownFormItem({
                 id: "dd1", type: "dropdown", init: twoOptions,
                 form: { title: "Pick" },
-                validate: "f:(view) => ({ isValid: true })" as any,
-            }, mockFunctionProcessor);
+                validate: "f:async (view) => ({ isValid: true })" as any,
+            }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             item.assignToForm({} as HTMLElement);
             const result = await item.validate({ dd1: "Alpha" });
@@ -201,12 +200,12 @@ describe("DropdownFormItem", () => {
         });
 
         test("returns false and calls setError for invalid result", async () => {
-            mockFunctionProcessor.executeFunctionWithParam.mockReturnValueOnce({ isValid: false, errMsg: "Invalid selection" });
+            mockFunctionProcessor.executeFunction.mockReturnValueOnce({ isValid: false, errMsg: "Invalid selection" });
             const item = new DropdownFormItem({
                 id: "dd1", type: "dropdown", init: twoOptions,
                 form: { title: "Pick" },
-                validate: "f:(view) => ({ isValid: false, errMsg: 'Invalid selection' })" as any,
-            }, mockFunctionProcessor);
+                validate: "f:async (view) => ({ isValid: false, errMsg: 'Invalid selection' })" as any,
+            }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             item.assignToForm({} as HTMLElement);
 
@@ -220,18 +219,18 @@ describe("DropdownFormItem", () => {
             expect(setError).toHaveBeenCalledWith("Invalid selection");
         });
 
-        test("resolves ref: validate via executeRefFunctionWithParam", async () => {
-            mockFunctionProcessor.executeRefFunctionWithParam.mockResolvedValueOnce({ isValid: true });
+        test("resolves ref: validate via executeRefFunction", async () => {
+            mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce({ isValid: true });
             const item = new DropdownFormItem({
                 id: "dd1", type: "dropdown", init: twoOptions,
                 form: { title: "Pick" },
                 validate: "ref:ddValidator" as any,
-            }, mockFunctionProcessor);
+            }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             item.assignToForm({} as HTMLElement);
             const result = await item.validate({ dd1: "Alpha" });
             expect(result).toBe(true);
-            expect(mockFunctionProcessor.executeRefFunctionWithParam).toHaveBeenCalledWith("ddValidator", { dd1: "Alpha" });
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("ddValidator", { dd1: "Alpha" }, mockUserApi);
         });
 
         test("throws for unsupported validate prefix", async () => {
@@ -239,7 +238,7 @@ describe("DropdownFormItem", () => {
                 id: "dd1", type: "dropdown", init: twoOptions,
                 form: { title: "Pick" },
                 validate: "x:bad" as any,
-            }, mockFunctionProcessor);
+            }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
             item.assignToForm({} as HTMLElement);
             await expect(item.validate({ dd1: "Alpha" })).rejects.toThrow("Unsupported validate function");

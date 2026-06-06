@@ -8,18 +8,19 @@ import { CheckboxFormItem } from "./checkboxFormItem";
 import { DropdownFormItem } from "./dropdownFormItem";
 import { NoteFromFormPluginSettings } from "src/pluginSettings";
 import { FormItemFunctionProcessor } from "./formItemFunctionProcessor";
+import { IUserApi } from "src/userApi/userApi";
 
 export class FormItemsManager {
     
-    static async getFormItems(template: NoteTemplate, functionProcessor: FormItemFunctionProcessor, settings: NoteFromFormPluginSettings): Promise<FormItem[]> {
+    static async getFormItems(template: NoteTemplate, functionProcessor: FormItemFunctionProcessor, settings: NoteFromFormPluginSettings, userApi: IUserApi): Promise<FormItem[]> {
         const fileLocationsSrc = template["file-location"] ?? `v:${settings.templatesFolderLocation}`;
         const result: FormItem[] = [];
 
-        let formItem: FormItem = new FileNameFormItem(functionProcessor, template["file-name"]);
+        let formItem: FormItem = new FileNameFormItem(functionProcessor, userApi, template["file-name"]);
         await formItem.initialize();
         result.push(formItem);
 
-        formItem = new FileLocationFormItem(functionProcessor, fileLocationsSrc);
+        formItem = new FileLocationFormItem(functionProcessor, userApi, fileLocationsSrc);
         await formItem.initialize();
         result.push(formItem);
 
@@ -29,21 +30,21 @@ export class FormItemsManager {
             switch (itemType) {
                 case 'text':
                 case 'textArea':
-                    formItem = new TextFormItem(item, functionProcessor);
+                    formItem = new TextFormItem(item, functionProcessor, userApi);
                     break;
                 case 'number':
-                    formItem = new NumberFormItem(item, functionProcessor);
+                    formItem = new NumberFormItem(item, functionProcessor, userApi);
                     break;
                 case 'date':
                 case 'time':
                 case 'dateTime':
-                    formItem = new DateTimeFormItem(item, functionProcessor);
+                    formItem = new DateTimeFormItem(item, functionProcessor, userApi);
                     break;
                 case 'checkbox':
-                    formItem = new CheckboxFormItem(item, functionProcessor);
+                    formItem = new CheckboxFormItem(item, functionProcessor, userApi);
                     break;
                 case 'dropdown':
-                    formItem = new DropdownFormItem(item, functionProcessor);
+                    formItem = new DropdownFormItem(item, functionProcessor, userApi);
                     break;
                 default:
                     throw new Error(`Unsupported type: ${itemType}`);
@@ -69,7 +70,7 @@ export class FormItemsManager {
         return view;
     }
 
-    static getViewModel(src: FormItem[]): Record<string, string> {
+    static async getViewModel(src: FormItem[]): Promise<Record<string, string>> {
         
         const view: Record<string, string> = {};
 
@@ -82,14 +83,14 @@ export class FormItemsManager {
                 continue;
             }
 
-            view[item.id] = item.get(rawView);
+            view[item.id] = await item.get(rawView);
         }
 
         // resolution of 'file-Name' and 'file-Location' should be done after all items from 'for-items' are resolved
         for(let i = 0; i < src.length; i++) {
             const item = src[i];
             if (item.id === FileNameFormItem.FormFieldId || item.id === FileLocationFormItem.FormFieldId) {
-                view[item.id] = item.get(view);
+                view[item.id] = await item.get(view);
             }
         }
 

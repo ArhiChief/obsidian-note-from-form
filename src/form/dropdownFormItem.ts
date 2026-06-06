@@ -2,6 +2,7 @@ import { DropdownFormItem as DropdownFormItemTemplate, FormItemType, InitFunctio
 import { FormItemBase } from "./formItem";
 import { ExtendedSetting } from "src/ui/settingsExtension";
 import { FormItemFunctionProcessor } from "./formItemFunctionProcessor";
+import { IUserApi } from "src/userApi/userApi";
 
 interface DropdownOption {
     k: string;
@@ -14,15 +15,21 @@ interface DropdownOptionInput extends DropdownOption {
 
 export class DropdownFormItem extends FormItemBase<DropdownOption[]> {
     
+    private readonly _title: string;
+    private readonly _description: string;
+
     private _opts: Record<string, string>;
     private _selected: string;
 
-    constructor(src: DropdownFormItemTemplate, funtionProcessor: FormItemFunctionProcessor) {
+    constructor(src: DropdownFormItemTemplate, funtionProcessor: FormItemFunctionProcessor, userApi: IUserApi) {
         DropdownFormItem.assertType(src.type);
-        super(src.id, src.type, funtionProcessor, src.init, src.get, src.validate, src.form);
+        super(src.id, src.type, funtionProcessor, userApi, src.init, src.get, src.validate, src.form);
 
         this._opts = {};
         this._selected = "";
+        
+        this._title = src.form?.title ?? "";
+        this._description = src.form?.description ?? "";
     }
 
     protected getFunctionDefault():string {
