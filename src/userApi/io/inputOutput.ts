@@ -1,4 +1,4 @@
-import { App, normalizePath, TFile, TFolder, Vault } from "obsidian";
+import { App, normalizePath, TAbstractFile, TFile, TFolder, Vault } from "obsidian";
 import { NoteFromFormPluginSettings } from "src/pluginSettings";
 
 export interface InputOutput {
@@ -6,8 +6,11 @@ export interface InputOutput {
     readonly defaultOutputDirectory: TFolder;
 
     createDirectory (path: string): Promise<TFolder>;
-    getFolder (path: string): TFolder | null;
+    getDirectory (path: string): TFolder | null;
     getFile (path: string): TFile | null;
+
+    isDirectory (folder: TAbstractFile): boolean;
+    isFile (file: TAbstractFile): boolean;
 }
 
 export class InputOutputImpl implements InputOutput {
@@ -19,19 +22,27 @@ export class InputOutputImpl implements InputOutput {
 
     constructor(settings: NoteFromFormPluginSettings, app: App) {
         this._vault = app.vault;
-        this.templatesDirectory = this.getFolder(settings.templatesFolderLocation)!;
-        this.defaultOutputDirectory = this.getFolder(settings.defaultOutputDir)!;
+        this.templatesDirectory = this.getDirectory(settings.templatesFolderLocation)!;
+        this.defaultOutputDirectory = this.getDirectory(settings.defaultOutputDir)!;
     }
 
     createDirectory(path: string): Promise<TFolder> {
         return this._vault.createFolder(normalizePath(path));
     }
 
-    getFolder(path: string): TFolder | null {
+    getDirectory(path: string): TFolder | null {
         return this._vault.getFolderByPath(normalizePath(path))!;
     }
 
     getFile(path: string): TFile | null {
         return this._vault.getFileByPath(normalizePath(path))!;
+    }
+
+    isDirectory(folder: TAbstractFile): boolean {
+        return folder instanceof TFolder;
+    }
+
+    isFile(file: TAbstractFile): boolean {
+        return file instanceof TFile;
     }
 }

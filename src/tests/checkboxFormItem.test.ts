@@ -136,7 +136,7 @@ describe("CheckboxFormItem", () => {
             mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce(true);
             const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", init: "ref:isChecked" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("isChecked");
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("isChecked", {}, mockUserApi);
             expect(item.value).toBe(true);
         });
 
@@ -144,7 +144,7 @@ describe("CheckboxFormItem", () => {
             mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce(false);
             const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", init: "ref:/funcs.md:isChecked" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("/funcs.md:isChecked");
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("/funcs.md:isChecked", {}, mockUserApi);
             expect(item.value).toBe(false);
         });
 
@@ -213,7 +213,7 @@ describe("CheckboxFormItem", () => {
             item.assignToForm({} as HTMLElement);
             const result = await item.validate({ cb1: true });
             expect(result).toBe(true);
-            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("myValidator", { cb1: true });
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("myValidator", { cb1: true }, mockUserApi);
         });
 
         test("throws for unsupported validate prefix", async () => {

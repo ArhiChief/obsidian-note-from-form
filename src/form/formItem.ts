@@ -62,9 +62,9 @@ export abstract class FormItemBase<TValue> implements FormItem {
     async initialize(): Promise<void> {
         if (this._initFunc) {
             if (this._initFunc.startsWith('f:')) {
-                this.value = await this._funtionProcessor.executeFunction<TValue, []>(this._initFunc.slice(2));
+                this.value = await this._funtionProcessor.executeFunction<TValue, [Record<string, any>, IUserApi]>(this._initFunc.slice(2), {}, this._userApi);
             } else if (this._initFunc.startsWith('ref:')) {
-                this.value = await this._funtionProcessor.executeRefFunction<TValue, []>(this._initFunc.slice(4));
+                this.value = await this._funtionProcessor.executeRefFunction<TValue, [Record<string, any>, IUserApi]>(this._initFunc.slice(4), {}, this._userApi);
             } else if (this._initFunc.startsWith('v:')) {
                 this.value = this.getInitValueFromString(this._initFunc.slice(2));
             } else {
@@ -90,9 +90,9 @@ export abstract class FormItemBase<TValue> implements FormItem {
         }
 
         if (this._getFunc.startsWith("f:")) {
-             return await this._funtionProcessor.executeFunction<string, [Record<string, any>]>(this._getFunc.slice(2), view);
+             return await this._funtionProcessor.executeFunction<string, [Record<string, any>, IUserApi]>(this._getFunc.slice(2), view, this._userApi);
         } else if (this._getFunc.startsWith("ref:")) {
-            return await this._funtionProcessor.executeRefFunction<string, [Record<string, any>]>(this._getFunc.slice(4), view);
+            return await this._funtionProcessor.executeRefFunction<string, [Record<string, any>, IUserApi]>(this._getFunc.slice(4), view, this._userApi);
         } else if (this._getFunc.startsWith("t:")) {
             return this.getTemplateImpl(this._getFunc.slice(2), view);
         } else if (this._getFunc.startsWith("v:")) {
@@ -110,9 +110,9 @@ export abstract class FormItemBase<TValue> implements FormItem {
         let validationResult: ValidateResult;
 
         if (this._validateFunc.startsWith('f:')) {
-            validationResult = await this._funtionProcessor.executeFunction<ValidateResult, [Record<string, any>]>(this._validateFunc.slice(2), view);
+            validationResult = await this._funtionProcessor.executeFunction<ValidateResult, [Record<string, any>, IUserApi]>(this._validateFunc.slice(2), view, this._userApi);
         } else if (this._validateFunc.startsWith('ref:')) {
-            validationResult = await this._funtionProcessor.executeRefFunction<ValidateResult, [Record<string, any>]>(this._validateFunc.slice(4), view);
+            validationResult = await this._funtionProcessor.executeRefFunction<ValidateResult, [Record<string, any>, IUserApi]>(this._validateFunc.slice(4), view, this._userApi);
         } else {
             throw new Error(`Unsupported validate function: ${this._validateFunc}`);
         }

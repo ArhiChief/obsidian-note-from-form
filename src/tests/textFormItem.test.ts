@@ -129,7 +129,7 @@ describe("TextFormItem", () => {
             mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce("from-ref");
             const item = new TextFormItem({ id: "t1", type: "text", init: "ref:myFunc" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("myFunc");
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("myFunc", {}, mockUserApi);
             expect(item.value).toBe("from-ref");
         });
 
@@ -137,7 +137,7 @@ describe("TextFormItem", () => {
             mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce("from-file-ref");
             const item = new TextFormItem({ id: "t1", type: "text", init: "ref:/path/to/file.md:myFunc" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("/path/to/file.md:myFunc");
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("/path/to/file.md:myFunc", {}, mockUserApi);
             expect(item.value).toBe("from-file-ref");
         });
 
@@ -178,6 +178,7 @@ describe("TextFormItem", () => {
             expect(mockFunctionProcessor.executeFunction).toHaveBeenCalledWith(
                 "async (view) => ({ isValid: true })",
                 { t1: "hello" },
+                mockUserApi,
             );
         });
 
@@ -245,7 +246,7 @@ describe("TextFormItem", () => {
             item.assignToForm({} as HTMLElement);
             const result = await item.validate({ t1: "hello" });
             expect(result).toBe(true);
-            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("myValidator", { t1: "hello" });
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("myValidator", { t1: "hello" }, mockUserApi);
         });
 
         test("resolves ref: with path via executeRefFunction", async () => {
@@ -258,7 +259,7 @@ describe("TextFormItem", () => {
             item.assignToForm({} as HTMLElement);
             const result = await item.validate({ t1: "x" });
             expect(result).toBe(false);
-            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("/path/to/file.md:myValidator", { t1: "x" });
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("/path/to/file.md:myValidator", { t1: "x" }, mockUserApi);
         });
 
         test("throws for unsupported validate prefix", async () => {

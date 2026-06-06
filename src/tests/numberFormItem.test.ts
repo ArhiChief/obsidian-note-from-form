@@ -129,7 +129,7 @@ describe("NumberFormItem", () => {
             mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce(77);
             const item = new NumberFormItem({ id: "n1", type: "number", init: "ref:getNumber" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("getNumber");
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("getNumber", {}, mockUserApi);
             expect(item.value).toBe(77);
         });
 
@@ -137,7 +137,7 @@ describe("NumberFormItem", () => {
             mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce(123);
             const item = new NumberFormItem({ id: "n1", type: "number", init: "ref:/utils.md:getNumber" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("/utils.md:getNumber");
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("/utils.md:getNumber", {}, mockUserApi);
             expect(item.value).toBe(123);
         });
 
@@ -206,7 +206,7 @@ describe("NumberFormItem", () => {
             item.assignToForm({} as HTMLElement);
             const result = await item.validate({ n1: 10 });
             expect(result).toBe(true);
-            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("numValidator", { n1: 10 });
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("numValidator", { n1: 10 }, mockUserApi);
         });
 
         test("throws for unsupported validate prefix", async () => {

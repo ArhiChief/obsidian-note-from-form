@@ -147,7 +147,7 @@ describe("DropdownFormItem", () => {
             mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce(refOptions);
             const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: "ref:getOptions" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("getOptions");
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("getOptions", {}, mockUserApi);
             expect(item.value).toEqual(refOptions);
         });
 
@@ -156,7 +156,7 @@ describe("DropdownFormItem", () => {
             mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce(refOptions);
             const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: "ref:/data.md:getOptions" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("/data.md:getOptions");
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("/data.md:getOptions", {}, mockUserApi);
             expect(item.value).toEqual(refOptions);
         });
 
@@ -230,7 +230,7 @@ describe("DropdownFormItem", () => {
             item.assignToForm({} as HTMLElement);
             const result = await item.validate({ dd1: "Alpha" });
             expect(result).toBe(true);
-            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("ddValidator", { dd1: "Alpha" });
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("ddValidator", { dd1: "Alpha" }, mockUserApi);
         });
 
         test("throws for unsupported validate prefix", async () => {

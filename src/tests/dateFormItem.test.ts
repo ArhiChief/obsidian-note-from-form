@@ -204,7 +204,7 @@ describe("DateFormItem", () => {
             mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce(refDate);
             const item = new DateFormItem({ id: "d1", type: "date", init: "ref:getDate" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("getDate");
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("getDate", {}, mockUserApi);
             expect(item.value).toBe(refDate);
         });
 
@@ -213,7 +213,7 @@ describe("DateFormItem", () => {
             mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce(refDate);
             const item = new DateFormItem({ id: "d1", type: "date", init: "ref:/helpers.md:getDate" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("/helpers.md:getDate");
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("/helpers.md:getDate", {}, mockUserApi);
             expect(item.value).toBe(refDate);
         });
 
@@ -283,7 +283,7 @@ describe("DateFormItem", () => {
             const view = { d1: new Date() };
             const result = await item.validate(view);
             expect(result).toBe(true);
-            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("dateValidator", view);
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("dateValidator", view, mockUserApi);
         });
 
         test("throws for unsupported validate prefix", async () => {
