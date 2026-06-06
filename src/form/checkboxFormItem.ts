@@ -1,15 +1,13 @@
-import { CheckboxFormItem as CheckboxFormItemTemplate, InitFunctionString, ValueString, FormItemType } from "src/template/templateTypes";
+import { CheckboxFormItem as CheckboxFormItemTemplate, FormItemType } from "src/template/templateTypes";
 import { FormItemBase } from "./formItem";
 import { ExtendedSetting } from "src/ui/settingsExtension";
+import { FormItemFunctionProcessor } from "./formItemFunctionProcessor";
 
 export class CheckboxFormItem extends FormItemBase<boolean> {
 
-    constructor(src: CheckboxFormItemTemplate) {
+    constructor(src: CheckboxFormItemTemplate, funtionProcessor: FormItemFunctionProcessor) {
         CheckboxFormItem.assertType(src.type);
-
-        const initValue = CheckboxFormItem.getInitValue(src.init);
-
-        super(src.id, src.type, initValue, src.get, src.form);
+        super(src.id, src.type, funtionProcessor, src.init, src.get, src.form);
     }
 
     protected assignToFormImpl(contentEl: HTMLElement): void {
@@ -17,27 +15,21 @@ export class CheckboxFormItem extends FormItemBase<boolean> {
             .setName(this._title)
             .setDesc(this._description)
             .addToggle(toggle => toggle
-                .setValue(this.value)
+                .setValue(this.value!)
                 .onChange(newVal => this.value = newVal)
             );
     }
 
     protected getFunctionDefault(): string {
-        return String(this.value);
+        return String(this.value!);
     }
 
-    private static getInitValue(src?: InitFunctionString | ValueString): boolean {
-        if (!src) {
-            return false;
-        }
+    protected getInitValueFromString(valStr: string): boolean {
+        return valStr.toLowerCase() === 'true';
+    }
 
-        if (src.startsWith('f:')) {
-            return FormItemBase.executeInitFunction<boolean>(src.slice(2));
-        } else if (src.startsWith('v:')) {
-            return src.slice(2).toLowerCase() === 'true';
-        } else {
-            throw new Error(`Unsupported init value: ${src}`);
-        }
+    protected getInitValueDefault(): boolean {
+        return false;
     }
 
     private static assertType(type: FormItemType): void {

@@ -26,20 +26,16 @@ export class TemplateIndex {
         return this.items;
     }
 
-    onVaultChange(file: TAbstractFile) {
+    async onVaultChange(file: TAbstractFile) {
         if (!(file instanceof TFile)) return;
 
-        if (this.isInTemplatesFolder(file)) {
-            this.update(file);
+        if (await this.isInTemplatesFolder(file)) {
+            await this.update(file);
         }
     }
 
-    isInTemplatesFolder(file: TFile): boolean {
-        const templatesFolder = this.settings.templatesFolderLocation;
-        if (templatesFolder.length === 0) return false;
-
-        const normalizedFolder = normalizePath(templatesFolder);
-        return file.path.startsWith(normalizedFolder + '/');
+    isTemplateFile(file: TFile): boolean {
+        return this.items.some(item => item.file.path === file.path);
     }
 
     async update(file: TFile) {
@@ -92,5 +88,21 @@ export class TemplateIndex {
         const parts = relativePath.replace(/\.md$/, '').split('/');
         if (parts.length === 1) return parts[0];
         return parts.join('/');
+    }
+
+    private async isInTemplatesFolder(file: TFile): Promise<boolean> {
+        const templatesFolder = this.settings.templatesFolderLocation;
+        if (templatesFolder.length === 0) return false;
+
+        const normalizedFolder = normalizePath(templatesFolder);
+        const isInTemplatesFolder = file.path.startsWith(normalizedFolder + '/');
+        let isTemplate: boolean = false;
+
+        await this.fileManager.processFrontMatter(file, (frontmatter) => {
+            const propertyName = this.settings.templatePropertyName;
+            isTemplate = propertyName in frontmatter;
+        });
+
+        return isInTemplatesFolder && isTemplate;
     }
 }

@@ -54,6 +54,7 @@ function createMockFormItem(id: string): FormItem {
         value: "",
         assignToForm: jest.fn(),
         get: jest.fn().mockReturnValue(""),
+        initialize: jest.fn().mockResolvedValue(undefined),
     };
 }
 

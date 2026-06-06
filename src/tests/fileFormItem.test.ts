@@ -13,55 +13,78 @@ jest.mock("src/ui/settingsExtension", () => {
     return { ExtendedSetting: jest.fn().mockImplementation(() => ({ ...mock })) };
 });
 
+const mockFunctionProcessor = {
+    renderMustacheTemplate: jest.fn(),
+    executeFunction: jest.fn(),
+    executeFunctionWithParam: jest.fn(),
+    executeRefFunction: jest.fn(),
+    executeRefFunctionWithParam: jest.fn(),
+} as any;
+
 describe("FileNameFormItem", () => {
 
     describe("constructor", () => {
         test("has id 'file-name'", () => {
-            const item = new FileNameFormItem();
+            const item = new FileNameFormItem(mockFunctionProcessor);
             expect(item.id).toBe("file-name");
         });
 
         test("has type 'text'", () => {
-            const item = new FileNameFormItem();
+            const item = new FileNameFormItem(mockFunctionProcessor);
             expect(item.type).toBe("text");
         });
 
-        test("defaults to empty string value", () => {
-            const item = new FileNameFormItem();
+        test("defaults to empty string value", async () => {
+            const item = new FileNameFormItem(mockFunctionProcessor);
+            await item.initialize();
             expect(item.value).toBe("");
         });
 
-        test("without getFunc, assignToForm renders a form", () => {
-            const item = new FileNameFormItem();
+        test("without getFunc, assignToForm renders a form", async () => {
+            const item = new FileNameFormItem(mockFunctionProcessor);
+            await item.initialize();
             // assignToForm should delegate to assignToFormImpl (form display is set)
             expect(() => item.assignToForm({} as HTMLElement)).not.toThrow();
         });
 
-        test("with getFunc, assignToForm is a no-op", () => {
-            const item = new FileNameFormItem("v:hardcoded");
+        test("with getFunc, assignToForm is a no-op", async () => {
+            const item = new FileNameFormItem(mockFunctionProcessor, "v:hardcoded");
+            await item.initialize();
             // No form display → assignToForm does nothing
             expect(() => item.assignToForm({} as HTMLElement)).not.toThrow();
         });
     });
 
     describe("get", () => {
-        test("returns normalized value when no getFunc", () => {
-            const item = new FileNameFormItem();
+        test("returns normalized value when no getFunc", async () => {
+            const item = new FileNameFormItem(mockFunctionProcessor);
+            await item.initialize();
             item.value = "my\\note";
             const result = item.get({});
             expect(result).toBe("my/note");
         });
 
-        test("returns normalized literal for v: getFunc", () => {
-            const item = new FileNameFormItem("v:some\\path");
+        test("returns normalized literal for v: getFunc", async () => {
+            const item = new FileNameFormItem(mockFunctionProcessor, "v:some\\path");
+            await item.initialize();
             const result = item.get({});
             expect(result).toBe("some/path");
         });
 
-        test("normalizes trailing slashes", () => {
-            const item = new FileNameFormItem("v:folder/name/");
+        test("normalizes trailing slashes", async () => {
+            const item = new FileNameFormItem(mockFunctionProcessor, "v:folder/name/");
+            await item.initialize();
             const result = item.get({});
             expect(result).toBe("folder/name");
+        });
+    });
+
+    // ─── initialize ───
+
+    describe("initialize", () => {
+        test("value is undefined before initialize", () => {
+            const item = new FileNameFormItem(mockFunctionProcessor);
+            expect(item.value).toBeUndefined();
         });
     });
 });
@@ -70,43 +93,57 @@ describe("FileLocationFormItem", () => {
 
     describe("constructor", () => {
         test("has id 'file-location'", () => {
-            const item = new FileLocationFormItem();
+            const item = new FileLocationFormItem(mockFunctionProcessor);
             expect(item.id).toBe("file-location");
         });
 
         test("has type 'text'", () => {
-            const item = new FileLocationFormItem();
+            const item = new FileLocationFormItem(mockFunctionProcessor);
             expect(item.type).toBe("text");
         });
 
-        test("defaults to empty string value", () => {
-            const item = new FileLocationFormItem();
+        test("defaults to empty string value", async () => {
+            const item = new FileLocationFormItem(mockFunctionProcessor);
+            await item.initialize();
             expect(item.value).toBe("");
         });
 
-        test("without getFunc, assignToForm renders a form", () => {
-            const item = new FileLocationFormItem();
+        test("without getFunc, assignToForm renders a form", async () => {
+            const item = new FileLocationFormItem(mockFunctionProcessor);
+            await item.initialize();
             expect(() => item.assignToForm({} as HTMLElement)).not.toThrow();
         });
 
-        test("with getFunc, assignToForm is a no-op", () => {
-            const item = new FileLocationFormItem("v:/notes");
+        test("with getFunc, assignToForm is a no-op", async () => {
+            const item = new FileLocationFormItem(mockFunctionProcessor, "v:/notes");
+            await item.initialize();
             expect(() => item.assignToForm({} as HTMLElement)).not.toThrow();
         });
     });
 
     describe("get", () => {
-        test("returns normalized value when no getFunc", () => {
-            const item = new FileLocationFormItem();
+        test("returns normalized value when no getFunc", async () => {
+            const item = new FileLocationFormItem(mockFunctionProcessor);
+            await item.initialize();
             item.value = "path\\to\\folder";
             const result = item.get({});
             expect(result).toBe("path/to/folder");
         });
 
-        test("returns normalized literal for v: getFunc", () => {
-            const item = new FileLocationFormItem("v:my\\folder");
+        test("returns normalized literal for v: getFunc", async () => {
+            const item = new FileLocationFormItem(mockFunctionProcessor, "v:my\\folder");
+            await item.initialize();
             const result = item.get({});
             expect(result).toBe("my/folder");
+        });
+    });
+
+    // ─── initialize ───
+
+    describe("initialize", () => {
+        test("value is undefined before initialize", () => {
+            const item = new FileLocationFormItem(mockFunctionProcessor);
+            expect(item.value).toBeUndefined();
         });
     });
 });

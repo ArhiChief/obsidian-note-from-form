@@ -1,6 +1,7 @@
-import { DropdownFormItem as DropdownFormItemTemplate, FormItemType, InitFunctionString, ValueString } from "src/template/templateTypes";
+import { DropdownFormItem as DropdownFormItemTemplate, FormItemType, InitFunctionType, ValueString } from "src/template/templateTypes";
 import { FormItemBase } from "./formItem";
 import { ExtendedSetting } from "src/ui/settingsExtension";
+import { FormItemFunctionProcessor } from "./formItemFunctionProcessor";
 
 interface DropdownOption {
     k: string;
@@ -11,33 +12,21 @@ interface DropdownOptionInput extends DropdownOption {
     s?: boolean;
 }
 
-interface InitResult {
-    opts: Record<string, string>;
-    selected: string;
-}
-
 export class DropdownFormItem extends FormItemBase<DropdownOption[]> {
     
-    private readonly _opts: Record<string, string>;
-    private readonly _selected: string;
+    private _opts: Record<string, string>;
+    private _selected: string;
 
-    constructor(src: DropdownFormItemTemplate) {
+    constructor(src: DropdownFormItemTemplate, funtionProcessor: FormItemFunctionProcessor) {
         DropdownFormItem.assertType(src.type);
+        super(src.id, src.type, funtionProcessor, src.init, src.get, src.form);
 
-        const {opts, selected} = DropdownFormItem.initSource(src.id, src.init);
-        const initValue: DropdownOption[] = [{
-            k: selected,
-            v: opts[selected],
-        }];
-
-        super(src.id, src.type, initValue, src.get, src.form);
-        
-        this._opts = opts;
-        this._selected = selected;
+        this._opts = {};
+        this._selected = "";
     }
 
     protected getFunctionDefault():string {
-        return this.value[0].v;
+        return this.value![0].v;
     }
 
     protected assignToFormImpl(contentEl: HTMLElement): void {
@@ -52,37 +41,29 @@ export class DropdownFormItem extends FormItemBase<DropdownOption[]> {
             );
     }
 
-    private static initSource(id: string, src?:  InitFunctionString | ValueString): InitResult {
-        if (!src) {
-            throw new Error(`Default value is not supported for '${id}' form item`);
+    protected getInitValueDefault(): DropdownOption[] {
+        throw new Error(`Default value is not supported for '${this.id}' form item`);
+    }
+
+    protected getInitValueFromString(valStr: string): DropdownOption[] {
+        return JSON.parse(valStr);
+    }
+
+    async initialize(): Promise<void> {
+        await super.initialize();
+
+        if (this.value!.length === 0) {
+            throw new Error(`Init value can't be empty for for '${this.id}' form item`);
         }
 
-        let data: DropdownOptionInput[];
-        if (src.startsWith('f:')) {
-            data = FormItemBase.executeInitFunction<DropdownOptionInput[]>(src.slice(2));
-        } else if (src.startsWith('v:')) {
-            data = JSON.parse(src.slice(2));
-        } else {
-            throw new Error(`Invalid init value: ${src}`);
-        }
-
-        if (data.length === 0) {
-            throw new Error(`Init value can't be empty for for '${id}' form item`);
-        }
-
-        let result: InitResult = {
-            opts: {},
-            selected: data[0].k,
-        };
-
+        const data = this.value! as DropdownOptionInput[];
+        
         data.forEach(item => {
-            result.opts[item.k] = item.v;
+            this._opts[item.k] = item.v;
             if (item.s) {
-                result.selected = item.k;
+                this._selected = item.k;
             }
         });
-
-        return result;
     }
 
     private static assertType (type: FormItemType): void {

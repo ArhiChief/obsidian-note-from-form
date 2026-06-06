@@ -1,18 +1,16 @@
-import { DateFormItem as DateFormItemTemplate, InitFunctionString, ValueString, FormItemType } from "src/template/templateTypes";
+import { DateFormItem as DateFormItemTemplate, FormItemType } from "src/template/templateTypes";
 import { FormItemBase } from "./formItem";
 import { ExtendedSetting } from "src/ui/settingsExtension";
 import { DateTimeComponent } from "src/ui/dateTimeComponent";
+import { FormItemFunctionProcessor } from "./formItemFunctionProcessor";
 
 const MUSTACHE_TEMPLATE_REGEX = /[{]{2}.+[}]{2}/;
 
 export class DateTimeFormItem extends FormItemBase<Date> {
 
-    constructor(src: DateFormItemTemplate) {
+    constructor(src: DateFormItemTemplate, funtionProcessor: FormItemFunctionProcessor) {
         DateTimeFormItem.assertType(src.type);
-
-        const initValue = DateTimeFormItem.getInitValue(src.init);
-
-        super(src.id, src.type, initValue, src.get, src.form);
+        super(src.id, src.type, funtionProcessor, src.init, src.get, src.form);
     }
 
     protected assignToFormImpl(contentEl: HTMLElement): void {
@@ -38,7 +36,7 @@ export class DateTimeFormItem extends FormItemBase<Date> {
 
     private configureComponent(): (component: DateTimeComponent) => any {
         return component => component
-            .setValue(this.value)
+            .setValue(this.value!)
             .onChange(newVal => this.value = newVal);
     }
 
@@ -63,22 +61,16 @@ export class DateTimeFormItem extends FormItemBase<Date> {
         return window.moment(this.value).format(templateText);
     }
 
-    private static getInitValue(src?: InitFunctionString | ValueString): Date {
-        if (!src) {
-            return new Date();
-        }
-
-        if (src.startsWith('f:')) {
-            return FormItemBase.executeInitFunction<Date>(src.slice(2));
-        } else if (src.startsWith('v:')) {
-            const parsed = new Date(src.slice(2));
+    protected getInitValueFromString(valStr: string): Date {
+        const parsed = new Date(valStr);
             if (isNaN(parsed.getTime())) {
-                throw new Error(`Invalid date init value: ${src}`);
+                throw new Error(`Invalid date init value: ${valStr}`);
             }
             return parsed;
-        } else {
-            throw new Error(`Unsupported init value: ${src}`);
-        }
+    }
+
+    protected getInitValueDefault(): Date {
+        return new Date();
     }
 
     private static assertType(type: FormItemType): void {

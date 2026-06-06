@@ -12,14 +12,54 @@
             "errorMessage": "must be a value string starting with 'v:' followed by at least one character"
         },
         "initFunctionType": {
-            "type": "string",
-            "pattern": "^f:(\\(.*\\)\\s*=>|function\\s*\\(.*\\)\\s*\\{).*$",
-            "errorMessage": "must be a function string starting with 'f:' followed by an anonymous function (e.g. f:() => value or f:function() { return value; })"
+            "oneOf": [
+                {
+                    "type": "string",
+                    "pattern": "^f:\\(.*\\)\\s*=>.*$",
+                    "errorMessage": "must be a function string starting with 'f:' followed by an arrow function (e.g. f:() => value)"
+                },
+                {
+                    "type": "string",
+                    "pattern": "^f:function\\s*\\(.*\\)\\s*\\{.*\\}$",
+                    "errorMessage": "must be a function string starting with 'f:' followed by a function expression (e.g. f:function() { return value; })"
+                },
+                {
+                    "type": "string",
+                    "pattern": "^ref:[a-zA-Z_$][a-zA-Z0-9_$]*$",
+                    "errorMessage": "must be a reference starting with 'ref:' followed by a valid function name (e.g. ref:myFunction)"
+                },
+                {
+                    "type": "string",
+                    "pattern": "^ref:/[^:]+:[a-zA-Z_$][a-zA-Z0-9_$]*$",
+                    "errorMessage": "must be a reference starting with 'ref:' followed by a file path and function name (e.g. ref:/my/dir/functions.md:myFunc)"
+                }
+            ],
+            "errorMessage": "must be one of: f:<arrow function>, f:<function expression>, ref:<funcName>, or ref:<path>:<funcName>"
         },
         "getFunctionType": {
-            "type": "string",
-            "pattern": "^f:(\\(view\\)\\s*=>|function\\s*\\(view\\)\\s*\\{).*$",
-            "errorMessage": "must be a function string starting with 'f:' followed by an anonymous function that receives 'view' parameter (e.g. f:(view) => value or f:function(view) { return value; })"
+            "oneOf": [
+                {
+                    "type": "string",
+                    "pattern": "^f:\\(view\\)\\s*=>.*$",
+                    "errorMessage": "must be a function string starting with 'f:' followed by an arrow function receiving 'view' parameter (e.g. f:(view) => value)"
+                },
+                {
+                    "type": "string",
+                    "pattern": "^f:function\\s*\\(view\\)\\s*\\{.*\\}$",
+                    "errorMessage": "must be a function string starting with 'f:' followed by a function expression receiving 'view' parameter (e.g. f:function(view) { return value; })"
+                },
+                {
+                    "type": "string",
+                    "pattern": "^ref:[a-zA-Z_$][a-zA-Z0-9_$]*$",
+                    "errorMessage": "must be a reference starting with 'ref:' followed by a valid function name (e.g. ref:myFunction)"
+                },
+                {
+                    "type": "string",
+                    "pattern": "^ref:/[^:]+:[a-zA-Z_$][a-zA-Z0-9_$]*$",
+                    "errorMessage": "must be a reference starting with 'ref:' followed by a file path and function name (e.g. ref:/my/dir/functions.md:myFunc)"
+                }
+            ],
+            "errorMessage": "must be one of: f:<arrow function with view>, f:<function expression with view>, ref:<funcName>, or ref:<path>:<funcName>"
         },
         "pathType": {
             "type": "string",

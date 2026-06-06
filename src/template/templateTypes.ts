@@ -6,11 +6,20 @@ export type TemplateString = `t:${string}`;
 /** String prefixed with `v:` — a literal value, e.g. `"v:42"` */
 export type ValueString = `v:${string}`;
 
-/** String prefixed with `f:` — an init function (no params), e.g. `"f:() => 'default'"` */
-export type InitFunctionString = `f:${string}`;
+/** String prefixed with `f:` — an inline function, e.g. `"f:() => 'default'"` */
+export type FuncStringType = `f:${string}`;
 
-/** String prefixed with `f:` — a get function receiving `view`, e.g. `"f:(view) => view.name"` */
-export type GetFunctionString = `f:${string}`;
+/** String prefixed with `ref:` — a reference to a named function, e.g. `"ref:myFunc"` */
+export type FuncRefType = `ref:${string}`;
+
+/** String prefixed with `ref:` — a reference to a named function in a file, e.g. `"ref:/path/to/file.md:myFunc"` */
+export type FuncFileRefType = `ref:${string}:${string}`;
+
+/** An init function: inline function, function reference, or file function reference */
+export type InitFunctionType = FuncStringType | FuncRefType | FuncFileRefType;
+
+/** A get function: inline function with view param, function reference, or file function reference */
+export type GetFunctionType = FuncStringType | FuncRefType | FuncFileRefType;
 
 // ── Form item types ──
 
@@ -29,8 +38,8 @@ export interface BaseFormItem {
     id: string;
     type: FormItemType;
     form?: FormItemForm;
-    get?: GetFunctionString | TemplateString | ValueString;
-    init?: InitFunctionString | ValueString;
+    get?: GetFunctionType | TemplateString | ValueString;
+    init?: InitFunctionType | ValueString;
 }
 
 export interface TextFormItem extends BaseFormItem {
@@ -59,7 +68,7 @@ export type FormItem = TextFormItem | NumberFormItem | DateFormItem | CheckboxFo
 // ── Top-level template ──
 
 export interface NoteTemplate {
-    'file-name'?: TemplateString | ValueString | GetFunctionString;
-    'file-location'?: TemplateString | GetFunctionString | ValueString;
+    'file-name'?: TemplateString | ValueString | GetFunctionType;
+    'file-location'?: TemplateString | GetFunctionType | ValueString;
     'form-items'?: FormItem[];
 }

@@ -1,5 +1,6 @@
 import Mustache from 'mustache';
-import { FormItemForm, FormItemType, GetFunctionString, TemplateString, ValueString } from "src/template/templateTypes";
+import { FormItemForm, FormItemType, GetFunctionType, InitFunctionType, TemplateString, ValueString } from "src/template/templateTypes";
+import { FormItemFunctionProcessor } from './formItemFunctionProcessor';
 
 export interface FormItem {
     value: any;
@@ -9,33 +10,37 @@ export interface FormItem {
 
     assignToForm(contentEl: HTMLElement): void;
     get(view: Record<string, any>): string;
+    initialize(): Promise<void>;
 }
 
 export abstract class FormItemBase<TValue> implements FormItem {
 
-    value: TValue;
+    value: TValue | undefined;
 
     readonly id: string;
     readonly type: FormItemType;
 
     private readonly _assignToForm?: (contentEl: HTMLElement) => void;
-    private readonly _getFunc?: GetFunctionString | TemplateString | ValueString;
+    private readonly _getFunc?: GetFunctionType | TemplateString | ValueString;
+    private readonly _initFunc?: InitFunctionType | ValueString;
 
     protected readonly _title: string;
     protected readonly _description: string;
-
+    protected readonly _funtionProcessor: FormItemFunctionProcessor; 
 
     protected constructor(
         id: string, 
         type: FormItemType, 
-        initValue: TValue, 
-        getFunc?: GetFunctionString | TemplateString | ValueString, 
+        funtionProcessor: FormItemFunctionProcessor,
+        initFunc?: InitFunctionType | ValueString, 
+        getFunc?: GetFunctionType | TemplateString | ValueString, 
         formDisplay?: FormItemForm
     ) {
         this.id = id;
         this.type = type;
-        this.value = initValue;
+        this._initFunc = initFunc;
         this._getFunc = getFunc;
+        this._funtionProcessor = funtionProcessor;
 
         this._title = "";
         this._description = "";
@@ -46,6 +51,25 @@ export abstract class FormItemBase<TValue> implements FormItem {
             this._description = formDisplay.description ?? "";
         }
     }
+
+    async initialize(): Promise<void> {
+        if (this._initFunc) {
+            if (this._initFunc.startsWith('f:')) {
+                this.value = this._funtionProcessor.executeFunction<TValue>(this._initFunc.slice(2));
+            } else if (this._initFunc.startsWith('ref:')) {
+                this.value = await this._funtionProcessor.executeRefFunction<TValue>(this._initFunc.slice(4));
+            } else if (this._initFunc.startsWith('v:')) {
+                this.value = this.getInitValueFromString(this._initFunc.slice(2));
+            } else {
+                throw new Error(`Unsupported init function: ${this._initFunc}`);
+            }
+        } else {
+            this.value = this.getInitValueDefault();
+        }
+    }
+
+    protected abstract getInitValueFromString(valStr: string): TValue;
+    protected abstract getInitValueDefault(): TValue;
 
     assignToForm(contentEl: HTMLElement): void {
         if (this._assignToForm) {
@@ -84,10 +108,5 @@ export abstract class FormItemBase<TValue> implements FormItem {
 
     protected getValueImpl(valueText: string, _: Record<string, any>) : string {
         return valueText;
-    }
-
-    protected static executeInitFunction<TResult>(funcText: string): TResult {
-        const func = eval(`(${funcText})`) as () => TResult;
-        return func();
     }
 }

@@ -3,8 +3,17 @@ import { TemplateProcessor } from '../template/templateProcessor';
 import { NoteFromFormPluginSettings, TEMPLATE_PROPERTY_NAME } from '../pluginSettings';
 import { TemplateIndexItem } from '../template/templateIndex';
 import { FormItem } from '../form/formItem';
+import { FormItemFunctionProcessor } from '../form/formItemFunctionProcessor';
 
 // ── mocks ──
+
+const mockFunctionProcessor = {
+    renderMustacheTemplate: jest.fn((t: string, v: any) => t),
+    executeFunction: jest.fn((f: string) => eval(`(${f})()`)),
+    executeFunctionWithParam: jest.fn((f: string, ...args: any[]) => eval(`(${f})`).apply(null, args)),
+    executeRefFunction: jest.fn(),
+    executeRefFunctionWithParam: jest.fn(),
+} as unknown as FormItemFunctionProcessor;
 
 jest.mock("moment", () => {
     const fn = (date: any) => ({
@@ -247,7 +256,7 @@ describe("TemplateProcessor", () => {
             );
 
             const { FormItemsManager } = require("../form/formItemManager");
-            const formItems = FormItemsManager.getFormItems(template, defaultSettings());
+            const formItems = await FormItemsManager.getFormItems(template, mockFunctionProcessor, defaultSettings());
             formItems[2].value = "hello";
 
             const result = await callback(formItems, indexed);
@@ -282,7 +291,7 @@ describe("TemplateProcessor", () => {
             );
 
             const { FormItemsManager } = require("../form/formItemManager");
-            const formItems = FormItemsManager.getFormItems(template, defaultSettings());
+            const formItems = await FormItemsManager.getFormItems(template, mockFunctionProcessor, defaultSettings());
 
             const result = await callback(formItems, indexed);
 
@@ -310,7 +319,7 @@ describe("TemplateProcessor", () => {
             );
 
             const { FormItemsManager } = require("../form/formItemManager");
-            const formItems = FormItemsManager.getFormItems({}, defaultSettings());
+            const formItems = await FormItemsManager.getFormItems({}, mockFunctionProcessor, defaultSettings());
             formItems[0].value = "Note";
             formItems[1].value = "existing";
 
@@ -341,7 +350,7 @@ describe("TemplateProcessor", () => {
             );
 
             const { FormItemsManager } = require("../form/formItemManager");
-            const formItems = FormItemsManager.getFormItems({}, defaultSettings());
+            const formItems = await FormItemsManager.getFormItems({}, mockFunctionProcessor, defaultSettings());
             formItems[0].value = "Note";
             formItems[1].value = "out";
 
@@ -351,6 +360,110 @@ describe("TemplateProcessor", () => {
             expect(capturedFrontmatters.length).toBe(1);
             expect(capturedFrontmatters[0]).not.toHaveProperty(TEMPLATE_PROPERTY_NAME);
             expect(capturedFrontmatters[0]).toHaveProperty("other", "keep");
+        });
+
+        test("sanitizes new note by removing code blocks with template property name", async () => {
+            const folder = createFolder('out');
+            const getFolderByPath = jest.fn().mockReturnValue(folder);
+            const copy = jest.fn().mockImplementation(async (_src: TFile, newPath: string) => createFile(newPath));
+            const processFrontMatter = jest.fn().mockImplementation(async (file: TFile, fn: (fm: any) => void) => {
+                if (file.path === 'templates/note.md') {
+                    fn({ [TEMPLATE_PROPERTY_NAME]: {} });
+                } else {
+                    fn({});
+                }
+            });
+            let sanitizedContent: string | null = null;
+            let processCallCount = 0;
+            const process = jest.fn().mockImplementation(async (_file: TFile, cb: (content: string) => string) => {
+                processCallCount++;
+                if (processCallCount === 1) {
+                    // sanitizeNewNote call
+                    const input = [
+                        "# My Note",
+                        "",
+                        "Some content.",
+                        "",
+                        "```js:" + TEMPLATE_PROPERTY_NAME + ":myInit",
+                        "() => 'default'",
+                        "```",
+                        "",
+                        "More content.",
+                        "",
+                        "```js:" + TEMPLATE_PROPERTY_NAME + ":getTitle",
+                        "(view) => view.title",
+                        "```",
+                        "",
+                        "End of note.",
+                    ].join("\n");
+                    sanitizedContent = cb(input);
+                }
+            });
+
+            const { callback, indexed } = await setupAndGetCallback(
+                {},
+                { getFolderByPath, copy, processFrontMatter, process },
+            );
+
+            const { FormItemsManager } = require("../form/formItemManager");
+            const formItems = await FormItemsManager.getFormItems({}, mockFunctionProcessor, defaultSettings());
+            formItems[0].value = "Note";
+            formItems[1].value = "out";
+
+            await callback(formItems, indexed);
+
+            expect(sanitizedContent).not.toContain("```js:" + TEMPLATE_PROPERTY_NAME);
+            expect(sanitizedContent).toContain("# My Note");
+            expect(sanitizedContent).toContain("Some content.");
+            expect(sanitizedContent).toContain("More content.");
+            expect(sanitizedContent).toContain("End of note.");
+        });
+
+        test("does not remove code blocks with different tags", async () => {
+            const folder = createFolder('out');
+            const getFolderByPath = jest.fn().mockReturnValue(folder);
+            const copy = jest.fn().mockImplementation(async (_src: TFile, newPath: string) => createFile(newPath));
+            const processFrontMatter = jest.fn().mockImplementation(async (file: TFile, fn: (fm: any) => void) => {
+                if (file.path === 'templates/note.md') {
+                    fn({ [TEMPLATE_PROPERTY_NAME]: {} });
+                } else {
+                    fn({});
+                }
+            });
+            let sanitizedContent: string | null = null;
+            let processCallCount = 0;
+            const process = jest.fn().mockImplementation(async (_file: TFile, cb: (content: string) => string) => {
+                processCallCount++;
+                if (processCallCount === 1) {
+                    const input = [
+                        "# Note",
+                        "",
+                        "```js:other-plugin:func",
+                        "() => 42",
+                        "```",
+                        "",
+                        "```javascript",
+                        "const x = 1;",
+                        "```",
+                    ].join("\n");
+                    sanitizedContent = cb(input);
+                }
+            });
+
+            const { callback, indexed } = await setupAndGetCallback(
+                {},
+                { getFolderByPath, copy, processFrontMatter, process },
+            );
+
+            const { FormItemsManager } = require("../form/formItemManager");
+            const formItems = await FormItemsManager.getFormItems({}, mockFunctionProcessor, defaultSettings());
+            formItems[0].value = "Note";
+            formItems[1].value = "out";
+
+            await callback(formItems, indexed);
+
+            expect(sanitizedContent).toContain("```js:other-plugin:func");
+            expect(sanitizedContent).toContain("```javascript");
         });
 
         test("applies Mustache view model to note content", async () => {
@@ -375,8 +488,9 @@ describe("TemplateProcessor", () => {
             );
 
             const { FormItemsManager } = require("../form/formItemManager");
-            const formItems = FormItemsManager.getFormItems(
+            const formItems = await FormItemsManager.getFormItems(
                 { "form-items": [{ id: "title", type: "text" }] },
+                mockFunctionProcessor,
                 defaultSettings(),
             );
             formItems[0].value = "Note";
@@ -410,8 +524,9 @@ describe("TemplateProcessor", () => {
             );
 
             const { FormItemsManager } = require("../form/formItemManager");
-            const formItems = FormItemsManager.getFormItems(
+            const formItems = await FormItemsManager.getFormItems(
                 { "form-items": [{ id: "content", type: "text" }] },
+                mockFunctionProcessor,
                 defaultSettings(),
             );
             formItems[0].value = "Note";
@@ -446,6 +561,7 @@ describe("TemplateProcessor", () => {
                 value: "x",
                 assignToForm: jest.fn(),
                 get: () => { throw new Error("broken"); },
+                initialize: jest.fn().mockResolvedValue(undefined),
             };
 
             const result = await callback([badItem], indexed);
