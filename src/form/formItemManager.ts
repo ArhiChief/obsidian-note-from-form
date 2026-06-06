@@ -56,11 +56,8 @@ export class FormItemsManager {
         return result;
     }
 
-    static getViewModel(src: FormItem[]): Record<string, string> {
+    static getRawViewModel(src: FormItem[]): Record<string, any> {
         const view: Record<string, any> = {};
-        const result: Record<string, string> = {};
-
-        // get model needed as source for `get` functions of src
         for(let i = 0; i < src.length; i++) {
             const item = src[i];
             if (item.id === FileNameFormItem.FormFieldId || item.id === FileLocationFormItem.FormFieldId) {
@@ -69,6 +66,15 @@ export class FormItemsManager {
 
             view[item.id] = item.value;
         }
+        return view;
+    }
+
+    static getViewModel(src: FormItem[]): Record<string, string> {
+        
+        const view: Record<string, string> = {};
+
+        // get model needed as source for `get` functions of src
+        const rawView = FormItemsManager.getRawViewModel(src);
 
         for(let i = 0; i < src.length; i++) {
             const item = src[i];
@@ -76,17 +82,26 @@ export class FormItemsManager {
                 continue;
             }
 
-            result[item.id] = item.get(view);
+            view[item.id] = item.get(rawView);
         }
 
         // resolution of 'file-Name' and 'file-Location' should be done after all items from 'for-items' are resolved
         for(let i = 0; i < src.length; i++) {
             const item = src[i];
             if (item.id === FileNameFormItem.FormFieldId || item.id === FileLocationFormItem.FormFieldId) {
-                result[item.id] = item.get(result);
+                view[item.id] = item.get(view);
             }
         }
 
-        return result;
+        return view;
+    }
+
+    static async validateItems(items: FormItem[], view: Record<string, any>): Promise<boolean> {
+        let isValid = true;
+        for (const item of items) {
+            const itemValid = await item.validate(view);
+            isValid = isValid && itemValid;
+        }
+        return isValid;       
     }
 }

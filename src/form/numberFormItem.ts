@@ -7,11 +7,11 @@ export class NumberFormItem extends FormItemBase<number> {
 
     constructor(src: NumberFormItemTemplate, funtionProcessor: FormItemFunctionProcessor) {
         NumberFormItem.assertType(src.type);
-        super(src.id, src.type, funtionProcessor, src.init, src.get, src.form);
+        super(src.id, src.type, funtionProcessor, src.init, src.get, src.validate, src.form);
     }
 
-    protected assignToFormImpl(contentEl: HTMLElement): void {
-        new ExtendedSetting(contentEl)
+    protected assignToFormImpl(contentEl: HTMLElement): ExtendedSetting {
+        return new ExtendedSetting(contentEl)
             .setName(this._title)
             .setDesc(this._description)
             .addNumber(comp => comp

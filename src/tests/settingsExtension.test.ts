@@ -139,4 +139,89 @@ describe("ExtendedSetting", () => {
             expect(setting.components.length).toBe(4);
         });
     });
+
+    describe("setError", () => {
+        test("saves original description and sets error message", () => {
+            const setting = createSetting();
+            (setting as any).descEl.innerText = "Original description";
+
+            setting.setError("Something went wrong");
+
+            expect((setting as any)._desc).toBe("Something went wrong");
+        });
+
+        test("adds nff-error-desc class", () => {
+            const setting = createSetting();
+
+            setting.setError("Error");
+
+            expect((setting as any).descEl.toggleClass).toHaveBeenCalledWith("nff-error-desc", true);
+        });
+
+        test("returns this for chaining", () => {
+            const setting = createSetting();
+
+            const result = setting.setError("Error");
+
+            expect(result).toBe(setting);
+        });
+
+        test("does not overwrite original description on subsequent calls", () => {
+            const setting = createSetting();
+            (setting as any).descEl.innerText = "Original";
+
+            setting.setError("First error");
+            setting.setError("Second error");
+
+            expect((setting as any)._desc).toBe("Second error");
+        });
+    });
+
+    describe("clearError", () => {
+        test("removes nff-error-desc class", () => {
+            const setting = createSetting();
+
+            setting.setError("Error");
+            setting.clearError();
+
+            expect((setting as any).descEl.toggleClass).toHaveBeenCalledWith("nff-error-desc", false);
+        });
+
+        test("restores original description", () => {
+            const setting = createSetting();
+            (setting as any).descEl.innerText = "Original";
+
+            setting.setError("Error");
+            setting.clearError();
+
+            expect((setting as any)._desc).toBe("Original");
+        });
+
+        test("resets originDesc to null after clearing", () => {
+            const setting = createSetting();
+            (setting as any).descEl.innerText = "Original";
+
+            setting.setError("Error");
+            setting.clearError();
+
+            expect((setting as any).originDesc).toBeNull();
+        });
+
+        test("returns this for chaining", () => {
+            const setting = createSetting();
+
+            const result = setting.clearError();
+
+            expect(result).toBe(setting);
+        });
+
+        test("does not change description if no error was set", () => {
+            const setting = createSetting();
+            (setting as any)._desc = "Current";
+
+            setting.clearError();
+
+            expect((setting as any)._desc).toBe("Current");
+        });
+    });
 });

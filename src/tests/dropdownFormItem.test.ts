@@ -3,7 +3,8 @@ import { DropdownFormItem } from "../form/dropdownFormItem";
 jest.mock("src/ui/settingsExtension", () => {
     const methods = ['setName', 'setDesc', 'addToggle', 'addText', 'addTextArea',
         'addDropdown', 'addDate', 'addTime', 'addDateTime', 'addNumber',
-        'setValue', 'onChange', 'setPlaceholder', 'addOptions'];
+        'setValue', 'onChange', 'setPlaceholder', 'addOptions',
+        'setError', 'clearError'];
     const mock: Record<string, any> = {};
     const chain = (...args: any[]) => {
         if (typeof args[0] === 'function') args[0](mock);
@@ -163,6 +164,85 @@ describe("DropdownFormItem", () => {
         test("throws for unsupported init prefix", async () => {
             const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: "x:bad" as any }, mockFunctionProcessor);
             await expect(item.initialize()).rejects.toThrow("Unsupported init function");
+        });
+    });
+
+    // ─── validate ───
+
+    describe("validate", () => {
+        test("returns true when no validateFunc is provided", async () => {
+            const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: twoOptions }, mockFunctionProcessor);
+            await item.initialize();
+            const result = await item.validate({ dd1: "Alpha" });
+            expect(result).toBe(true);
+        });
+
+        test("returns true when no element is assigned (no form)", async () => {
+            const item = new DropdownFormItem({
+                id: "dd1", type: "dropdown", init: twoOptions,
+                validate: "f:(view) => ({ isValid: true })" as any,
+            }, mockFunctionProcessor);
+            await item.initialize();
+            const result = await item.validate({ dd1: "Alpha" });
+            expect(result).toBe(true);
+        });
+
+        test("returns true for valid inline function", async () => {
+            mockFunctionProcessor.executeFunctionWithParam.mockReturnValueOnce({ isValid: true });
+            const item = new DropdownFormItem({
+                id: "dd1", type: "dropdown", init: twoOptions,
+                form: { title: "Pick" },
+                validate: "f:(view) => ({ isValid: true })" as any,
+            }, mockFunctionProcessor);
+            await item.initialize();
+            item.assignToForm({} as HTMLElement);
+            const result = await item.validate({ dd1: "Alpha" });
+            expect(result).toBe(true);
+        });
+
+        test("returns false and calls setError for invalid result", async () => {
+            mockFunctionProcessor.executeFunctionWithParam.mockReturnValueOnce({ isValid: false, errMsg: "Invalid selection" });
+            const item = new DropdownFormItem({
+                id: "dd1", type: "dropdown", init: twoOptions,
+                form: { title: "Pick" },
+                validate: "f:(view) => ({ isValid: false, errMsg: 'Invalid selection' })" as any,
+            }, mockFunctionProcessor);
+            await item.initialize();
+            item.assignToForm({} as HTMLElement);
+
+            const element = (item as any)._element;
+            const setError = jest.fn().mockReturnThis();
+            element.setError = setError;
+            element.clearError = jest.fn().mockReturnThis();
+
+            const result = await item.validate({ dd1: "Alpha" });
+            expect(result).toBe(false);
+            expect(setError).toHaveBeenCalledWith("Invalid selection");
+        });
+
+        test("resolves ref: validate via executeRefFunctionWithParam", async () => {
+            mockFunctionProcessor.executeRefFunctionWithParam.mockResolvedValueOnce({ isValid: true });
+            const item = new DropdownFormItem({
+                id: "dd1", type: "dropdown", init: twoOptions,
+                form: { title: "Pick" },
+                validate: "ref:ddValidator" as any,
+            }, mockFunctionProcessor);
+            await item.initialize();
+            item.assignToForm({} as HTMLElement);
+            const result = await item.validate({ dd1: "Alpha" });
+            expect(result).toBe(true);
+            expect(mockFunctionProcessor.executeRefFunctionWithParam).toHaveBeenCalledWith("ddValidator", { dd1: "Alpha" });
+        });
+
+        test("throws for unsupported validate prefix", async () => {
+            const item = new DropdownFormItem({
+                id: "dd1", type: "dropdown", init: twoOptions,
+                form: { title: "Pick" },
+                validate: "x:bad" as any,
+            }, mockFunctionProcessor);
+            await item.initialize();
+            item.assignToForm({} as HTMLElement);
+            await expect(item.validate({ dd1: "Alpha" })).rejects.toThrow("Unsupported validate function");
         });
     });
 });
