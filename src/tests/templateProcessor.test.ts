@@ -4,6 +4,7 @@ import { NoteFromFormPluginSettings, TEMPLATE_PROPERTY_NAME } from '../pluginSet
 import { TemplateIndexItem } from '../template/templateIndex';
 import { FormItem } from '../form/formItem';
 import { FormItemFunctionProcessor } from '../form/formItemFunctionProcessor';
+import { NoteTemplate } from '../template/templateTypes';
 
 // ── mocks ──
 
@@ -39,10 +40,10 @@ jest.mock("src/ui/dateTimeComponent", () => ({
     DateTimeComponent: jest.fn(),
 }));
 
-let capturedModalCallback: ((items: FormItem[], indexedTemplate: TemplateIndexItem) => Promise<boolean>) | null = null;
+let capturedModalCallback: ((items: FormItem[], indexedTemplate: TemplateIndexItem, templateData: NoteTemplate) => Promise<boolean>) | null = null;
 
 jest.mock("src/ui/inputFormModal", () => ({
-    InputFormModal: jest.fn().mockImplementation((_app: any, _tpl: any, _items: any, callback: any) => {
+    InputFormModal: jest.fn().mockImplementation((_app: any, _tpl: any, _items: any, _templateData: any, callback: any) => {
         capturedModalCallback = callback;
         return { open: jest.fn() };
     }),
@@ -196,6 +197,7 @@ describe("TemplateProcessor", () => {
                 app,
                 indexed,
                 expect.any(Array),
+                expect.any(Object),
                 expect.any(Function),
             );
         });
@@ -229,7 +231,7 @@ describe("TemplateProcessor", () => {
             const indexed = createIndexedTemplate('templates/note.md', 'note');
             await processor.useTemplate(indexed);
 
-            return { app, indexed, callback: capturedModalCallback! };
+            return { app, indexed, template: templateObj as NoteTemplate, callback: capturedModalCallback! };
         }
 
         test("creates folder, copies note, sanitizes, and applies view model", async () => {
@@ -250,7 +252,7 @@ describe("TemplateProcessor", () => {
             });
             const process = jest.fn().mockResolvedValue(undefined);
 
-            const { callback, indexed } = await setupAndGetCallback(
+            const { callback, indexed, template: templateData } = await setupAndGetCallback(
                 template,
                 { getFolderByPath, copy, processFrontMatter, process },
             );
@@ -259,7 +261,7 @@ describe("TemplateProcessor", () => {
             const formItems = await FormItemsManager.getFormItems(template, mockFunctionProcessor, defaultSettings());
             formItems[2].value = "hello";
 
-            const result = await callback(formItems, indexed);
+            const result = await callback(formItems, indexed, templateData);
 
             expect(result).toBe(true);
             expect(getFolderByPath).toHaveBeenCalledWith("/output");
@@ -285,7 +287,7 @@ describe("TemplateProcessor", () => {
             });
             const process = jest.fn().mockResolvedValue(undefined);
 
-            const { callback, indexed } = await setupAndGetCallback(
+            const { callback, indexed, template: templateData } = await setupAndGetCallback(
                 template,
                 { getFolderByPath, createFolder: createFolderMock, copy, processFrontMatter, process },
             );
@@ -293,7 +295,7 @@ describe("TemplateProcessor", () => {
             const { FormItemsManager } = require("../form/formItemManager");
             const formItems = await FormItemsManager.getFormItems(template, mockFunctionProcessor, defaultSettings());
 
-            const result = await callback(formItems, indexed);
+            const result = await callback(formItems, indexed, templateData);
 
             expect(result).toBe(true);
             expect(createFolderMock).toHaveBeenCalledWith("/new-folder");
@@ -313,7 +315,7 @@ describe("TemplateProcessor", () => {
             });
             const process = jest.fn().mockResolvedValue(undefined);
 
-            const { callback, indexed } = await setupAndGetCallback(
+            const { callback, indexed, template: templateData } = await setupAndGetCallback(
                 {},
                 { getFolderByPath, createFolder: createFolderMock, copy, processFrontMatter, process },
             );
@@ -323,7 +325,7 @@ describe("TemplateProcessor", () => {
             formItems[0].value = "Note";
             formItems[1].value = "existing";
 
-            await callback(formItems, indexed);
+            await callback(formItems, indexed, templateData);
 
             expect(createFolderMock).not.toHaveBeenCalled();
         });
@@ -344,7 +346,7 @@ describe("TemplateProcessor", () => {
             });
             const process = jest.fn().mockResolvedValue(undefined);
 
-            const { callback, indexed } = await setupAndGetCallback(
+            const { callback, indexed, template: templateData } = await setupAndGetCallback(
                 {},
                 { getFolderByPath, copy, processFrontMatter, process },
             );
@@ -354,7 +356,7 @@ describe("TemplateProcessor", () => {
             formItems[0].value = "Note";
             formItems[1].value = "out";
 
-            await callback(formItems, indexed);
+            await callback(formItems, indexed, templateData);
 
             // The frontmatter callback should have deleted the template property
             expect(capturedFrontmatters.length).toBe(1);
@@ -400,7 +402,7 @@ describe("TemplateProcessor", () => {
                 }
             });
 
-            const { callback, indexed } = await setupAndGetCallback(
+            const { callback, indexed, template: templateData } = await setupAndGetCallback(
                 {},
                 { getFolderByPath, copy, processFrontMatter, process },
             );
@@ -410,7 +412,7 @@ describe("TemplateProcessor", () => {
             formItems[0].value = "Note";
             formItems[1].value = "out";
 
-            await callback(formItems, indexed);
+            await callback(formItems, indexed, templateData);
 
             expect(sanitizedContent).not.toContain("```js:" + TEMPLATE_PROPERTY_NAME);
             expect(sanitizedContent).toContain("# My Note");
@@ -450,7 +452,7 @@ describe("TemplateProcessor", () => {
                 }
             });
 
-            const { callback, indexed } = await setupAndGetCallback(
+            const { callback, indexed, template: templateData } = await setupAndGetCallback(
                 {},
                 { getFolderByPath, copy, processFrontMatter, process },
             );
@@ -460,7 +462,7 @@ describe("TemplateProcessor", () => {
             formItems[0].value = "Note";
             formItems[1].value = "out";
 
-            await callback(formItems, indexed);
+            await callback(formItems, indexed, templateData);
 
             expect(sanitizedContent).toContain("```js:other-plugin:func");
             expect(sanitizedContent).toContain("```javascript");
@@ -482,7 +484,7 @@ describe("TemplateProcessor", () => {
                 renderedContent = cb("Hello {{title}}!");
             });
 
-            const { callback, indexed } = await setupAndGetCallback(
+            const { callback, indexed, template: templateData } = await setupAndGetCallback(
                 { "form-items": [{ id: "title", type: "text" }] },
                 { getFolderByPath, copy, processFrontMatter, process },
             );
@@ -497,7 +499,7 @@ describe("TemplateProcessor", () => {
             formItems[1].value = "out";
             formItems[2].value = "World";
 
-            await callback(formItems, indexed);
+            await callback(formItems, indexed, templateData);
 
             expect(renderedContent).toBe("Hello World!");
         });
@@ -518,7 +520,7 @@ describe("TemplateProcessor", () => {
                 renderedContent = cb("{{content}}");
             });
 
-            const { callback, indexed } = await setupAndGetCallback(
+            const { callback, indexed, template: templateData } = await setupAndGetCallback(
                 { "form-items": [{ id: "content", type: "text" }] },
                 { getFolderByPath, copy, processFrontMatter, process },
             );
@@ -533,7 +535,7 @@ describe("TemplateProcessor", () => {
             formItems[1].value = "out";
             formItems[2].value = "<b>bold</b> & \"quoted\"";
 
-            await callback(formItems, indexed);
+            await callback(formItems, indexed, templateData);
 
             expect(renderedContent).toBe("<b>bold</b> & \"quoted\"");
         });
@@ -549,7 +551,7 @@ describe("TemplateProcessor", () => {
                 }
             });
 
-            const { callback, indexed } = await setupAndGetCallback(
+            const { callback, indexed, template: templateData } = await setupAndGetCallback(
                 {},
                 { getFolderByPath, processFrontMatter },
             );
@@ -565,7 +567,7 @@ describe("TemplateProcessor", () => {
                 validate: jest.fn().mockResolvedValue(undefined),
             };
 
-            const result = await callback([badItem], indexed);
+            const result = await callback([badItem], indexed, templateData);
             expect(result).toBe(false);
         });
     });

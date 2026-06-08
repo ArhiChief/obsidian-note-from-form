@@ -1,6 +1,7 @@
 import { InputFormModal } from "../ui/inputFormModal";
 import { FormItem } from "../form/formItem";
 import { TemplateIndexItem } from "../template/templateIndex";
+import { NoteTemplate } from "../template/templateTypes";
 
 // ── mocks ──
 
@@ -63,7 +64,8 @@ function createModal(items: FormItem[] = [], title = "Test", callback?: jest.Moc
     const app = {} as any;
     const cb = callback ?? jest.fn().mockResolvedValue(undefined);
     const indexedTemplate = { file: {} as any, label: title } as TemplateIndexItem;
-    const modal = new InputFormModal(app, indexedTemplate, items, cb);
+    const templateData = {} as NoteTemplate;
+    const modal = new InputFormModal(app, indexedTemplate, items, templateData, cb);
     return { modal, callback: cb };
 }
 

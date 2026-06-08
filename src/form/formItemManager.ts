@@ -105,4 +105,16 @@ export class FormItemsManager {
         }
         return isValid;       
     }
+
+    static async beforeCreate(template: NoteTemplate, functionProcessor: FormItemFunctionProcessor, userApi: IUserApi, view: Record<string, string>): Promise<void> { 
+        if (template.beforeCreate) {
+            if (template.beforeCreate.startsWith('f:')) {
+                await functionProcessor.executeFunction<void, [Record<string, string>, IUserApi]>(template.beforeCreate.slice(2), view, userApi);
+            } else if (template.beforeCreate.startsWith('ref:')) {
+                await functionProcessor.executeRefFunction<void, [Record<string, string>, IUserApi]>(template.beforeCreate.slice(4), view, userApi);
+            } else {
+                throw new Error(`Unsupported beforeCreate function: ${template.beforeCreate}`);
+            }
+        }
+    }
 }
