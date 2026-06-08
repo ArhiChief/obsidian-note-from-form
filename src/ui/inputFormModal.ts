@@ -1,20 +1,23 @@
 import { App, Modal, Setting } from "obsidian";
 import { FormItem } from "src/form/formItem";
 import { TemplateIndexItem } from "src/template/templateIndex";
+import { NoteTemplate } from "src/template/templateTypes";
 
 export class InputFormModal extends Modal {
 
     private readonly _items: FormItem[];
     private readonly _indexedTemplate: TemplateIndexItem;
-    private readonly _callback: (items: FormItem[], indexedTemplate: TemplateIndexItem) => Promise<boolean>;
+    private readonly _templateData: NoteTemplate;
+    private readonly _callback: (items: FormItem[], indexedTemplate: TemplateIndexItem, templateData: NoteTemplate) => Promise<boolean>;
 
     private readonly _app: App;
 
-    constructor(app: App, indexedTemplate: TemplateIndexItem, formItems: FormItem[], callback: (items: FormItem[], indexedTemplate: TemplateIndexItem) => Promise<boolean>) {
+    constructor(app: App, indexedTemplate: TemplateIndexItem, formItems: FormItem[], templateData: NoteTemplate, callback: (items: FormItem[], indexedTemplate: TemplateIndexItem, templateData: NoteTemplate) => Promise<boolean>) {
         super(app);
         this._app = app;
         this._indexedTemplate = indexedTemplate;
         this._items = formItems;
+        this._templateData = templateData;
         this._callback = callback;
     }
 
@@ -34,7 +37,7 @@ export class InputFormModal extends Modal {
                 .setButtonText("Create")
                 .setCta()
                 .onClick(async () => {
-                    if (await this._callback(this._items, this._indexedTemplate)) {
+                    if (await this._callback(this._items, this._indexedTemplate, this._templateData)) {
                         this.close();
                     }
                 })

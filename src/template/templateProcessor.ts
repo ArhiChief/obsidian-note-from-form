@@ -62,11 +62,11 @@ export class TemplateProcessor {
         const userApi = new UserApi(this._settings, this._app);
         const formItems = await FormItemsManager.getFormItems(template, functionProcessor, this._settings, userApi);
 
-        const inputForm = new InputFormModal(this._app, indexedTemplate, formItems, this.createNoteFromTemplate.bind(this));
+        const inputForm = new InputFormModal(this._app, indexedTemplate, formItems, template, this.createNoteFromTemplate.bind(this));
         inputForm.open();
     }
 
-    private async createNoteFromTemplate(formItems: FormItem[], indexedTemplate: TemplateIndexItem): Promise<boolean> {
+    private async createNoteFromTemplate(formItems: FormItem[], indexedTemplate: TemplateIndexItem, templateData: NoteTemplate): Promise<boolean> {
 
         try {
             const rawViewModel = FormItemsManager.getRawViewModel(formItems);
@@ -85,6 +85,14 @@ export class TemplateProcessor {
         } catch (e) {
             new Notice(`Error processing form items: ${(e as Error).message}`);
             return false;
+        }
+
+        try {
+            var userApi = new UserApi(this._settings, this._app);
+            var functionProcessor = new FormItemFunctionProcessor(indexedTemplate, this._app, this._settings);
+            await FormItemsManager.beforeCreate(templateData, functionProcessor, userApi, viewModel);
+        }catch (e) {
+            new Notice(`Error creating note: ${(e as Error).message}`);
         }
 
         const dirPath = normalizePath(viewModel[FileLocationFormItem.FormFieldId]);
@@ -126,17 +134,17 @@ export class TemplateProcessor {
         return file;
     }
 
-    private async applyViewModelToNote(note: TFile, viewModel: Record<string, string>): Promise<void> {
-        await this._app.vault.process(note, (content) => {
-            return Mustache.render(content, viewModel, {}, { escape: (val: string) => val });
-        });
-    }
-
     private getCodeBlockPattern(): RegExp {
         const propName = this._settings.templatePropertyName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         return new RegExp(
             '\\n?^```js:' + propName + ':[a-zA-Z_$][a-zA-Z0-9_$]*\\s*\\n[\\s\\S]*?\\n```$',
             'gm'
         );
+    }
+
+    private async applyViewModelToNote(note: TFile, viewModel: Record<string, string>): Promise<void> {
+        await this._app.vault.process(note, (content) => {
+            return Mustache.render(content, viewModel, {}, { escape: (val: string) => val });
+        });
     }
 }

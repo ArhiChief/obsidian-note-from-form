@@ -24,6 +24,9 @@ export type GetFunctionType = FuncStringType | FuncRefType | FuncFileRefType;
 /** A validate function: inline function with view param, function reference, or file function reference */
 export type ValidateFunctionType = FuncStringType | FuncRefType | FuncFileRefType;
 
+/** A beforeCreate function: inline function with view param, function reference, or file function reference */
+export type BeforeCreateFunctionType = FuncStringType | FuncRefType | FuncFileRefType;
+
 // ── Form item types ──
 
 export type FormItemType = 'text' | 'textArea' | 'number' | 'date' | 'time' | 'dateTime' | 'checkbox' | 'dropdown';
@@ -75,4 +78,5 @@ export interface NoteTemplate {
     'file-name'?: TemplateString | ValueString | GetFunctionType;
     'file-location'?: TemplateString | GetFunctionType | ValueString;
     'form-items'?: FormItem[];
+    'beforeCreate'?: BeforeCreateFunctionType;
 }

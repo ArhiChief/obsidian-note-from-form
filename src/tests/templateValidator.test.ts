@@ -522,6 +522,63 @@ describe("validateTemplate", () => {
         });
     });
 
+    // ─── beforeCreate function (top-level) ───
+
+    describe("beforeCreate function (top-level)", () => {
+        test("accepts valid beforeCreate function (arrow)", () => {
+            const result = validateTemplate(validTemplate({ beforeCreate: "f:async (view, api) => view.title !== ''" }));
+            expect(result.valid).toBe(true);
+        });
+
+        test("accepts valid beforeCreate function (classic)", () => {
+            const result = validateTemplate(validTemplate({ beforeCreate: "f:async function(view, api) { return view.title !== ''; }" }));
+            expect(result.valid).toBe(true);
+        });
+
+        test("rejects beforeCreate function without view parameter", () => {
+            const result = validateTemplate(validTemplate({ beforeCreate: "f:async (view) => true" }));
+            expect(result.valid).toBe(false);
+            expect(result.errors).toEqual(expect.arrayContaining([
+                "/beforeCreate: must be a function string starting with 'f:' followed by an async arrow function receiving 'view' and 'api' parameters (e.g. f:async (view, api) => value)",
+            ]));
+        });
+
+        test("accepts beforeCreate with ref to function name", () => {
+            const result = validateTemplate(validTemplate({ beforeCreate: "ref:myBeforeCreate" }));
+            expect(result.valid).toBe(true);
+        });
+
+        test("accepts beforeCreate with ref to file path and function name", () => {
+            const result = validateTemplate(validTemplate({ beforeCreate: "ref:/my/dir/functions.md:myBeforeCreate" }));
+            expect(result.valid).toBe(true);
+        });
+
+        test("rejects beforeCreate ref with invalid function name", () => {
+            const result = validateTemplate(validTemplate({ beforeCreate: "ref:1bad" }));
+            expect(result.valid).toBe(false);
+        });
+
+        test("rejects beforeCreate ref with empty function name", () => {
+            const result = validateTemplate(validTemplate({ beforeCreate: "ref:" }));
+            expect(result.valid).toBe(false);
+        });
+
+        test("rejects beforeCreate ref:path with invalid function name", () => {
+            const result = validateTemplate(validTemplate({ beforeCreate: "ref:/path/to/file.md:123bad" }));
+            expect(result.valid).toBe(false);
+        });
+
+        test("rejects beforeCreate with plain string (no prefix)", () => {
+            const result = validateTemplate(validTemplate({ beforeCreate: "myBeforeCreate" }));
+            expect(result.valid).toBe(false);
+        });
+
+        test("accepts template without beforeCreate (optional)", () => {
+            const result = validateTemplate(validTemplate());
+            expect(result.valid).toBe(true);
+        });
+    });
+
     // ─── additional properties ───
 
     test("rejects unknown top-level property", () => {

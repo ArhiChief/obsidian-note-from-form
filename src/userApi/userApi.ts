@@ -4,6 +4,7 @@ import { App } from "obsidian";
 
 export interface IUserApi {
     readonly io: InputOutput;
+    throwError(message: string): void;
 }
 
 export class UserApi implements IUserApi {
@@ -11,5 +12,9 @@ export class UserApi implements IUserApi {
 
     constructor(settings: NoteFromFormPluginSettings, app: App) {
         this.io = new InputOutputImpl(settings, app);
+    }
+
+    throwError(message: string): void {
+        throw new Error(message);
     }
 }
