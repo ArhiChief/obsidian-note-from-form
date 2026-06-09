@@ -6,6 +6,8 @@ export interface InputOutput {
     readonly defaultOutputDirectory: TFolder;
 
     createDirectory (path: string): Promise<TFolder>;
+    createFile (path: string, content: string): Promise<TFile>;
+
     getDirectory (path: string): TFolder | null;
     getFile (path: string): TFile | null;
 
@@ -22,12 +24,16 @@ export class InputOutputImpl implements InputOutput {
 
     constructor(settings: NoteFromFormPluginSettings, app: App) {
         this._vault = app.vault;
-        this.templatesDirectory = this.getDirectory(settings.templatesFolderLocation)!;
-        this.defaultOutputDirectory = this.getDirectory(settings.defaultOutputDir)!;
+        this.templatesDirectory = this.getDirectory(normalizePath(settings.templatesFolderLocation))!;
+        this.defaultOutputDirectory = this.getDirectory(normalizePath(settings.defaultOutputDir))!;
     }
 
-    createDirectory(path: string): Promise<TFolder> {
-        return this._vault.createFolder(normalizePath(path));
+    async createDirectory(path: string): Promise<TFolder> {
+        return await this._vault.createFolder(normalizePath(path));
+    }
+
+    async createFile(path: string, content: string): Promise<TFile> {
+        return await this._vault.create(normalizePath(path), content);
     }
 
     getDirectory(path: string): TFolder | null {

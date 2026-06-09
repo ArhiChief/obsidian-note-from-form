@@ -59,7 +59,7 @@ export class TemplateProcessor {
 
         const template = templateData as NoteTemplate;
         const functionProcessor = new FormItemFunctionProcessor(indexedTemplate, this._app, this._settings);
-        const userApi = new UserApi(this._settings, this._app);
+        const userApi = new UserApi(this._settings, this._app, this);
         const formItems = await FormItemsManager.getFormItems(template, functionProcessor, this._settings, userApi);
 
         const inputForm = new InputFormModal(this._app, indexedTemplate, formItems, template, this.createNoteFromTemplate.bind(this));
@@ -88,20 +88,25 @@ export class TemplateProcessor {
         }
 
         try {
-            var userApi = new UserApi(this._settings, this._app);
+            var userApi = new UserApi(this._settings, this._app, this);
             var functionProcessor = new FormItemFunctionProcessor(indexedTemplate, this._app, this._settings);
             await FormItemsManager.beforeCreate(templateData, functionProcessor, userApi, viewModel);
         }catch (e) {
             new Notice(`Error creating note: ${(e as Error).message}`);
+            return false;
         }
 
-        const dirPath = normalizePath(viewModel[FileLocationFormItem.FormFieldId]);
-        const folder = await this.ensureFolderExists(dirPath);
-        const newNote = await this.createNewNote(indexedTemplate.file, folder, viewModel[FileNameFormItem.FormFieldId]);
-        await this.sanitizeNewNote(newNote);
-        await this.applyViewModelToNote(newNote, viewModel);
+        await this.renderTemplate(indexedTemplate.file, viewModel);
 
         return true;
+    }
+
+    async renderTemplate(template: TFile, viewModel: Record<string, string>): Promise<void> {
+        const dirPath = normalizePath(viewModel[FileLocationFormItem.FormFieldId]);
+        const folder = await this.ensureFolderExists(dirPath);
+        const newNote = await this.createNewNote(template, folder, viewModel[FileNameFormItem.FormFieldId]);
+        await this.sanitizeNewNote(newNote);
+        await this.applyViewModelToNote(newNote, viewModel);
     }
 
 
