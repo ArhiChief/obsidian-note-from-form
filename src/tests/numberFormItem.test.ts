@@ -129,7 +129,7 @@ describe("NumberFormItem", () => {
             mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce(77);
             const item = new NumberFormItem({ id: "n1", type: "number", init: "ref:getNumber" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("getNumber", {}, mockUserApi);
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("getNumber", mockUserApi);
             expect(item.value).toBe(77);
         });
 
@@ -137,7 +137,7 @@ describe("NumberFormItem", () => {
             mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce(123);
             const item = new NumberFormItem({ id: "n1", type: "number", init: "ref:/utils.md:getNumber" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("/utils.md:getNumber", {}, mockUserApi);
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("/utils.md:getNumber", mockUserApi);
             expect(item.value).toBe(123);
         });
 

@@ -136,7 +136,7 @@ describe("CheckboxFormItem", () => {
             mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce(true);
             const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", init: "ref:isChecked" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("isChecked", {}, mockUserApi);
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("isChecked", mockUserApi);
             expect(item.value).toBe(true);
         });
 
@@ -144,7 +144,7 @@ describe("CheckboxFormItem", () => {
             mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce(false);
             const item = new CheckboxFormItem({ id: "cb1", type: "checkbox", init: "ref:/funcs.md:isChecked" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("/funcs.md:isChecked", {}, mockUserApi);
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("/funcs.md:isChecked", mockUserApi);
             expect(item.value).toBe(false);
         });
 

@@ -35,13 +35,13 @@ describe("DropdownFormItem", () => {
         test("parses v: JSON init and selects first option by default", async () => {
             const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: twoOptions }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(item.value).toEqual([{ k: "a", v: "Alpha" }, { k: "b", v: "Beta" }]);
+            expect(item.value).toEqual([{ k: "a", v: "Alpha" }]);
         });
 
         test("selects option marked with s:true", async () => {
             const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: withSelected }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(item.value).toEqual([{ k: "a", v: "Alpha" }, { k: "b", v: "Beta", s: true }]);
+            expect(item.value).toEqual([{ k: "b", v: "Beta" }]);
         });
 
         test("evaluates f: init function", async () => {
@@ -87,7 +87,7 @@ describe("DropdownFormItem", () => {
         test("returns selected value when s:true option", async () => {
             const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: withSelected }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(await item.get({})).toBe("Alpha");
+            expect(await item.get({})).toBe("Beta");
         });
 
         test("returns literal for v: getFunc", async () => {
@@ -147,7 +147,7 @@ describe("DropdownFormItem", () => {
             mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce(refOptions);
             const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: "ref:getOptions" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("getOptions", {}, mockUserApi);
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("getOptions", mockUserApi);
             expect(item.value).toEqual(refOptions);
         });
 
@@ -156,13 +156,46 @@ describe("DropdownFormItem", () => {
             mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce(refOptions);
             const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: "ref:/data.md:getOptions" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("/data.md:getOptions", {}, mockUserApi);
-            expect(item.value).toEqual(refOptions);
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("/data.md:getOptions", mockUserApi);
+            expect(item.value).toEqual([{ k: "a", v: "Alpha" }]);
         });
 
         test("throws for unsupported init prefix", async () => {
             const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: "x:bad" as any }, mockFunctionProcessor, mockUserApi);
             await expect(item.initialize()).rejects.toThrow("Unsupported init function");
+        });
+
+        test("reduces value to first option when none is marked selected", async () => {
+            const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: twoOptions }, mockFunctionProcessor, mockUserApi);
+            await item.initialize();
+            expect(item.value).toEqual([{ k: "a", v: "Alpha" }]);
+        });
+
+        test("reduces value to the option marked with s:true", async () => {
+            const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: withSelected }, mockFunctionProcessor, mockUserApi);
+            await item.initialize();
+            expect(item.value).toEqual([{ k: "b", v: "Beta" }]);
+        });
+
+        test("strips s flag from the selected option", async () => {
+            const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: withSelected }, mockFunctionProcessor, mockUserApi);
+            await item.initialize();
+            expect(item.value![0]).not.toHaveProperty("s");
+        });
+
+        test("uses last s:true option when multiple are marked", async () => {
+            const multi = 'v:[{"k":"a","v":"Alpha","s":true},{"k":"b","v":"Beta","s":true}]' as const;
+            const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: multi }, mockFunctionProcessor, mockUserApi);
+            await item.initialize();
+            expect(item.value).toEqual([{ k: "b", v: "Beta" }]);
+        });
+
+        test("reduces value when init resolves from ref function", async () => {
+            const refOptions = [{ k: "x", v: "X-ray" }, { k: "y", v: "Yankee", s: true }];
+            mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce(refOptions);
+            const item = new DropdownFormItem({ id: "dd1", type: "dropdown", init: "ref:getOptions" }, mockFunctionProcessor, mockUserApi);
+            await item.initialize();
+            expect(item.value).toEqual([{ k: "y", v: "Yankee" }]);
         });
     });
 
