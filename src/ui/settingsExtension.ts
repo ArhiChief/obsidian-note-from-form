@@ -31,7 +31,7 @@ export class ExtendedSetting extends Setting {
 
     private originDesc: string | null = null;
     setError(errMsg: string): this {
-        if (!this.originDesc) {
+        if (this.originDesc === null) {
             this.originDesc = this.descEl.innerText;
         }
 
@@ -44,7 +44,7 @@ export class ExtendedSetting extends Setting {
     clearError(): this {
         this.descEl.toggleClass('nff-error-desc', false);
         
-        if (this.originDesc) {
+        if (this.originDesc !== null) {
             this.setDesc(this.originDesc);
             this.originDesc = null;
         }
