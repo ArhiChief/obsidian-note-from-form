@@ -19,7 +19,7 @@ export class FormItemFunctionProcessor {
     }
 
     async executeFunction<TResult, TArgs extends any[]>(funcText: string, ...args: TArgs): Promise<TResult> {
-        const func = eval(`(${funcText})`) as (...args: TArgs) => Promise<TResult>;
+        const func = new Function(`return (${funcText});`)() as (...args: TArgs) => Promise<TResult>;
         return await func(...args);
     }
 

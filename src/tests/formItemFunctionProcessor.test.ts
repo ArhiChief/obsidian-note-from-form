@@ -97,6 +97,43 @@ describe("FormItemFunctionProcessor", () => {
             const { processor } = createProcessor();
             await expect(processor.executeFunction("'not a function'")).rejects.toThrow();
         });
+
+        test("evaluates async arrow function", async () => {
+            const { processor } = createProcessor();
+            const result = await processor.executeFunction<number, []>("async () => 42");
+            expect(result).toBe(42);
+        });
+
+        test("awaits an async function with internal await", async () => {
+            const { processor } = createProcessor();
+            const result = await processor.executeFunction<string, []>(
+                "async () => { return await Promise.resolve('done'); }"
+            );
+            expect(result).toBe("done");
+        });
+
+        test("resolves a non-async function returning a promise", async () => {
+            const { processor } = createProcessor();
+            const result = await processor.executeFunction<number, []>(
+                "() => Promise.resolve(7)"
+            );
+            expect(result).toBe(7);
+        });
+
+        test("passes arguments to async function", async () => {
+            const { processor } = createProcessor();
+            const result = await processor.executeFunction<number, [number, number]>(
+                "async (a, b) => { return await Promise.resolve(a * b); }", 3, 4
+            );
+            expect(result).toBe(12);
+        });
+
+        test("propagates rejection from async function", async () => {
+            const { processor } = createProcessor();
+            await expect(
+                processor.executeFunction("async () => { throw new Error('async boom'); }")
+            ).rejects.toThrow("async boom");
+        });
     });
 
     // ─── executeFunction with args ───
@@ -194,6 +231,22 @@ describe("FormItemFunctionProcessor", () => {
                 "compute", { x: 10 }
             );
             expect(result).toBe(11);
+        });
+
+        test("executes an async referenced function with args", async () => {
+            const templateFile = createMockFile("templates/tpl.md");
+            const body = "async (view) => { return await Promise.resolve(view.x * 2); }";
+            const fileContent = codeBlock("note-from-form", "computeAsync", body);
+
+            const { processor } = createProcessor({
+                templateFile,
+                fileContent,
+            });
+
+            const result = await processor.executeRefFunction<number, [Record<string, any>]>(
+                "computeAsync", { x: 10 }
+            );
+            expect(result).toBe(20);
         });
     });
 

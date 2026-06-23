@@ -160,6 +160,8 @@ Done: false
 Category: Work
 ```
 
+Sample templates can be found [here](samples/SRE/README.md).
+
 ## Using
 1. Install plugin
 2. Open plugin settings and set location of template files. Also you can specify obsidian property that will point to template definition:
