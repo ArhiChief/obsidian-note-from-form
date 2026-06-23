@@ -65,12 +65,15 @@ export class DropdownFormItem extends FormItemBase<DropdownOption[]> {
 
         const data = this.value! as DropdownOptionInput[];
         
+        this._selected = data[0].k;
         data.forEach(item => {
             this._opts[item.k] = item.v;
             if (item.s) {
                 this._selected = item.k;
             }
         });
+
+        this.value = [{ k: this._selected, v: this._opts[this._selected] }];
     }
 
     private static assertType (type: FormItemType): void {

@@ -305,14 +305,14 @@ describe("validateTemplate", () => {
     describe("init and get functions", () => {
         test("accepts valid init function (arrow)", () => {
             const result = validateTemplate(validTemplate({
-                "form-items": [validTextItem({ init: "f:async (view, api) => 'default'" })],
+                "form-items": [validTextItem({ init: "f:async (api) => 'default'" })],
             }));
             expect(result.valid).toBe(true);
         });
 
         test("accepts valid init function (classic)", () => {
             const result = validateTemplate(validTemplate({
-                "form-items": [validTextItem({ init: "f:async function(view, api) { return 'x'; }" })],
+                "form-items": [validTextItem({ init: "f:async function(api) { return 'x'; }" })],
             }));
             expect(result.valid).toBe(true);
         });

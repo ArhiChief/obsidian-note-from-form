@@ -10,11 +10,9 @@ export class InputFormModal extends Modal {
     private readonly _templateData: NoteTemplate;
     private readonly _callback: (items: FormItem[], indexedTemplate: TemplateIndexItem, templateData: NoteTemplate) => Promise<boolean>;
 
-    private readonly _app: App;
 
     constructor(app: App, indexedTemplate: TemplateIndexItem, formItems: FormItem[], templateData: NoteTemplate, callback: (items: FormItem[], indexedTemplate: TemplateIndexItem, templateData: NoteTemplate) => Promise<boolean>) {
         super(app);
-        this._app = app;
         this._indexedTemplate = indexedTemplate;
         this._items = formItems;
         this._templateData = templateData;
@@ -36,16 +34,18 @@ export class InputFormModal extends Modal {
             .addButton(button => button
                 .setButtonText("Create")
                 .setCta()
-                .onClick(async () => {
-                    if (await this._callback(this._items, this._indexedTemplate, this._templateData)) {
-                        this.close();
-                    }
-                })
+                .onClick(async () => await this.submit())
             );
     }
 
     onClose(): void {
         const { contentEl } = this;
         contentEl.empty();
+    }
+
+    async submit(): Promise<void> {
+        if (await this._callback(this._items, this._indexedTemplate, this._templateData)) {
+            this.close();
+        }
     }
 }

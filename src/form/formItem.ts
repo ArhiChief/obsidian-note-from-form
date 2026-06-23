@@ -62,9 +62,9 @@ export abstract class FormItemBase<TValue> implements FormItem {
     async initialize(): Promise<void> {
         if (this._initFunc) {
             if (this._initFunc.startsWith('f:')) {
-                this.value = await this._funtionProcessor.executeFunction<TValue, [Record<string, any>, IUserApi]>(this._initFunc.slice(2), {}, this._userApi);
+                this.value = await this._funtionProcessor.executeFunction<TValue, [IUserApi]>(this._initFunc.slice(2), this._userApi);
             } else if (this._initFunc.startsWith('ref:')) {
-                this.value = await this._funtionProcessor.executeRefFunction<TValue, [Record<string, any>, IUserApi]>(this._initFunc.slice(4), {}, this._userApi);
+                this.value = await this._funtionProcessor.executeRefFunction<TValue, [IUserApi]>(this._initFunc.slice(4), this._userApi);
             } else if (this._initFunc.startsWith('v:')) {
                 this.value = this.getInitValueFromString(this._initFunc.slice(2));
             } else {

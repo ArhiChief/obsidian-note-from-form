@@ -129,7 +129,7 @@ describe("TextFormItem", () => {
             mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce("from-ref");
             const item = new TextFormItem({ id: "t1", type: "text", init: "ref:myFunc" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("myFunc", {}, mockUserApi);
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("myFunc", mockUserApi);
             expect(item.value).toBe("from-ref");
         });
 
@@ -137,7 +137,7 @@ describe("TextFormItem", () => {
             mockFunctionProcessor.executeRefFunction.mockResolvedValueOnce("from-file-ref");
             const item = new TextFormItem({ id: "t1", type: "text", init: "ref:/path/to/file.md:myFunc" }, mockFunctionProcessor, mockUserApi);
             await item.initialize();
-            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("/path/to/file.md:myFunc", {}, mockUserApi);
+            expect(mockFunctionProcessor.executeRefFunction).toHaveBeenCalledWith("/path/to/file.md:myFunc", mockUserApi);
             expect(item.value).toBe("from-file-ref");
         });
 
